@@ -8,12 +8,82 @@ function fmtMoney(n) {
   return '$' + Number(n).toLocaleString();
 }
 
+const CAPABILITIES = [
+  {
+    id: 'semrush',
+    title: '1. Semrush — Market & Competitor Intelligence',
+    description: 'Provides market-wide keyword research, competitor SEO visibility gaps, and backlink audit tracking.',
+    tools: ['semrush_domain_overview', 'semrush_keyword_difficulty', 'semrush_competitors', 'semrush_backlinks', 'semrush_related_keywords'],
+    playbook: [
+      { label: 'Market Benchmarking', text: 'Establishes absolute market rankings and competitor search visibility.' },
+      { label: 'SEO Quick Wins', text: 'Identifies high-impression keywords ranking positions 4-15 to target for immediate traffic uplifts.' },
+      { label: 'Defensive Audits', text: 'Monitors backlink health and toxic link profiles to safeguard organic authority.' }
+    ]
+  },
+  {
+    id: 'gsc',
+    title: '2. Google Search Console (GSC) — Performance & Indexing',
+    description: 'Measures exact Google Search traffic performance, keywords, and schedules real-time URL indexing.',
+    tools: ['site_snapshot', 'quick_wins', 'ctr_opportunities', 'traffic_drops', 'content_gaps', 'inspect_url', 'submit_url'],
+    playbook: [
+      { label: 'Performance Health', text: 'Tracks actual clicks, impressions, click-through-rates (CTR), and average rankings.' },
+      { label: 'Cannibalization & Decay', text: 'Detects competing pages split-ranking for identical keywords and flags traffic decline.' },
+      { label: 'Direct Indexing', text: 'Uses the Google Indexing API to notify search crawlers of new or updated content instantly.' }
+    ]
+  },
+  {
+    id: 'ga4',
+    title: '3. Google Analytics 4 (GA4) — On-Site Behavior',
+    description: 'Monitors user behavior, custom conversion funnels, session engagement, and content revenue performance.',
+    tools: ['run_report', 'run_funnel_report', 'run_realtime_report', 'get_property_details'],
+    playbook: [
+      { label: 'Portfolio Monitoring', text: 'Aggregates behavioral metrics across 70+ luxury properties seamlessly.' },
+      { label: 'Conversion Analysis', text: 'Tracks user actions, lead completions, and ecommerce transaction drop-off funnels.' },
+      { label: 'Revenue Attribution', text: 'Attributes revenue to specific landing pages to identify top-performing content clusters.' }
+    ]
+  },
+  {
+    id: 'gtm',
+    title: '4. Google Tag Manager (GTM) — Conversion Validation',
+    description: 'Audits container tag health, builds custom event triggers, and deploys marketing tags without editing code.',
+    tools: ['gtm_audit_container', 'gtm_list_tags', 'gtm_create_trigger', 'gtm_fix_conversion_tag_trigger'],
+    playbook: [
+      { label: 'Tracking Audits', text: 'Scans GTM containers to identify broken tags, duplicate triggers, and misfiring conversion codes.' },
+      { label: 'Event Standardization', text: 'Enforces unified GA4 custom event schema definitions across the entire portfolio.' },
+      { label: 'Tag Publishing', text: 'Creates, tests, and publishes robust tracking scripts safely inside dedicated workspaces.' }
+    ]
+  },
+  {
+    id: 'gads',
+    title: '5. Google Ads (Paid Search & Spend Audits)',
+    description: 'Monitors paid search campaigns, CPC, keyword search queries, and maximizes budget spend efficiency.',
+    tools: ['gads_get_account_performance', 'gads_list_conversion_actions', 'gads_update_conversion_counting'],
+    playbook: [
+      { label: 'Spend Optimization', text: 'Tracks budget allocation and campaign ROAS to shift spend to high-performing keywords.' },
+      { label: 'Conversion Counting Fixes', text: 'Audits conversion actions to prevent duplicate purchase counting (many vs. one).' },
+      { label: 'Negative Mining', text: 'Extracts wasteful search queries from live campaigns to exclude them as negative terms.' }
+    ]
+  },
+  {
+    id: 'aeo',
+    title: '6. AEO — Answer Engine Optimization',
+    description: 'Optimizes content to be referenced, citation-tagged, and extracted inside conversational AI search answers.',
+    tools: ['schema_jsonld', 'featured_snippet', 'AI Assistants channel grouping'],
+    playbook: [
+      { label: 'Direct Answer Blocks', text: 'Structures concise factual summaries (40-60 words) in the first 200 words for generative engines.' },
+      { label: 'Structured Markup', text: 'Deploys Article, BlogPosting, and FAQPage schemas to make pages highly machine-readable.' },
+      { label: 'AI Referrer Tracking', text: 'Isolates and attributes on-site traffic arriving from ChatGPT, Perplexity, Gemini, and Copilot.' }
+    ]
+  }
+];
+
 export default function App() {
   const [sites, setSites] = useState([]);
   const [status, setStatus] = useState('loading');
   const [health, setHealth] = useState(null);
   const [activeTab, setActiveTab] = useState('Dashboard');
   const [selectedGroup, setSelectedGroup] = useState('All');
+  const [activeAccordion, setActiveAccordion] = useState(null);
   
   // Proposals state
   const [proposals, setProposals] = useState([
@@ -346,40 +416,97 @@ export default function App() {
 
         {/* ==================== VIEW 6: SETTINGS ==================== */}
         {activeTab === 'Settings' && (
-          <section className="panel">
-            <div className="panel-head">
-              <h2>API Configurations & OAuth Credentials</h2>
-              <span className="badge-source">System Status</span>
-            </div>
-            <div className="pad settings-view">
-              <div className="settings-section">
-                <h3>Credentials Status Map (Verified Live)</h3>
-                <div className="credential-row">
-                  <span className="cred-name">1. Semrush (API Key)</span>
-                  <span className="cred-status ok">✓ Fully Connected (~2M API units remaining)</span>
-                </div>
-                <div className="credential-row">
-                  <span className="cred-name">2. Google Search Console (OAuth)</span>
-                  <span className="cred-status ok">✓ Fully Connected (Master OAuth, pull working)</span>
-                </div>
-                <div className="credential-row">
-                  <span className="cred-name">3. Google Analytics 4 (OAuth Bypass)</span>
-                  <span className="cred-status ok">✓ Fully Connected (Master OAuth, bypass successful)</span>
-                </div>
-                <div className="credential-row">
-                  <span className="cred-name">4. Google Tag Manager (OAuth)</span>
-                  <span className="cred-status ok">✓ Fully Connected (Master OAuth, read working)</span>
-                </div>
-                <div className="credential-row">
-                  <span className="cred-name">5. Google Ads (API Token)</span>
-                  <span className="cred-status warn">⏳ Pending Token Approval (Google Ads API)</span>
+          <div className="settings-view" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            {/* Card 1: APU (API Configurations & OAuth Credentials) */}
+            <section className="panel" style={{ margin: 0 }}>
+              <div className="panel-head">
+                <h2>API Configurations & OAuth Credentials (APU)</h2>
+                <span className="badge-source">System Status</span>
+              </div>
+              <div className="pad">
+                <div className="settings-section" style={{ margin: 0 }}>
+                  <h3>Credentials Status Map (Verified Live)</h3>
+                  <div className="credential-row">
+                    <span className="cred-name">1. Semrush (API Key)</span>
+                    <span className="cred-status ok">✓ Fully Connected (~2M API units remaining)</span>
+                  </div>
+                  <div className="credential-row">
+                    <span className="cred-name">2. Google Search Console (OAuth)</span>
+                    <span className="cred-status ok">✓ Fully Connected (Master OAuth, pull working)</span>
+                  </div>
+                  <div className="credential-row">
+                    <span className="cred-name">3. Google Analytics 4 (OAuth Bypass)</span>
+                    <span className="cred-status ok">✓ Fully Connected (Master OAuth, bypass successful)</span>
+                  </div>
+                  <div className="credential-row">
+                    <span className="cred-name">4. Google Tag Manager (OAuth)</span>
+                    <span className="cred-status ok">✓ Fully Connected (Master OAuth, read working)</span>
+                  </div>
+                  <div className="credential-row">
+                    <span className="cred-name">5. Google Ads (API Token)</span>
+                    <span className="cred-status warn">⏳ Pending Token Approval (Google Ads API)</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          </section>
+            </section>
+
+            {/* Card 2: Capabilities / App Capability */}
+            <section className="panel" style={{ margin: 0 }}>
+              <div className="panel-head">
+                <h2>Capabilities / App Capability</h2>
+                <span className="badge-source font-11">capabilities.md</span>
+              </div>
+              <div className="pad">
+                <p className="muted small" style={{ marginBottom: '16px' }}>
+                  Interactive accordion reference detailing the 5-data-source unified measurement stack & Answer Engine Optimization (AEO) playbooks backing this platform.
+                </p>
+                <div className="capabilities-container">
+                  {CAPABILITIES.map((cap, i) => (
+                    <div 
+                      key={cap.id} 
+                      className={'accordion-item' + (activeAccordion === i ? ' active' : '')}
+                    >
+                      <div 
+                        className="accordion-header" 
+                        onClick={() => setActiveAccordion(activeAccordion === i ? null : i)}
+                      >
+                        <h4>{cap.title}</h4>
+                        <span className="accordion-icon">▼</span>
+                      </div>
+                      {activeAccordion === i && (
+                        <div className="accordion-content">
+                          <p className="muted small" style={{ marginBottom: '16px', lineHeight: '1.5' }}>
+                            {cap.description}
+                          </p>
+                          <div className="capability-grid">
+                            <div>
+                              <div className="capability-section-title">Playbook Strategy</div>
+                              {cap.playbook.map((play, pi) => (
+                                <div key={pi} className="capability-playbook-item">
+                                  <strong>{play.label}:</strong> {play.text}
+                                </div>
+                              ))}
+                            </div>
+                            <div>
+                              <div className="capability-section-title">Associated MCP Tools</div>
+                              <div className="capability-tools-list">
+                                {cap.tools.map((tool, ti) => (
+                                  <span key={ti} className="capability-tool-badge">{tool}</span>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          </div>
         )}
 
-        <footer className="foot muted">Gaia Nexus Platform • Built for Roger • Stack: PostgreSQL · Python · React · Vite · Node</footer>
+        <footer className="foot muted">Gaia Nexus Platform • Built for Roger • Stack: Hermes · PostgreSQL · Python · React · Vite · Tailwind · Node</footer>
       </main>
     </div>
   );

@@ -153,6 +153,28 @@ th { font-size: 12px; color: var(--muted); font-weight: 500; text-transform: upp
 .cred-status.ok { color: var(--success); font-weight: 600; }
 .cred-status.warn { color: var(--warning); font-weight: 600; }
 
+/* Accordion component styling */
+.capabilities-container { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+.accordion-item { background: var(--darker); border: 1px solid rgba(255,255,255,0.03); border-radius: 8px; overflow: hidden; transition: all 0.2s; }
+.accordion-item.active { border-color: rgba(99,102,241,0.25); }
+.accordion-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; cursor: pointer; user-select: none; transition: background 0.2s; }
+.accordion-header:hover { background: rgba(255,255,255,0.01); }
+.accordion-header h4 { font-size: 14px; font-weight: 600; color: var(--text); }
+.accordion-icon { font-size: 12px; color: var(--muted); transition: transform 0.2s; }
+.accordion-item.active .accordion-icon { transform: rotate(180deg); }
+.accordion-content { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.03); animation: fadeIn 0.2s ease-out; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.capability-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 16px; }
+@media (max-width: 768px) {
+  .capability-grid { grid-template-columns: 1fr; }
+}
+.capability-section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; letter-spacing: 0.05em; }
+.capability-tools-list { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin-top: 4px; }
+.capability-tool-badge { background: var(--surface); border: 1px solid rgba(255,255,255,0.05); color: var(--muted); padding: 3px 8px; border-radius: 6px; font-size: 11px; font-family: monospace; }
+.capability-playbook-item { margin-bottom: 8px; line-height: 1.4; color: var(--muted); font-size: 13px; }
+.capability-playbook-item strong { color: var(--text); }
+
 .muted { color: var(--muted); }
 .err { color: var(--danger); }
 .foot { margin-top: 24px; font-size: 12px; text-align: center; }
