@@ -1,264 +1,168 @@
-# Gaia Nexus — Scaffold Guide (`README-SCAFFOLD.md`)
+# Gaia Nexus Platform — Master Operator Guide
 
-A complete, reproducible reference for the **Gaia Nexus placeholder app** — the minimal **PRVTN**
-stack currently running for **1 site** on `gda-s01`, and how to rebuild, run, and extend it toward the
-full 50-site platform described in `app_design/`.
+Welcome to the master control panel and developer reference for the **Gaia Nexus Platform** (located at `/var/www/nexus` on `gda-s01`). This platform provides a unified SaaS-grade interface enabling search engine, conversational search (AEO), paid marketing analytics, and on-page SEO optimization across Gaia Digital Agency's (GDA) portfolio of **34 luxury properties** in Bali, Jakarta, and internationally.
 
-> **Live now:** https://nexus.gaiada.online · app dir `gda-s01:/var/www/nexus`
-> **Secrets/creds:** `key.txt` (chmod 600) — never commit. This file contains **no secrets**.
+The platform is designed, built, and autonomously orchestrated from the AI command center on **`gda-ai01`** using the **Hermes AI Agent**.
 
----
-
-## 1. What this scaffold is
-
-A deliberately minimal slice of the architecture in `app_design/03–05`, proving the full request path
-end-to-end for one seeded site:
-
-```
-Browser ──HTTPS──▶ nginx (nexus.gaiada.online)
-                     ├── /            → frontend/dist  (React SPA, Vite build)
-                     └── /api/*        → 127.0.0.1:3100 (Express)
-                                              │
-                                              ▼
-                                   PostgreSQL 18 (gaia_nexus.sites)
-        pipeline/ (Python)  ── stub for the Hermes collectors (not yet wired)
-```
-
-**PRVTN mapping:** **P**ostgreSQL · Python (pipeline stub) · **R**eact · **V**ite · **N**ode (Express).
-Payload CMS and the React 19 + Vite **SSR** of the full spec are intentionally deferred — this is a CSR
-placeholder to "spin it up".
+> **Live Production URL:** https://nexus.gaiada.online
+> **Secrets/Credentials:** `key.txt` (chmod 600) — local only, NEVER commit.
 
 ---
 
-## 2. Directory layout (`/var/www/nexus`)
+## 🚀 1. Platform Architecture
+
+The Gaia Nexus Platform uses the **PRVTN** stack to deliver extreme speed, responsive visualization, and seamless AI orchestration:
+
+```
+Browser ──HTTPS (SSL)──▶ Nginx (nexus.gaiada.online)
+                             ├── /             → frontend/dist (React SPA, Vite Build)
+                             └── /api/*        → 127.0.0.1:3100 (Express Node API)
+                                                      │
+                                                      ▼
+                                           PostgreSQL 18 (gaia_nexus DB)
+                                                      ▲
+                                                      │ (Database Queries / Updates)
+   Orchestration Host (gda-ai01) ──[SSH/MCP]──▶ Hermes Agent
+```
+
+*   **P**ostgreSQL 18 — Active, relational master database mapping all 34 real-world properties and marketing states.
+*   **R**eact 19 — High-performance, single-page application (SPA) client interface.
+*   **V**ite 6 — Extreme-speed bundler compiling static assets for production deployment.
+*   **T**oolchain (Node/Express) — Robust backend API handling secure database operations and platform state.
+*   **N**ginx 1.24 — Acts as the front-line reverse proxy and TLS/SSL termination point.
+
+---
+
+## 📂 2. Repository Layout (`/var/www/nexus`)
 
 ```
 nexus/
-├── README.md                 # short in-repo readme
-├── backend/
-│   ├── package.json          # express, pg, cors, dotenv
-│   ├── server.js             # API (ESM)
-│   ├── .env                  # DB creds + PORT (chmod 600, NOT in git)
-│   └── node_modules/
-├── frontend/
-│   ├── package.json          # react 19, react-dom, vite 6, @vitejs/plugin-react
-│   ├── vite.config.js        # dev proxy /api → :3100, build → dist/
-│   ├── index.html
+├── README.md                 # This Master Guide and System Reference
+├── README-SCAFFOLD.md        # Technical guide for local rebuilds / DB setup
+├── CLAUDE.md                 # Workspace playbook and operational guidelines
+├── backend/                  # Node.js + Express API
+│   ├── server.js             # ESM Express API entrypoint
+│   ├── package.json          # Dependencies: pg, cors, dotenv, express
+│   └── .env                  # Port, database URL, credentials (chmod 600, untracked)
+├── frontend/                 # React 19 Client Dashboard
+│   ├── index.html            # Main HTML wrapper
+│   ├── vite.config.js        # Vite compilation rules and dev API proxy to Port 3100
+│   ├── package.json          # Dependencies: react 19, tailwind css, lucide-react
 │   ├── src/
-│   │   ├── main.jsx
-│   │   ├── App.jsx           # dashboard: KPIs + sites table (fetches /api/sites)
-│   │   └── index.css         # design tokens from app_design/08
-│   ├── dist/                 # built static assets (served by nginx)
-│   └── node_modules/
-└── pipeline/
-    ├── collect.py            # Hermes collector stub
+│   │   ├── main.jsx          # DOM rendering entrypoint
+│   │   ├── App.jsx           # Core SaaS UI Layout (All interactive tabs)
+│   │   └── index.css         # Styling framework, responsive queries, circular PABS gauges
+│   └── dist/                 # Vite production build (served directly by Nginx)
+├── docs/                     # Centralized Documentation
+│   ├── app_design/           # Design briefs, Concept plans, and System specs (Docs 01-09)
+│   └── capabilities/
+│       ├── capabilities.md   # Live deployment status and MCP credentials audit
+│       └── SKILLS-copywriter.md # GDA British English (en-GB) and copywriting standards
+└── pipeline/                 # Automated Collectors & AI Integrations
+    ├── collect.py            # Metrics collectors stub
     └── requirements.txt
 ```
 
 ---
 
-## 3. Prerequisites (already present on gda-s01)
+## 🎛️ 3. Core Workspace Tabs & Features
 
-- **Node** v20.20.2 + npm 10 + **pm2** (system, per-user daemon under `azlan`)
-- **PostgreSQL 18** live on port **5432** (cluster `18/main`; note `16/main` exists on 5433, down)
-- **Python** 3.12, **nginx** 1.24, **certbot**
+The live application features an elegant, dark-mode, mobile-responsive dashboard containing six dedicated control centers:
+
+### 📊 A. Global Dashboard
+Provides a consolidated high-level portfolio overview of GDA's properties.
+- **Unified KPI Counters**: Live metrics representing cumulative Active Properties, Total Monthly Clicks, Average CTR, and Total Paid Ads Spend across the entire agency footprint.
+- **Row-to-Focus Transitions**: Clicking on any key property name automatically transitions the view to the **Focus** tab and pre-selects the corresponding property.
+
+### 🌐 B. Global Property Directory
+Displays all **34 production properties** mapped directly to their hosting topology:
+- **Server Tracking**: Filterable by Node Groups: `gda-ce01` (GCP WordPress Cluster), `hostinger-wp` (Hostinger Shared), and `gda-pn01` (Partner NodeJS).
+- **Competitor Analytics**: Displays high-level organic search competitors, domain authority (DA) comparison, keyword overlap counts, and GDA's current competitive DA lead.
+
+### 🎯 C. Dynamic Focus Inspector
+A site-by-site, deep-dive panel enabling granular analysis of individual properties:
+- **Property Selector**: Dropdown to select any of GDA's 34 properties.
+- **SEO & Search Console**: Loads top-performing Google Search Console (GSC) organic keywords, query volumes, average impressions, and CTR metrics.
+- **Tracking & Tagging**: Displays active Google Tag Manager (GTM) Container IDs and specific setup verification (e.g. ecommerce vs generic tags).
+- **AEO (Conversational Search)**: Visualizes incoming conversational search and AI reference referrals (ChatGPT, Gemini, Perplexity) categorized by traffic source.
+
+### 📝 D. Staging Proposals & Chat Drawer
+- **Recommendations Pipeline**: A structured 4-lifecycle recommendations board (Pending, Accepted, Rejected, Archived) enabling operators to accept or dismiss on-page SEO recommendations.
+- **Hermes Chat Slide-Over**: A sliding chat drawer that lets operators consult with the Hermes AI Agent directly to refine, rewrite, or shorten titles, meta descriptions, and copy according to GDA on-page SEO checklist standards.
+
+### 🚨 E. Lighthouse (PABS Audits & Alerts)
+- **Circular PABS Gauges**: Renders interactive, SVG-driven circular gauges representing Google Lighthouse scores for **P**erformance, **A**ccessibility, **B**est Practices, and **S**EO.
+- **Critical PABS Alerts**: A real-time alerting panel identifying any properties scoring in the **Red** (below `50`) for any metric. Includes pre-seeded anomaly test cases like *Nail Salon Ubud* and *Bali Spa Guide*. Clicking any flagged alert automatically populates and expands that property's details.
+
+### 📖 F. Interactive Guide
+A step-by-step Operator Playbook walking managers through daily auditing workflows, proposal reviews, database schema alterations, and Hermes execution parameters.
 
 ---
 
-## 4. Rebuild from scratch
+## 🤖 4. AI Orchestration with Hermes (`gda-ai01`)
 
-### 4.1 Database (PostgreSQL 18 @ 5432)
-Run as a script (avoids SSH quoting issues). Generates a random password, idempotent on the role:
+The platform's frontend, database, and background processes are built and autonomously maintained by the **Hermes AI Agent** operating from the orchestration host **`gda-ai01`**.
 
+### How Hermes Operates & Compiles
+1.  **Secure Passwordless SSH**: Hermes uses cryptographic key auth to log in to `gda-s01` as the `azlan` user, allowing it to modify backend code, alter schemas, run SQL seeds, and rebuild assets.
+2.  **Remote Vite Compilation**: When code modifications are made to `App.jsx` or `index.css`, Hermes issues a remote command to rebuild the client bundle on the server:
+    ```bash
+    ssh gda-s01 "cd /var/www/nexus/frontend && npm run build"
+    ```
+    Nginx immediately picks up and serves the newly generated `dist/` bundle live.
+3.  **Active MCP Integration**: Hermes utilizes the **Model Context Protocol (MCP)** inside `/home/azlan/.hermes/config.yaml` to securely query GDA's marketing credentials from `gda-ai01`:
+    -   **Semrush MCP**: Connected with live API keys for keyword overlap sweeps.
+    -   **Google Search Console MCP**: Authenticated via Master OAuth (`~/.gsc-mcp/oauth-token.json`).
+    -   **Google Analytics 4 MCP**: Deployed using the Master Service Account Key (`ga4-user-credentials.json`).
+    -   **Google Tag Manager MCP**: Consolidated using the Master Service Account key for real-time tracking audits.
+
+### Automated Cron Routines
+Hermes executes automated sync schedules on `gda-ai01` to fetch metrics and keep the PostgreSQL database on `gda-s01` fresh:
+-   **Daily Sync Routine**: Triggers at **3:00 AM GMT+8** (Singapore Time) to execute GSC and GA4 sweeps.
+-   **Monthly Competitor Sweep**: Runs on the **last day of every month at 4:00 AM GMT+8** to refresh Semrush domain overlap statistics.
+
+---
+
+## 🛠️ 5. Operator CLI Playbook
+
+### A. Deploying Frontend Updates
+To make frontend adjustments live manually:
 ```bash
-PGPASS=$(openssl rand -hex 16)
-# role (create or reset)
-if sudo -u postgres psql -p 5432 -tAc "SELECT 1 FROM pg_roles WHERE rolname='nexus_user'" | grep -q 1; then
-  sudo -u postgres psql -p 5432 -c "ALTER ROLE nexus_user LOGIN PASSWORD '$PGPASS';"
-else
-  sudo -u postgres psql -p 5432 -c "CREATE ROLE nexus_user LOGIN PASSWORD '$PGPASS';"
-fi
-# database (owned by nexus_user)
-sudo -u postgres psql -p 5432 -tAc "SELECT 1 FROM pg_database WHERE datname='gaia_nexus'" | grep -q 1 \
-  || sudo -u postgres createdb -p 5432 -O nexus_user gaia_nexus
-```
+# Log in to gda-s01
+ssh gda-s01
 
-Schema + seed:
-```sql
--- psql -p 5432 -d gaia_nexus
-CREATE TABLE IF NOT EXISTS sites (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name VARCHAR(255) NOT NULL,
-  url VARCHAR(512) NOT NULL,
-  type VARCHAR(20) NOT NULL DEFAULT 'wordpress',     -- wordpress | nodejs
-  server_ip VARCHAR(45),
-  status VARCHAR(20) NOT NULL DEFAULT 'active',       -- active | inactive
-  seo_score INT, traffic_7d INT, ad_spend NUMERIC(12,2), roas NUMERIC(6,2),
-  created_at TIMESTAMP DEFAULT now()
-);
-ALTER TABLE sites OWNER TO nexus_user;
-INSERT INTO sites (name,url,type,server_ip,status,seo_score,traffic_7d,ad_spend,roas)
-SELECT 'Nexus Placeholder Site','https://nexus.gaiada.online','wordpress','gda-s01','active',72,1240,350.00,3.80
-WHERE NOT EXISTS (SELECT 1 FROM sites);
-```
-
-### 4.2 Backend `.env` (`backend/.env`, chmod 600)
-```ini
-PORT=3100
-PGHOST=127.0.0.1
-PGPORT=5432
-PGUSER=nexus_user
-PGPASSWORD=<generated>
-PGDATABASE=gaia_nexus
-DATABASE_URL=postgresql://nexus_user:<generated>@127.0.0.1:5432/gaia_nexus
-```
-
-### 4.3 Backend
-```bash
-cd /var/www/nexus/backend
-npm install --omit=dev --no-fund --no-audit      # express, pg, cors, dotenv
-pm2 start server.js --name gaia-nexus-backend
-pm2 save
-curl -s http://127.0.0.1:3100/api/health         # {"status":"ok","db":"up"}
-```
-`server.js` binds to **127.0.0.1** (nginx proxies; never expose 3100 publicly).
-
-### 4.4 Frontend
-```bash
+# Navigate and rebuild
 cd /var/www/nexus/frontend
-npm install --no-fund --no-audit                 # react 19 + vite 6
-npm run build                                    # → dist/  (~200 KB)
+npm run build
 ```
 
-### 4.5 nginx + SSL
-Create `/etc/nginx/sites-available/nexus.gaiada.online` (then symlink into `sites-enabled/`):
-```nginx
-server {
-    listen 80;
-    listen [::]:80;
-    server_name nexus.gaiada.online;
-    root /var/www/nexus/frontend/dist;
-    index index.html;
-    location /api/ {
-        proxy_pass http://127.0.0.1:3100;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-    location / { try_files $uri $uri/ /index.html; }   # SPA fallback
-}
-```
+### B. Managing Backend API
+To view API logs or restart the backend service:
 ```bash
-sudo nginx -t && sudo systemctl reload nginx
-# HTTPS (adds the 443 block + 80→443 redirect; touches only this vhost):
-sudo certbot --nginx -d nexus.gaiada.online --non-interactive --agree-tos -m ai@gaiada.com --redirect
+# View active processes
+pm2 list
+
+# View live backend log streams
+pm2 logs gaia-nexus-backend
+
+# Restart API
+pm2 restart gaia-nexus-backend
 ```
 
----
-
-## 5. API reference (current)
-
-| Method | Path | Returns |
-|---|---|---|
-| GET | `/api/health` | `{ status, db }` — DB connectivity check |
-| GET | `/api/sites` | array of site rows |
-| GET | `/api/sites/:id` | one site row (404 if missing) |
-
----
-
-## 6. Local development
-
+### C. Seeding the Database
+To reset or re-seed the 34 production properties inside PostgreSQL 18:
 ```bash
-# backend (hot: use `node --watch server.js` or nodemon)
-cd backend && node server.js
-# frontend dev server with API proxy to :3100
-cd frontend && npm run dev          # http://localhost:5173  (proxy /api → 127.0.0.1:3100)
+# From gda-ai01, copy the seed script
+scp /home/azlan/seed.sql gda-s01:/tmp/seed.sql
+
+# SSH into gda-s01 and execute seed
+ssh gda-s01 "psql -U nexus_user -d gaia_nexus -h 127.0.0.1 -f /tmp/seed.sql"
 ```
-Production serves the built `dist/` via nginx; dev uses Vite's server + proxy (see `vite.config.js`).
 
 ---
 
-## 7. Redeploy / operations
-
-```bash
-# update frontend
-cd /var/www/nexus/frontend && git pull 2>/dev/null; npm install; npm run build   # nginx serves new dist immediately
-# update backend
-cd /var/www/nexus/backend && npm install; pm2 restart gaia-nexus-backend
-pm2 logs gaia-nexus-backend          # tail logs
-pm2 status                           # confirm 'online'
-```
-**Multi-server caution (gda-s01):** other apps run on 3006/3007/3010/3080/8081. Use free ports only,
-keep the dedicated nginx vhost, reload (never restart) nginx, and never restart shared PostgreSQL.
-
----
-
-## 8. Design system (from `app_design/08`, encoded in `frontend/src/index.css`)
-
-| Token | Value | Use |
-|---|---|---|
-| `--bg` | `#0F172A` | page background |
-| `--surface` | `#1E293B` | cards/panels |
-| `--accent` | `#6366F1` | CTAs, active nav |
-| `--success` | `#10B981` | ok/approved |
-| `--warning` | `#F59E0B` | pending |
-| `--danger` | `#EF4444` | error/rejected |
-| `--text` / `--muted` | `#F8FAFC` / `#94A3B8` | text |
-
-Font: Inter. Layout: left sidebar + main; KPI grid; data-dense tables.
-
----
-
-## 9. Extending toward the full platform
-
-Build order that keeps the scaffold working at every step:
-
-1. **Schema** — add the rest of `app_design/04`: `metrics_snapshots` (JSONB per source), `proposals`,
-   `deployments`, `users`, `audit_logs`. Add migrations (e.g. `db/migrations/`, or Drizzle/Payload).
-2. **Auth + RBAC** — `/api/auth/*`, JWT, roles admin/reviewer/viewer (middleware).
-3. **Routes/pages** — implement the full sitemap in `app_design/08` (dashboard, analytics incl.
-   **AEO** + **Social**, proposals, deployments, reports, settings incl. **Integrations source-health**).
-4. **Data pipeline** — flesh out `pipeline/` into the Hermes collectors (Semrush/GA4/GSC/Ads/GTM) that
-   write `metrics_snapshots`; the MCP servers already configured on `gda-ai01` are the dev counterpart.
-5. **Payload CMS + Vite SSR** — swap the CSR placeholder for the spec's headless-CMS + SSR setup.
-6. **Cloud SQL + Secret Manager** — migrate the local DB to managed Cloud SQL and move secrets out of
-   `.env`/`key.txt` into GCP Secret Manager (`app_design/03`, `06`).
-
-This placeholder is **1 site**; the production target is 50. Keep a canonical site-ID model and
-per-source `last_sync` from the start.
-
----
-
-## 10. AI Orchestration with Hermes (gda-ai01)
-
-This application is built, managed, and monitored autonomously by **Hermes**, an AI agent running on the orchestration host **`gda-ai01`**.
-
-### How Hermes Orchestrates the Platform
-- **Orchestration Host:** `gda-ai01` (Installation root: `/opt/hermes/`)
-- **Remote Operations:** Hermes is configured with secure, passwordless SSH access to `gda-s01` as the `azlan` user, allowing it to execute builds, manage services (PM2), and run database queries directly.
-- **Data Integrations:** Hermes utilizes the Model Context Protocol (MCP) to pull live marketing and performance metrics from 5 unified data sources (Semrush, Google Search Console, Google Analytics 4, Google Tag Manager, Google Ads) connected on `gda-ai01`.
-- **System Maintenance:** Hermes monitors application health, schedules cron jobs for metrics collection, and handles automated deployments.
-
-### Developer/Operator Guidelines for Hermes
-When cooperating with Hermes or triggering tasks from the orchestration host:
-1. **Always plan first:** Before running deployment scripts, database updates, or modifications, Hermes is instructed to propose a comprehensive plan first and wait for approval.
-2. **Platform Constraints:** Ensure all application components remain fully isolated on `gda-s01` to avoid interrupting other active services. Never restart postgresql or shared services globally.
-
----
-
-## 11. Troubleshooting
-
-| Symptom | Cause / fix |
-|---|---|
-| HTTPS shows another site ("fallback") | No 443 vhost yet → run certbot (§4.5). 80-only configs fall through to the default 443 server. |
-| `/api/*` returns nginx 404 right after reload | Reload race — retry; confirm the `/api/` location proxies to `:3100`. |
-| `db: down` in `/api/health` | Check `backend/.env` creds; test `PGPASSWORD=… psql -h 127.0.0.1 -U nexus_user -d gaia_nexus -c 'select 1'`. |
-| pm2 app missing after reboot | `pm2 save` + `pm2 startup` (per-user). |
-| Lost DB password | Reset: `ALTER ROLE nexus_user LOGIN PASSWORD '…'` and update `backend/.env` + `key.txt`. |
-
----
-
-*Companion docs: `CLAUDE.md` (workspace context), `capabilities.md` (MCP + strategy),
-`app_design/` (full spec), `key.txt` (secrets — local only).*
+## ⚠️ 6. Key Operator Constraints
+1.  **Plan First, Execute Second**: In compliance with agency policy, the AI Agent must propose and receive explicit approval before running code updates, server configurations, or database actions.
+2.  **No Global Restarts**: Never execute global restarts on PostgreSQL or shared system services on `gda-s01` to prevent interrupting other active agency sites. Only restart individual PM2 containers or reload Nginx.
+3.  **British English Standard**: All system copy, user interface titles, and recommendations must strictly conform to **British English (`en-GB`)** spelling conventions, adhering to guidelines in `SKILLS-copywriter.md`.
+4.  **Raw URLs Only**: Roger's terminal client completely strips formatted markdown links. Always output raw, plain-text URLs rather than markdown anchors in reports or terminal readouts.
