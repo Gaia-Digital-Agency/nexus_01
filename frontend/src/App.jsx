@@ -306,6 +306,14 @@ export default function App() {
   const [selectedServerFilter, setSelectedServerFilter] = useState('All');
   const [directorySearch, setDirectorySearch] = useState('');
   const [focusedSiteIdx, setFocusedSiteIdx] = useState(0);
+
+  const handleSiteFocus = (siteName) => {
+    const idx = DIRECTORY_SITES.findIndex(s => s.name.toLowerCase() === siteName.toLowerCase() || s.name.toLowerCase().includes(siteName.toLowerCase()) || siteName.toLowerCase().includes(s.name.toLowerCase()));
+    if (idx !== -1) {
+      setFocusedSiteIdx(idx);
+      setActiveTab('Focus');
+    }
+  };
   
   // Proposals state
   const [proposals, setProposals] = useState([
@@ -468,7 +476,14 @@ export default function App() {
                       {filteredSites.map(s => (
                         <tr key={s.id}>
                           <td>
-                            <div className="site-name">{s.name}</div>
+                            <div 
+                              className="site-name" 
+                              style={{ cursor: 'pointer', color: 'var(--accent)' }}
+                              onClick={() => handleSiteFocus(s.name)}
+                              data-tooltip="Click to deep-dive in Focus tab"
+                            >
+                              {s.name}
+                            </div>
                             <div className="muted small">{s.url}</div>
                           </td>
                           <td><span className="tag">{s.type}</span></td>
@@ -575,7 +590,14 @@ export default function App() {
                   }).map((s, idx) => (
                     <tr key={idx}>
                       <td>
-                        <div className="site-name">{s.name}</div>
+                        <div 
+                          className="site-name" 
+                          style={{ cursor: 'pointer', color: 'var(--accent)' }}
+                          onClick={() => handleSiteFocus(s.name)}
+                          data-tooltip="Click to deep-dive in Focus tab"
+                        >
+                          {s.name}
+                        </div>
                         <a href={s.url} target="_blank" rel="noopener noreferrer" className="muted small" style={{ textDecoration: 'none', color: 'var(--accent)' }}>
                           {s.url}
                         </a>
