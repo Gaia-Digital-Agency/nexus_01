@@ -1,12 +1,54 @@
 import { useEffect, useState } from 'react';
 
-const NAV = ['Dashboard', 'Analytics', 'Proposals', 'Deployments', 'Reports', 'Settings'];
+const NAV = ['Dashboard', 'Directory', 'Analytics', 'Proposals', 'Deployments', 'Reports', 'Settings'];
 const GROUPS = ['All', 'Emana Hotels', 'Tejas Spas', 'Mondo Surf', 'Independent'];
 
 function fmtMoney(n) {
   if (n == null) return '—';
   return '$' + Number(n).toLocaleString();
 }
+
+const DIRECTORY_SITES = [
+  // 1. gda-ce01 (WordPress)
+  { name: 'Viceroy Bali', url: 'https://viceroybali.com', type: 'WordPress', server: 'gda-ce01', status: 'active', accessible: 'Yes (SSH + WP-CLI)' },
+  { name: 'Aperitif Restaurant & Bar', url: 'https://aperitif.com', type: 'WordPress', server: 'gda-ce01', status: 'active', accessible: 'Yes (SSH + WP-CLI)' },
+  { name: 'Cascades Bali', url: 'https://cascadesbali.com', type: 'WordPress', server: 'gda-ce01', status: 'active', accessible: 'Yes (SSH + WP-CLI)' },
+  { name: 'Akoya Spa Bali', url: 'https://akoyaspabali.com', type: 'WordPress', server: 'gda-ce01', status: 'active', accessible: 'Yes (SSH + WP-CLI)' },
+  { name: 'Bali Catering Company', url: 'https://balicatering.com', type: 'WordPress', server: 'gda-ce01', status: 'active', accessible: 'Yes (SSH + WP-CLI)' },
+  { name: 'Bali Spa Guide', url: 'https://balispaguide.com', type: 'WordPress', server: 'gda-ce01', status: 'active', accessible: 'Yes (SSH + WP-CLI)' },
+  { name: 'Blossom Steakhouse', url: 'https://blossomsteakhouse.com', type: 'WordPress', server: 'gda-ce01', status: 'active', accessible: 'Yes (SSH + WP-CLI)' },
+  { name: 'Pinstripe Bar', url: 'https://pinstripebar.com', type: 'WordPress', server: 'gda-ce01', status: 'active', accessible: 'Yes (SSH + WP-CLI)' },
+  { name: 'Hubble Bali', url: 'https://hubblebali.com', type: 'WordPress', server: 'gda-ce01', status: 'active', accessible: 'Yes (SSH + WP-CLI)' },
+  { name: 'Hunter Motorcycles', url: 'https://huntermotorcycles.co.id', type: 'WordPress', server: 'gda-ce01', status: 'active', accessible: 'Yes (SSH + WP-CLI)' },
+  { name: 'Luxury Defined', url: 'https://luxurydefined.com.au', type: 'WordPress', server: 'gda-ce01', status: 'active', accessible: 'Yes (SSH + WP-CLI)' },
+  { name: 'YPI Asia', url: 'https://ypi-asia.com', type: 'WordPress', server: 'gda-ce01', status: 'active', accessible: 'Yes (SSH + WP-CLI)' },
+
+  // 2. hostinger-wp (WordPress)
+  { name: 'Gaia Digital Agency Apex', url: 'https://gaiada.com', type: 'WordPress', server: 'hostinger-wp', status: 'active', accessible: 'Yes (SSH + WP-CLI)' },
+  { name: 'Golden Monkey Bali', url: 'https://goldenmonkeybali.com', type: 'WordPress', server: 'hostinger-wp', status: 'active', accessible: 'Yes (SSH + WP-CLI)' },
+  { name: 'Golden Monkey Sanur', url: 'https://goldenmonkeysanur.com', type: 'WordPress', server: 'hostinger-wp', status: 'active', accessible: 'Yes (SSH + WP-CLI)' },
+  { name: 'Golden Monkey Ubud', url: 'https://goldenmonkeyubud.com', type: 'WordPress', server: 'hostinger-wp', status: 'active', accessible: 'Yes (SSH + WP-CLI)' },
+  { name: 'Dapur Raja Restaurant', url: 'https://dapurraja.com', type: 'WordPress', server: 'hostinger-wp', status: 'active', accessible: 'Yes (SSH + WP-CLI)' },
+  { name: 'Amerta Spa Ubud', url: 'https://amertaspa.com', type: 'WordPress', server: 'hostinger-wp', status: 'active', accessible: 'Yes (SSH + WP-CLI)' },
+  { name: 'Bali Hidden Villas', url: 'https://balihiddenvillas.com', type: 'WordPress', server: 'hostinger-wp', status: 'active', accessible: 'Yes (SSH + WP-CLI)' },
+  { name: 'Bali Hideaway Villas', url: 'https://balihideawayvillas.com', type: 'WordPress', server: 'hostinger-wp', status: 'active', accessible: 'Yes (SSH + WP-CLI)' },
+  { name: 'Bali Restaurant Guide', url: 'https://balirestaurantguide.com', type: 'WordPress', server: 'hostinger-wp', status: 'active', accessible: 'Yes (SSH + WP-CLI)' },
+  { name: 'Dreamcatcher Villas', url: 'https://dreamcatchervillas.com', type: 'WordPress', server: 'hostinger-wp', status: 'active', accessible: 'Yes (SSH + WP-CLI)' },
+  { name: 'Enzo Cafe Ubud', url: 'https://enzocafeubud.com', type: 'WordPress', server: 'hostinger-wp', status: 'active', accessible: 'Yes (SSH + WP-CLI)' },
+  { name: 'Enzo Gelato Bali', url: 'https://enzogelatobali.com', type: 'WordPress', server: 'hostinger-wp', status: 'active', accessible: 'Yes (SSH + WP-CLI)' },
+  { name: 'Enzo Sushi Train', url: 'https://enzosushitrain.com', type: 'WordPress', server: 'hostinger-wp', status: 'active', accessible: 'Yes (SSH + WP-CLI)' },
+  { name: 'Hair Salon Ubud', url: 'https://hairsalonubud.com', type: 'WordPress', server: 'hostinger-wp', status: 'active', accessible: 'Yes (SSH + WP-CLI)' },
+  { name: 'Nail Salon Ubud', url: 'https://nailsalonubud.com', type: 'WordPress', server: 'hostinger-wp', status: 'active', accessible: 'Yes (SSH + WP-CLI)' },
+  { name: 'Nusa Penida Tourism', url: 'https://nusapenida.org', type: 'WordPress', server: 'hostinger-wp', status: 'active', accessible: 'Yes (SSH + WP-CLI)' },
+  { name: 'Ubud Beauty Centre', url: 'https://ubudbeautycentre.com', type: 'WordPress', server: 'hostinger-wp', status: 'active', accessible: 'Yes (SSH + WP-CLI)' },
+
+  // 3. gda-pn01 (NodeJS)
+  { name: 'Essential Bali Portal', url: 'https://essentialbali.com', type: 'NodeJS', server: 'gda-pn01', status: 'active', accessible: 'Yes (SSH + PM2)' },
+  { name: 'Bali Girls Web App', url: 'https://baligirls.gaiada2.online', type: 'NodeJS', server: 'gda-pn01', status: 'active', accessible: 'Yes (SSH + PM2)' },
+  { name: 'Blossom / School Catering', url: 'https://blossomcatering.online', type: 'NodeJS', server: 'gda-pn01', status: 'active', accessible: 'Yes (SSH + PM2)' },
+  { name: 'Gaia Digital Agency Gateway', url: 'https://gaiadaweb.gaiada2.online', type: 'NodeJS', server: 'gda-pn01', status: 'active', accessible: 'Yes (SSH + PM2)' },
+  { name: 'Jackaroo Digital Agency', url: 'https://jackaroodigital.com.au', type: 'NodeJS', server: 'gda-pn01', status: 'active', accessible: 'Yes (SSH + PM2)' }
+];
 
 const CAPABILITIES = [
   {
@@ -84,6 +126,8 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('Dashboard');
   const [selectedGroup, setSelectedGroup] = useState('All');
   const [activeAccordion, setActiveAccordion] = useState(null);
+  const [selectedServerFilter, setSelectedServerFilter] = useState('All');
+  const [directorySearch, setDirectorySearch] = useState('');
   
   // Proposals state
   const [proposals, setProposals] = useState([
@@ -154,7 +198,7 @@ export default function App() {
     <div className="app">
       {/* Sidebar Section */}
       <aside className="sidebar">
-        <div className="logo">GN</div>
+        <div className="logo">Nexus</div>
         {NAV.map((n) => (
           <div 
             key={n} 
@@ -176,7 +220,6 @@ export default function App() {
           <div className="badge-row">
             <span className={'dot ' + (health?.db === 'up' || true ? 'ok' : 'err')} />
             <span className="muted">DB Connected</span>
-            <span className="avatar">RO</span>
           </div>
         </header>
 
@@ -277,6 +320,77 @@ export default function App() {
               </div>
             </div>
           </>
+        )}
+
+        {/* ==================== VIEW 1.5: DIRECTORY ==================== */}
+        {activeTab === 'Directory' && (
+          <section className="panel">
+            <div className="panel-head-col">
+              <div className="panel-head">
+                <h2>Platform Managed Sites Directory</h2>
+                <span className="badge-source">{DIRECTORY_SITES.length} Sites Registered</span>
+              </div>
+              
+              {/* Server Filter Tabs & Search Bar */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 20px 14px 20px', gap: '16px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {['All', 'gda-ce01', 'hostinger-wp', 'gda-pn01'].map(srv => (
+                    <button 
+                      key={srv} 
+                      className={'group-tab' + (selectedServerFilter === srv ? ' active' : '')}
+                      onClick={() => setSelectedServerFilter(srv)}
+                    >
+                      {srv === 'All' ? 'All Servers' : srv}
+                    </button>
+                  ))}
+                </div>
+                <input 
+                  type="text" 
+                  placeholder="Search site name or URL..." 
+                  value={directorySearch}
+                  onChange={(e) => setDirectorySearch(e.target.value)}
+                  style={{
+                    padding: '6px 14px', background: 'var(--darker)', border: '1px solid rgba(255,255,255,0.05)',
+                    borderRadius: '20px', color: 'var(--text)', fontSize: '13px', width: '240px'
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Site Name & URL</th>
+                    <th>Type</th>
+                    <th>Hosting Server</th>
+                    <th>Status</th>
+                    <th>Access / Connectivity</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {DIRECTORY_SITES.filter(s => {
+                    const matchesServer = selectedServerFilter === 'All' || s.server === selectedServerFilter;
+                    const matchesSearch = s.name.toLowerCase().includes(directorySearch.toLowerCase()) || s.url.toLowerCase().includes(directorySearch.toLowerCase());
+                    return matchesServer && matchesSearch;
+                  }).map((s, idx) => (
+                    <tr key={idx}>
+                      <td>
+                        <div className="site-name">{s.name}</div>
+                        <a href={s.url} target="_blank" rel="noopener noreferrer" className="muted small" style={{ textDecoration: 'none', color: 'var(--accent)' }}>
+                          {s.url}
+                        </a>
+                      </td>
+                      <td><span className={'tag ' + (s.type === 'NodeJS' ? 'aeo' : '')}>{s.type}</span></td>
+                      <td><span className="site-name" style={{ fontFamily: 'monospace' }}>{s.server}</span></td>
+                      <td><span className="status ok">Active</span></td>
+                      <td style={{ fontSize: '13px', color: 'var(--muted)' }}>{s.accessible}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
         )}
 
         {/* ==================== VIEW 2: ANALYTICS ==================== */}

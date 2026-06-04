@@ -24,9 +24,9 @@ body {
   display: flex; flex-direction: column; gap: 8px; border-right: 1px solid var(--darker);
 }
 .logo {
-  width: 44px; height: 44px; border-radius: 12px; background: var(--accent);
+  height: 44px; border-radius: 12px; background: var(--accent);
   color: #fff; font-weight: 600; display: flex; align-items: center; justify-content: center;
-  margin-bottom: 24px; font-size: 18px;
+  margin-bottom: 24px; font-size: 18px; padding: 0 16px; align-self: flex-start;
 }
 .nav-item { padding: 12px 16px; border-radius: 8px; color: var(--muted); cursor: pointer; font-weight: 500; transition: all 0.2s; }
 .nav-item:hover { background: var(--darker); color: var(--text); }
