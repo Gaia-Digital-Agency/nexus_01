@@ -503,6 +503,95 @@ export default function App() {
                 </div>
               </div>
             </section>
+
+            {/* Card 3: Platform Preferences & Scheduler */}
+            <section className="panel" style={{ margin: 0 }}>
+              <div className="panel-head">
+                <h2>Platform Preferences & Scheduler</h2>
+                <span className="badge-source">Local Config</span>
+              </div>
+              <div className="pad">
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
+                  {/* Column 1: AI Copywriting Presets */}
+                  <div style={{ background: 'var(--darker)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                    <h4 style={{ fontSize: '13px', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '12px', fontWeight: 600, letterSpacing: '0.05em' }}>AI Writer Presets</h4>
+                    <div style={{ marginBottom: '12px' }}>
+                      <label style={{ display: 'block', fontSize: '12px', color: 'var(--muted)', marginBottom: '6px' }}>Default Content Persona</label>
+                      <select style={{ width: '100%', padding: '8px 12px', background: 'var(--surface)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '6px', color: 'var(--text)' }}>
+                        <option value="maya">Maya (Local Foodie)</option>
+                        <option value="komang">Komang (Activities & Wellness)</option>
+                        <option value="putu">Putu (Cultural Insider)</option>
+                        <option value="sari">Sari (Nightlife & Events)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', color: 'var(--muted)', marginBottom: '6px' }}>Target Language / Locale</label>
+                      <select style={{ width: '100%', padding: '8px 12px', background: 'var(--surface)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '6px', color: 'var(--text)' }}>
+                        <option value="en-GB">British English (en-GB) - Default</option>
+                        <option value="en-US">American English (en-US)</option>
+                        <option value="en-AU">Australian English (en-AU)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Column 2: Cron Scheduling Intervals */}
+                  <div style={{ background: 'var(--darker)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                    <h4 style={{ fontSize: '13px', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '12px', fontWeight: 600, letterSpacing: '0.05em' }}>Diagnostics Scheduler</h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13px' }}>
+                        <input type="checkbox" defaultChecked style={{ accentColor: 'var(--accent)' }} />
+                        <div>
+                          <strong>Daily Anomaly Scan</strong>
+                          <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Triggers traffic_drops checks daily at 04:00</div>
+                        </div>
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13px' }}>
+                        <input type="checkbox" defaultChecked style={{ accentColor: 'var(--accent)' }} />
+                        <div>
+                          <strong>Weekly Opportunity Sweep</strong>
+                          <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Extracts quick_wins and content_recommendations</div>
+                        </div>
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13px' }}>
+                        <input type="checkbox" defaultChecked style={{ accentColor: 'var(--accent)' }} />
+                        <div>
+                          <strong>Monthly Site Health Crawl</strong>
+                          <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Launches Semrush Site Audits for all 50 sites</div>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Column 3: Notification Dispatch Targets */}
+                  <div style={{ background: 'var(--darker)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                    <h4 style={{ fontSize: '13px', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '12px', fontWeight: 600, letterSpacing: '0.05em' }}>Notification Targets</h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13px' }}>
+                        <input type="checkbox" defaultChecked style={{ accentColor: 'var(--accent)' }} />
+                        <div>
+                          <strong>Discord Bot Gateways</strong>
+                          <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Pushes real-time alerts to thread-channels</div>
+                        </div>
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13px' }}>
+                        <input type="checkbox" defaultChecked style={{ accentColor: 'var(--accent)' }} />
+                        <div>
+                          <strong>Telegram Operator DM</strong>
+                          <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Delivers pending review notifications</div>
+                        </div>
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13px' }}>
+                        <input type="checkbox" style={{ accentColor: 'var(--accent)' }} />
+                        <div>
+                          <strong>Email Summary (PDF)</strong>
+                          <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Sends weekly PDF briefings to Roger's inbox</div>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
           </div>
         )}
 

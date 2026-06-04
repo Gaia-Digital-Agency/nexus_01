@@ -178,3 +178,26 @@ th { font-size: 12px; color: var(--muted); font-weight: 500; text-transform: upp
 .muted { color: var(--muted); }
 .err { color: var(--danger); }
 .foot { margin-top: 24px; font-size: 12px; text-align: center; }
+
+/* Mobile Responsiveness & Media Queries */
+@media (max-width: 1024px) {
+  .kpis { grid-template-columns: repeat(2, 1fr); }
+  .split-panels { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .app { flex-direction: column; }
+  .sidebar {
+    width: 100%; border-right: none; border-bottom: 1px solid var(--darker);
+    flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between;
+    padding: 16px; gap: 12px;
+  }
+  .logo { margin-bottom: 0; }
+  .nav-item { padding: 6px 12px; font-size: 13px; }
+  .main { padding: 16px; gap: 16px; }
+  .topbar { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .badge-row { width: 100%; justify-content: space-between; margin-top: 4px; }
+  .kpis { grid-template-columns: 1fr; }
+  .split-panels { grid-template-columns: 1fr; }
+  .floating-action-bar { width: 90%; gap: 16px; flex-direction: column; border-radius: 16px; padding: 16px; }
+}
