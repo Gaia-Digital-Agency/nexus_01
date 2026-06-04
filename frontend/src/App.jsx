@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-const NAV = ['Dashboard', 'Directory', 'Focus', 'Analytics', 'Proposals', 'Deployments', 'Reports', 'Settings'];
+const NAV = ['Dashboard', 'Directory', 'Focus', 'Analytics', 'Proposals', 'Deployments', 'Reports', 'Settings', 'Guide'];
 const GROUPS = ['All', 'Emana Hotels', 'Tejas Spas', 'Mondo Surf', 'Independent'];
 
 const NAV_TOOLTIPS = {
@@ -11,7 +11,8 @@ const NAV_TOOLTIPS = {
   'Proposals': 'Staged copywriter & structural recommendations',
   'Deployments': 'Real-time Nginx/WP-CLI execution tracker',
   'Reports': 'AI-driven period performance briefings',
-  'Settings': 'Platform config, credentials, and schedules'
+  'Settings': 'Platform config, credentials, and schedules',
+  'Guide': 'Interactive operator playbook & workflow walkthrough'
 };
 
 function fmtMoney(n) {
@@ -306,6 +307,11 @@ export default function App() {
   const [selectedServerFilter, setSelectedServerFilter] = useState('All');
   const [directorySearch, setDirectorySearch] = useState('');
   const [focusedSiteIdx, setFocusedSiteIdx] = useState(0);
+  const [activeChatProposal, setActiveChatProposal] = useState(null);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [proposalsFilter, setProposalsFilter] = useState('pending');
 
   const handleSiteFocus = (siteName) => {
     const idx = DIRECTORY_SITES.findIndex(s => s.name.toLowerCase() === siteName.toLowerCase() || s.name.toLowerCase().includes(siteName.toLowerCase()) || siteName.toLowerCase().includes(s.name.toLowerCase()));
@@ -315,15 +321,82 @@ export default function App() {
     }
   };
   
-  // Proposals state
+  // Proposals state with real life status categories
   const [proposals, setProposals] = useState([
-    { id: 'prop-1', site: 'Viceroy Bali', type: 'Meta Title', target: '/spa-menu', desc: 'Shorten title to "Luxury Spa Ubud | Viceroy Bali" to avoid truncation', risk: 'Low', status: 'pending' },
+    { id: 'prop-1', site: 'Viceroy Bali', type: 'Meta Title', target: '/spa-menu', desc: 'Shorten title on /spa-menu to "Akoya Spa & Wellness | Viceroy Bali" (≤60 chars) to prevent search truncation', risk: 'Low', status: 'pending' },
     { id: 'prop-2', site: 'Tejas Spa Akatara', type: 'Schema Markup', target: '/about', desc: 'Inject FAQ Schema (5 question blocks) to optimize for generative search summaries', risk: 'Low', status: 'pending' },
     { id: 'prop-3', site: 'Aperitif Restaurant', type: 'Alt Text', target: '/gallery', desc: 'Add descriptive alt tags to 14 high-resolution images for image search discovery', risk: 'Low', status: 'pending' },
-    { id: 'prop-4', site: 'Airbali Helicopter', type: 'Meta Description', target: '/booking', desc: 'Rewrite description to emphasize instant bookings and current pricing', risk: 'Medium', status: 'pending' },
+    { id: 'prop-4', site: 'Airbali Helicopter', type: 'Meta Description', target: '/booking', desc: 'Rewrite description on /booking to emphasize instant bookings and current pricing', risk: 'Medium', status: 'pending' },
+    { id: 'prop-5', site: 'Golden Monkey Ubud', type: 'FAQ Schema', target: '/menu', desc: 'Deploy FAQPage schema to lock in rich snippet answers for Chinese dining queries', risk: 'Low', status: 'accepted' },
+    { id: 'prop-6', site: 'Mondo Surf Village', type: 'Meta Description', target: '/surf-lessons', desc: 'Optimize meta description copy to drive search clicks from beginner surfers', risk: 'Low', status: 'rejected' },
+    { id: 'prop-7', site: 'Tejas Spa Akatara', type: 'Schema Markup', target: '/about', desc: 'Inject local business structured markup to boost map ranking authority', risk: 'Low', status: 'archived' }
   ]);
   const [selectedProps, setSelectedProps] = useState([]);
   const [showPropsAlert, setShowPropsAlert] = useState(false);
+
+  const startProposalChat = (prop) => {
+    setActiveChatProposal(prop);
+    setChatMessages([
+      {
+        id: 'msg-init',
+        sender: 'hermes',
+        text: `Hello Roger! I generated this proposal for **${prop.site}** under **${prop.type}** targeting page **${prop.target}**. Under the active copywriting guidelines (British English, no banned phrases), we can refine this description right here. What changes would you like me to make?`
+      }
+    ]);
+    setChatInput('');
+  };
+
+  const handleSendChatMessage = () => {
+    if (!chatInput.trim() || !activeChatProposal) return;
+    
+    const userMsg = {
+      id: 'msg-' + Date.now(),
+      sender: 'user',
+      text: chatInput
+    };
+    
+    setChatMessages(prev => [...prev, userMsg]);
+    const currentInput = chatInput;
+    setChatInput('');
+    setIsTyping(true);
+    
+    setTimeout(() => {
+      let responseText = "I have updated the proposal based on your feedback.";
+      let updatedDesc = activeChatProposal.desc;
+      
+      const textLower = currentInput.toLowerCase();
+      if (textLower.includes('shorten') || textLower.includes('shorter') || textLower.includes('tighter')) {
+        updatedDesc = activeChatProposal.desc.split('|')[0].trim() || "Optimized metadata";
+        responseText = `Yes, Roger. I have tightened the copy of the recommendation to: **"${updatedDesc}"**. This falls well within our 60-character SEO title threshold. I have saved this change to the proposal!`;
+      } else if (textLower.includes('change target') || textLower.includes('page to') || textLower.includes('target to')) {
+        const match = currentInput.match(/(?:page to|target to|page)\s+(\/[a-zA-Z0-9_\-\/]+)/i);
+        const newPage = match ? match[1] : '/optimized';
+        setProposals(prev => prev.map(p => p.id === activeChatProposal.id ? { ...p, target: newPage } : p));
+        responseText = `Understood. I have updated the target page URL from **${activeChatProposal.target}** to **${newPage}** inside the system properties.`;
+      } else if (textLower.includes('change desc') || textLower.includes('recommendation to') || textLower.includes('change text to')) {
+        const cleanText = currentInput.replace(/change desc to|change text to|recommendation to/gi, '').trim();
+        updatedDesc = cleanText || activeChatProposal.desc;
+        responseText = `Perfect. I have updated the recommendation text to: **"${updatedDesc}"**. This is fully compliant with our en-GB copy rules.`;
+      } else {
+        responseText = `Acknowledged, Roger. I have recorded your feedback and updated the proposal properties to reflect: **"${currentInput}"**. Staging is updated and ready for your decision.`;
+      }
+      
+      setProposals(prev => prev.map(p => p.id === activeChatProposal.id ? { ...p, desc: updatedDesc } : p));
+      setActiveChatProposal(prev => ({ ...prev, desc: updatedDesc }));
+      
+      setChatMessages(prev => [...prev, {
+        id: 'msg-reply-' + Date.now(),
+        sender: 'hermes',
+        text: responseText
+      }]);
+      setIsTyping(false);
+    }, 1200);
+  };
+
+  const handleUpdateProposalStatus = (id, newStatus) => {
+    setProposals(prev => prev.map(p => p.id === id ? { ...p, status: newStatus } : p));
+    setActiveChatProposal(null);
+  };
 
   useEffect(() => {
     fetch('/api/health').then(r => r.json()).then(setHealth).catch(() => setHealth({ status: 'error' }));
@@ -844,68 +917,176 @@ export default function App() {
 
         {/* ==================== VIEW 3: PROPOSALS ==================== */}
         {activeTab === 'Proposals' && (
-          <section className="panel proposals-panel">
+          <section className="panel proposals-panel" style={{ position: 'relative' }}>
             <div className="panel-head">
-              <h2>Bulk Proposal Staging Workspace</h2>
-              <span className="badge-source">Phase 2 Review</span>
+              <h2>Proposals Lifecycle & Staging</h2>
+              <span className="badge-source">Hermes AI Engine</span>
             </div>
 
-            {showPropsAlert && (
-              <div className="alert-success">
-                ✓ Success! Selected proposals have been approved and staged for automated execution!
-              </div>
-            )}
-
-            <div className="pad-h-18 pad-t-12 pad-b-12 bg-darker">
-              <p className="muted small">Filter by low-risk change categories to quickly approve, edit, or reject Hermes-generated suggestions across all 50 properties.</p>
+            {/* Lifecycle State Cards */}
+            <div className="pad-h-18 pad-t-12 pad-b-12" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', padding: '16px' }}>
+              {[
+                { filter: 'pending', label: 'Pending Proposals', count: proposals.filter(p => p.status === 'pending').length, desc: 'Fresh drafts awaiting review', color: 'var(--warning)' },
+                { filter: 'accepted', label: 'Accepted / Staged', count: proposals.filter(p => p.status === 'accepted').length, desc: 'Queued for deployment', color: 'var(--success)' },
+                { filter: 'rejected', label: 'Rejected', count: proposals.filter(p => p.status === 'rejected').length, desc: 'Dismissed suggestions', color: 'var(--danger)' },
+                { filter: 'archived', label: 'Archived', count: proposals.filter(p => p.status === 'archived').length, desc: 'Already deployed in history', color: 'var(--muted)' }
+              ].map(card => (
+                <div 
+                  key={card.filter}
+                  onClick={() => setProposalsFilter(card.filter)}
+                  style={{
+                    background: 'var(--darker)', padding: '16px', borderRadius: '8px', cursor: 'pointer',
+                    border: '1px solid ' + (proposalsFilter === card.filter ? 'var(--accent)' : 'rgba(255,255,255,0.03)'),
+                    transition: 'all 0.2s', position: 'relative'
+                  }}
+                  data-tooltip={card.desc}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase' }}>{card.label}</span>
+                    <span style={{ background: card.color + '20', color: card.color, padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 700 }}>{card.count}</span>
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{card.desc}</div>
+                </div>
+              ))}
             </div>
 
-            <table className="proposals-table">
-              <thead>
-                <tr>
-                  <th style={{ width: '40px' }}>
-                    <input 
-                      type="checkbox" 
-                      checked={selectedProps.length === proposals.length}
-                      onChange={handleSelectAllProps}
-                    />
-                  </th>
-                  <th>Target Property</th><th>Change Type</th><th>Target Page</th><th>Hermes Recommendation</th><th>Risk</th><th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {proposals.map(p => (
-                  <tr key={p.id} className={p.status === 'approved' ? 'row-approved' : ''}>
-                    <td>
-                      <input 
-                        type="checkbox" 
-                        disabled={p.status === 'approved'}
-                        checked={selectedProps.includes(p.id)}
-                        onChange={() => handlePropCheck(p.id)}
-                      />
-                    </td>
-                    <td><span className="prop-site">{p.site}</span></td>
-                    <td><span className="prop-type">{p.type}</span></td>
-                    <td><span className="prop-target font-12">{p.target}</span></td>
-                    <td><div className="prop-desc small">{p.desc}</div></td>
-                    <td><span className={'badge-risk ' + p.risk.toLowerCase()}>{p.risk}</span></td>
-                    <td>
-                      <span className={'status-badge ' + p.status}>
-                        {p.status === 'approved' ? 'staged (approved)' : 'pending review'}
-                      </span>
-                    </td>
+            {/* Proposals List for Selected Category */}
+            <div className="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Target Property</th><th>Change Type</th><th>Target Page</th><th>Recommendation Text</th><th>Risk</th><th>Status</th><th>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {proposals.filter(p => p.status === proposalsFilter).length === 0 ? (
+                    <tr>
+                      <td colSpan="7" style={{ textAlign: 'center', padding: '32px', color: 'var(--muted)' }}>
+                        No proposals are currently under this lifecycle state.
+                      </td>
+                    </tr>
+                  ) : (
+                    proposals.filter(p => p.status === proposalsFilter).map(p => (
+                      <tr key={p.id}>
+                        <td><span className="prop-site" style={{ fontWeight: 600 }}>{p.site}</span></td>
+                        <td><span className="prop-type">{p.type}</span></td>
+                        <td><span className="prop-target font-12">{p.target}</span></td>
+                        <td><div className="prop-desc small">{p.desc}</div></td>
+                        <td><span className={'badge-risk ' + p.risk.toLowerCase()}>{p.risk}</span></td>
+                        <td>
+                          <span className={'status-badge ' + p.status}>
+                            {p.status}
+                          </span>
+                        </td>
+                        <td>
+                          <button 
+                            className="btn-primary" 
+                            style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '15px', cursor: 'pointer' }}
+                            onClick={() => startProposalChat(p)}
+                            data-tooltip="Chat with Hermes & modify this proposal"
+                          >
+                            Inspect & Chat
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
 
-            {/* Floating Action Bar */}
-            {selectedProps.length > 0 && (
-              <div className="floating-action-bar">
-                <span className="selected-count">{selectedProps.length} proposal{selectedProps.length === 1 ? '' : 's'} selected</span>
-                <div className="action-buttons">
-                  <button className="btn-secondary">Reject Selected</button>
-                  <button className="btn-primary" onClick={handleBulkApprove}>Approve & Stage Selected</button>
+            {/* Hermes Chat Drawer/Modal Panel */}
+            {activeChatProposal && (
+              <div style={{
+                position: 'fixed', top: 0, right: 0, width: '450px', height: '100%',
+                background: 'var(--surface)', borderLeft: '1px solid var(--darker)',
+                boxShadow: '-10px 0 30px rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', flexDirection: 'column',
+                animation: 'slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+              }}>
+                {/* Chat Header */}
+                <div style={{ padding: '20px', borderBottom: '1px solid var(--darker)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <h3 style={{ fontSize: '15px', color: 'var(--text)', fontWeight: 600, margin: 0 }}>Chat with Hermes</h3>
+                    <div className="muted small" style={{ marginTop: '2px' }}>{activeChatProposal.site} • {activeChatProposal.type}</div>
+                  </div>
+                  <button 
+                    onClick={() => setActiveChatProposal(null)}
+                    style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '18px', cursor: 'pointer' }}
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* Proposals Editor Preview Block */}
+                <div style={{ background: 'var(--darker)', padding: '14px', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                  <div className="capability-section-title" style={{ marginBottom: '8px' }}>Active Recommendation (Editable)</div>
+                  <div style={{ fontSize: '12px', lineHeight: '1.4', background: 'var(--surface)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.02)' }}>
+                    <div><strong>Page:</strong> <span style={{ fontFamily: 'monospace', color: 'var(--accent)' }}>{activeChatProposal.target}</span></div>
+                    <div style={{ marginTop: '4px' }}><strong>Text:</strong> "{activeChatProposal.desc}"</div>
+                  </div>
+                </div>
+
+                {/* Messages Body */}
+                <div style={{ flex: 1, padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {chatMessages.map((msg) => (
+                    <div 
+                      key={msg.id}
+                      style={{
+                        alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start',
+                        maxWidth: '85%', background: msg.sender === 'user' ? 'var(--accent)' : 'var(--darker)',
+                        padding: '10px 14px', borderRadius: '12px', fontSize: '13px', lineHeight: '1.4',
+                        border: '1px solid ' + (msg.sender === 'user' ? 'var(--accent)' : 'rgba(255,255,255,0.03)')
+                      }}
+                    >
+                      {msg.text}
+                    </div>
+                  ))}
+                  {isTyping && (
+                    <div style={{ alignSelf: 'flex-start', color: 'var(--muted)', fontSize: '12px', fontStyle: 'italic', paddingLeft: '8px' }}>
+                      Hermes is typing...
+                    </div>
+                  )}
+                </div>
+
+                {/* Input Area */}
+                <div style={{ padding: '16px', borderTop: '1px solid var(--darker)', display: 'flex', gap: '8px' }}>
+                  <input 
+                    type="text" 
+                    placeholder="Ask Hermes to shorten or refine..."
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSendChatMessage()}
+                    style={{
+                      flex: 1, padding: '8px 12px', background: 'var(--darker)',
+                      border: '1px solid rgba(255,255,255,0.05)', borderRadius: '20px', color: 'var(--text)',
+                      fontSize: '13px'
+                    }}
+                  />
+                  <button 
+                    className="btn-primary" 
+                    onClick={handleSendChatMessage}
+                    style={{ borderRadius: '20px', padding: '6px 14px', fontSize: '12px' }}
+                  >
+                    Send
+                  </button>
+                </div>
+
+                {/* Staging Decisions Actions Bar */}
+                <div style={{ padding: '16px', borderTop: '1px solid var(--darker)', display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
+                  <button 
+                    className="btn-secondary" 
+                    onClick={() => handleUpdateProposalStatus(activeChatProposal.id, 'rejected')}
+                    style={{ flex: 1, padding: '10px', fontSize: '13px', borderRadius: '8px', color: 'var(--danger)', cursor: 'pointer' }}
+                  >
+                    Reject Proposal
+                  </button>
+                  <button 
+                    className="btn-primary" 
+                    onClick={() => handleUpdateProposalStatus(activeChatProposal.id, 'accepted')}
+                    style={{ flex: 1, padding: '10px', fontSize: '13px', borderRadius: '8px', background: 'var(--success)', border: 'none', cursor: 'pointer' }}
+                  >
+                    Accept & Stage
+                  </button>
                 </div>
               </div>
             )}
@@ -1124,6 +1305,89 @@ export default function App() {
               </div>
             </section>
           </div>
+        )}
+
+        {/* ==================== VIEW 7: GUIDE ==================== */}
+        {activeTab === 'Guide' && (
+          <section className="panel">
+            <div className="panel-head">
+              <h2>Operator Playbook & Workflow Walkthrough</h2>
+              <span className="badge-source">GDA Playbook</span>
+            </div>
+            <div className="pad" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <p className="muted" style={{ lineHeight: '1.5', fontSize: '13.5px' }}>
+                Welcome to the official **Gaia Nexus operator manual**. This guide outlines our exact decision and execution loop for managing GDA's 34 multi-server active properties.
+              </p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
+                {/* Step 1 */}
+                <div style={{ background: 'var(--darker)', padding: '20px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
+                    <span style={{ background: 'var(--accent)', color: '#fff', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>1</span>
+                    <h3 style={{ fontSize: '14px', margin: 0, fontWeight: 600 }}>Portfolio Audit (Dashboard)</h3>
+                  </div>
+                  <p className="muted small" style={{ lineHeight: '1.5' }}>
+                    Start here to get an eagle-eye view of your entire fleet. Review aggregated sessions, ROAS metrics across paid keywords, and outstanding change proposals.
+                  </p>
+                </div>
+
+                {/* Step 2 */}
+                <div style={{ background: 'var(--darker)', padding: '20px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
+                    <span style={{ background: 'var(--accent)', color: '#fff', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>2</span>
+                    <h3 style={{ fontSize: '14px', margin: 0, fontWeight: 600 }}>Server Mapping & Competitors (Directory)</h3>
+                  </div>
+                  <p className="muted small" style={{ lineHeight: '1.5' }}>
+                    Inspect individual hosting nodes (`gda-ce01`, `hostinger-wp`, `gda-pn01`). Drill down on competitor Domain Authority (DA) gaps and keyword overlaps.
+                  </p>
+                </div>
+
+                {/* Step 3 */}
+                <div style={{ background: 'var(--darker)', padding: '20px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
+                    <span style={{ background: 'var(--accent)', color: '#fff', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>3</span>
+                    <h3 style={{ fontSize: '14px', margin: 0, fontWeight: 600 }}>Flagship Deep-Dive (Focus)</h3>
+                  </div>
+                  <p className="muted small" style={{ lineHeight: '1.5' }}>
+                    Click on any site's name in Dashboard or Directory lists to hop straight into its Focus page. Audits include custom AEO conversational search values (ChatGPT traffic) and GTM health.
+                  </p>
+                </div>
+
+                {/* Step 4 */}
+                <div style={{ background: 'var(--darker)', padding: '20px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
+                    <span style={{ background: 'var(--accent)', color: '#fff', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>4</span>
+                    <h3 style={{ fontSize: '14px', margin: 0, fontWeight: 600 }}>Proposal Negotiation Chat (Proposals)</h3>
+                  </div>
+                  <p className="muted small" style={{ lineHeight: '1.5' }}>
+                    Review draft suggestions under 4 separate cards: **Pending, Accepted, Rejected, and Archived**. Clicking any proposal opens an active chat window with Hermes to refine copy before staging.
+                  </p>
+                </div>
+
+                {/* Step 5 */}
+                <div style={{ background: 'var(--darker)', padding: '20px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
+                    <span style={{ background: 'var(--accent)', color: '#fff', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>5</span>
+                    <h3 style={{ fontSize: '14px', margin: 0, fontWeight: 600 }}>Automated Executions (Deployments)</h3>
+                  </div>
+                  <p className="muted small" style={{ lineHeight: '1.5' }}>
+                    Monitor real-time progress bars as Accepted proposals queue for Nginx/WP-CLI execution. The agent deploys the exact, custom-negotiated specifications securely via SSH.
+                  </p>
+                </div>
+
+                {/* Step 6 */}
+                <div style={{ background: 'var(--darker)', padding: '20px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
+                    <span style={{ background: 'var(--accent)', color: '#fff', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>6</span>
+                    <h3 style={{ fontSize: '14px', margin: 0, fontWeight: 600 }}>Impact Briefings (Reports)</h3>
+                  </div>
+                  <p className="muted small" style={{ lineHeight: '1.5' }}>
+                    Download period-brief summaries measuring organic lifts, AEO acquisition values, and conversion milestones. Ready for direct PDF exports.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
         )}
 
         <footer className="foot muted">Gaia Nexus Platform • Built for Roger • Stack: Hermes · PostgreSQL · Python · React · Vite · Tailwind · Node</footer>
