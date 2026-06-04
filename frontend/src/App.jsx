@@ -306,15 +306,25 @@ function getLighthouseData(site) {
   }
   const seed = Math.abs(hash);
   
-  const perf = (seed % 20) + 75; // Performance: 75 - 95
-  const acc = (seed % 10) + 88;  // Accessibility: 88 - 98
-  const bp = (seed % 12) + 85;   // Best Practices: 85 - 97
-  const seo = (seed % 8) + 92;    // SEO: 92 - 100
+  let perf = (seed % 20) + 75; // Performance: 75 - 95
+  let acc = (seed % 10) + 88;  // Accessibility: 88 - 98
+  let bp = (seed % 12) + 85;   // Best Practices: 85 - 97
+  let seo = (seed % 8) + 92;    // SEO: 92 - 100
+
+  // Induce a few realistic 'red' (under 50) scores for small, unoptimized sites to test our alerting system!
+  if (site.name.includes('Bali Spa Guide')) {
+    perf = 42; // Low performance
+    bp = 48;   // Low best practices
+  } else if (site.name.includes('Nail Salon Ubud')) {
+    perf = 38; // Critical low performance
+  } else if (site.name.includes('YPI Asia')) {
+    seo = 45;  // Low SEO indexing score
+  }
   
-  const fcp = ((seed % 10) / 10 + 0.8).toFixed(1) + 's';
-  const lcp = ((seed % 15) / 10 + 1.8).toFixed(1) + 's';
-  const inp = (seed % 120) + 60 + 'ms';
-  const cls = ((seed % 8) / 100).toFixed(2);
+  const fcp = perf < 50 ? '3.8s' : ((seed % 10) / 10 + 0.8).toFixed(1) + 's';
+  const lcp = perf < 50 ? '5.6s' : ((seed % 15) / 10 + 1.8).toFixed(1) + 's';
+  const inp = perf < 50 ? '340ms' : (seed % 120) + 60 + 'ms';
+  const cls = perf < 50 ? '0.28' : ((seed % 8) / 100).toFixed(2);
   
   return {
     performance: perf,
@@ -327,7 +337,11 @@ function getLighthouseData(site) {
       inp,
       cls
     },
-    recommendations: [
+    recommendations: perf < 50 ? [
+      { id: 'lh-rec-1', title: 'Reduce JavaScript execution time', impact: 'Critical', savings: '1.8s', desc: 'Large unoptimized WordPress modules are blocking the main JS thread.' },
+      { id: 'lh-rec-2', title: 'Serve images in next-gen formats (WebP)', impact: 'High', savings: '1.2s', desc: '14 large PNG banner assets are clogging the page load. Convert to WebP.' },
+      { id: 'lh-rec-3', title: 'Eliminate render-blocking CSS resources', impact: 'High', savings: '0.8s', desc: 'Move non-critical third-party styles to defer loading.' }
+    ] : [
       { id: 'lh-rec-1', title: 'Eliminate render-blocking resources', impact: 'High', savings: '0.8s', desc: 'Defer loading non-essential NGINX and theme CSS scripts on initial mobile load.' },
       { id: 'lh-rec-2', title: 'Defer offscreen images (Lazy Load)', impact: 'Medium', savings: '0.4s', desc: 'Apply loading="lazy" attribute to all remaining images below the first viewport.' },
       { id: 'lh-rec-3', title: 'Reduce unused JavaScript', impact: 'Medium', savings: '0.3s', desc: 'Clean up stale GTM custom triggers and unused tracking scripts in the container.' }
@@ -1247,44 +1261,92 @@ export default function App() {
                     </div>
 
                     <div className="split-panels">
-                      {/* Core Web Vitals Metrics (Left) */}
-                      <div className="opportunity-card" style={{ margin: 0 }}>
-                        <div className="capability-section-title">Core Web Vitals Field Metrics</div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
-                          <div className="credential-row">
-                            <span className="muted">First Contentful Paint (FCP):</span>
-                            <strong style={{ color: 'var(--success)' }}>{data.metrics.fcp} (Good)</strong>
+                      {/* Left Column: Metrics & Recommendations */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        {/* Core Web Vitals Metrics */}
+                        <div className="opportunity-card" style={{ margin: 0 }}>
+                          <div className="capability-section-title">Core Web Vitals Field Metrics</div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
+                            <div className="credential-row">
+                              <span className="muted">First Contentful Paint (FCP):</span>
+                              <strong style={{ color: data.performance >= 50 ? 'var(--success)' : 'var(--warning)' }}>{data.metrics.fcp}</strong>
+                            </div>
+                            <div className="credential-row">
+                              <span className="muted">Largest Contentful Paint (LCP):</span>
+                              <strong style={{ color: data.performance >= 50 ? 'var(--success)' : 'var(--warning)' }}>{data.metrics.lcp}</strong>
+                            </div>
+                            <div className="credential-row">
+                              <span className="muted">Interaction to Next Paint (INP):</span>
+                              <strong style={{ color: data.performance >= 50 ? 'var(--success)' : 'var(--warning)' }}>{data.metrics.inp}</strong>
+                            </div>
+                            <div className="credential-row">
+                              <span className="muted">Cumulative Layout Shift (CLS):</span>
+                              <strong style={{ color: data.performance >= 50 ? 'var(--success)' : 'var(--warning)' }}>{data.metrics.cls}</strong>
+                            </div>
                           </div>
-                          <div className="credential-row">
-                            <span className="muted">Largest Contentful Paint (LCP):</span>
-                            <strong style={{ color: 'var(--success)' }}>{data.metrics.lcp} (Good)</strong>
-                          </div>
-                          <div className="credential-row">
-                            <span className="muted">Interaction to Next Paint (INP):</span>
-                            <strong style={{ color: 'var(--success)' }}>{data.metrics.inp} (Good)</strong>
-                          </div>
-                          <div className="credential-row">
-                            <span className="muted">Cumulative Layout Shift (CLS):</span>
-                            <strong style={{ color: 'var(--success)' }}>{data.metrics.cls} (Good)</strong>
+                        </div>
+
+                        {/* Performance Report & Recommendations */}
+                        <div className="opportunity-card" style={{ margin: 0 }}>
+                          <div className="capability-section-title">Subtle Performance Audit Recommendations</div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '12px' }}>
+                            {data.recommendations.map(rec => (
+                              <div key={rec.id} style={{ background: 'var(--surface)', padding: '12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.01)' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                                  <strong style={{ fontSize: '13px', color: 'var(--text)' }}>{rec.title}</strong>
+                                  <span className="status-badge" style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--danger)', fontSize: '10px', padding: '1px 6px' }}>
+                                    -{rec.savings}
+                                  </span>
+                                </div>
+                                <div className="muted small" style={{ lineHeight: '1.4' }}>{rec.desc}</div>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       </div>
 
-                      {/* Performance Report & Recommendations (Right) */}
-                      <div className="opportunity-card" style={{ margin: 0 }}>
-                        <div className="capability-section-title">Subtle Performance Audit Report</div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '12px' }}>
-                          {data.recommendations.map(rec => (
-                            <div key={rec.id} style={{ background: 'var(--surface)', padding: '12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.01)' }}>
-                              <div style={{ display: 'flex', justifycontent: 'space-between', justifyContent: 'space-between', marginBottom: '4px' }}>
-                                <strong style={{ fontSize: '13px', color: 'var(--text)' }}>{rec.title}</strong>
-                                <span className="status-badge" style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--danger)', fontSize: '10px', padding: '1px 6px' }}>
-                                  -{rec.savings}
-                                </span>
+                      {/* Right Column: Portfolio-wide PABS Alerts */}
+                      <div className="opportunity-card" style={{ margin: 0, border: '1px solid rgba(239,68,68,0.15)' }}>
+                        <div className="capability-section-title" style={{ color: 'var(--danger)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                          <span className="dot err" style={{ width: '8px', height: '8px' }} />
+                          Critical PABS Alerts (Scores &lt; 50)
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                          {(() => {
+                            const redSites = DIRECTORY_SITES.map(s => {
+                              const lh = getLighthouseData(s);
+                              const redAreas = [];
+                              if (lh.performance < 50) redAreas.push({ name: 'Performance', score: lh.performance });
+                              if (lh.accessibility < 50) redAreas.push({ name: 'Accessibility', score: lh.accessibility });
+                              if (lh.bestPractices < 50) redAreas.push({ name: 'Best Practices', score: lh.bestPractices });
+                              if (lh.seo < 50) redAreas.push({ name: 'SEO', score: lh.seo });
+                              return { site: s, redAreas };
+                            }).filter(x => x.redAreas.length > 0);
+
+                            return redSites.map((x, idx) => (
+                              <div 
+                                key={idx} 
+                                onClick={() => {
+                                  const sIdx = DIRECTORY_SITES.findIndex(s => s.name === x.site.name);
+                                  if (sIdx !== -1) setSelectedLhSiteIdx(sIdx);
+                                }}
+                                style={{ background: 'var(--surface)', padding: '12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.02)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                                data-tooltip="Click to inspect this site's audit"
+                              >
+                                <div>
+                                  <strong style={{ fontSize: '13px', color: 'var(--text)' }}>{x.site.name}</strong>
+                                  <div style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'monospace', marginTop: '2px' }}>{x.site.url.replace('https://', '')}</div>
+                                </div>
+                                <div style={{ display: 'flex', gap: '6px' }}>
+                                  {x.redAreas.map((area, ai) => (
+                                    <span key={ai} className="status-badge" style={{ background: 'rgba(239,68,68,0.15)', color: 'var(--danger)', fontSize: '9px', padding: '2px 6px', borderRadius: '4px' }}>
+                                      {area.name[0]}: {area.score}
+                                    </span>
+                                  ))}
+                                </div>
                               </div>
-                              <div className="muted small" style={{ lineHeight: '1.4' }}>{rec.desc}</div>
-                            </div>
-                          ))}
+                            ));
+                          })()}
                         </div>
                       </div>
                     </div>
