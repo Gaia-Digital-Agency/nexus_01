@@ -312,6 +312,7 @@ export default function App() {
   const [chatInput, setChatInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [proposalsFilter, setProposalsFilter] = useState('pending');
+  const [proposalsSiteFilter, setProposalsSiteFilter] = useState('All');
 
   const handleSiteFocus = (siteName) => {
     const idx = DIRECTORY_SITES.findIndex(s => s.name.toLowerCase() === siteName.toLowerCase() || s.name.toLowerCase().includes(siteName.toLowerCase()) || siteName.toLowerCase().includes(s.name.toLowerCase()));
@@ -950,6 +951,34 @@ export default function App() {
               ))}
             </div>
 
+            {/* Table Filters Panel */}
+            <div style={{ padding: '0 16px 12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', borderBottom: '1px solid var(--darker)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span className="muted small" style={{ fontWeight: 600 }}>Filter by Site:</span>
+                <select 
+                  value={proposalsSiteFilter}
+                  onChange={(e) => setProposalsSiteFilter(e.target.value)}
+                  style={{
+                    padding: '6px 12px', background: 'var(--darker)', border: '1px solid rgba(255,255,255,0.05)',
+                    borderRadius: '6px', color: 'var(--text)', fontSize: '13px', cursor: 'pointer', fontWeight: 600
+                  }}
+                  data-tooltip="Select a specific site to filter proposals, or 'All'"
+                >
+                  <option value="All">All Managed Sites (Default)</option>
+                  {[...new Set(proposals.map(p => p.site))].map(site => (
+                    <option key={site} value={site}>{site}</option>
+                  ))}
+                </select>
+              </div>
+              <span className="muted small">
+                Showing {proposals.filter(p => {
+                  const matchesStatus = p.status === proposalsFilter;
+                  const matchesSite = proposalsSiteFilter === 'All' || p.site === proposalsSiteFilter;
+                  return matchesStatus && matchesSite;
+                }).length} recommendations
+              </span>
+            </div>
+
             {/* Proposals List for Selected Category */}
             <div className="table-wrapper">
               <table>
@@ -959,14 +988,14 @@ export default function App() {
                   </tr>
                 </thead>
                 <tbody>
-                  {proposals.filter(p => p.status === proposalsFilter).length === 0 ? (
+                  {proposals.filter(p => p.status === proposalsFilter && (proposalsSiteFilter === 'All' || p.site === proposalsSiteFilter)).length === 0 ? (
                     <tr>
                       <td colSpan="7" style={{ textAlign: 'center', padding: '32px', color: 'var(--muted)' }}>
-                        No proposals are currently under this lifecycle state.
+                        No proposals are currently under this lifecycle state for the selected property.
                       </td>
                     </tr>
                   ) : (
-                    proposals.filter(p => p.status === proposalsFilter).map(p => (
+                    proposals.filter(p => p.status === proposalsFilter && (proposalsSiteFilter === 'All' || p.site === proposalsSiteFilter)).map(p => (
                       <tr key={p.id}>
                         <td><span className="prop-site" style={{ fontWeight: 600 }}>{p.site}</span></td>
                         <td><span className="prop-type">{p.type}</span></td>
