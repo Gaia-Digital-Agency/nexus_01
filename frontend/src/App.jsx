@@ -1,7 +1,18 @@
 import { useEffect, useState } from 'react';
 
-const NAV = ['Dashboard', 'Directory', 'Analytics', 'Proposals', 'Deployments', 'Reports', 'Settings'];
+const NAV = ['Dashboard', 'Directory', 'Focus', 'Analytics', 'Proposals', 'Deployments', 'Reports', 'Settings'];
 const GROUPS = ['All', 'Emana Hotels', 'Tejas Spas', 'Mondo Surf', 'Independent'];
+
+const NAV_TOOLTIPS = {
+  'Dashboard': 'Portfolio-wide overall performance summary',
+  'Directory': 'Managed server-mapped properties list',
+  'Focus': 'Deep-dive stats, queries, and tracking metrics',
+  'Analytics': 'GA4 accounts & GTM containers registry',
+  'Proposals': 'Staged copywriter & structural recommendations',
+  'Deployments': 'Real-time Nginx/WP-CLI execution tracker',
+  'Reports': 'AI-driven period performance briefings',
+  'Settings': 'Platform config, credentials, and schedules'
+};
 
 function fmtMoney(n) {
   if (n == null) return '—';
@@ -380,12 +391,13 @@ export default function App() {
     <div className="app">
       {/* Sidebar Section */}
       <aside className="sidebar">
-        <div className="logo">Nexus</div>
+        <div className="logo" data-tooltip="Nexus AI-Powered Control Plane">Nexus</div>
         {NAV.map((n) => (
           <div 
             key={n} 
             className={'nav-item' + (activeTab === n ? ' active' : '')}
             onClick={() => setActiveTab(n)}
+            data-tooltip={NAV_TOOLTIPS[n]}
           >
             {n}
           </div>
@@ -415,10 +427,10 @@ export default function App() {
           <>
             {/* KPI Cards */}
             <section className="kpis">
-              <Kpi label="Total Organic Sessions (GA4)" value={totalTraffic ? totalTraffic.toLocaleString() : "45,200"} />
-              <Kpi label="Average Ad ROAS (Google Ads)" value={avgRoas ? avgRoas + 'x' : "4.30x"} accent="success" />
-              <Kpi label="Pending Proposals" value={proposals.filter(p => p.status === 'pending').length} accent="warning" />
-              <Kpi label="Connected GCP SSH Hosts" value="4 / 4" />
+              <Kpi label="Total Organic Sessions (GA4)" value={totalTraffic ? totalTraffic.toLocaleString() : "45,200"} tooltip="Sum of organic web traffic sessions across all GDA sites" />
+              <Kpi label="Average Ad ROAS (Google Ads)" value={avgRoas ? avgRoas + 'x' : "4.30x"} accent="success" tooltip="Average Return on Ad Spend for active campaigns" />
+              <Kpi label="Pending Proposals" value={proposals.filter(p => p.status === 'pending').length} accent="warning" tooltip="Count of staged content optimization suggestions" />
+              <Kpi label="Connected GCP SSH Hosts" value="4 / 4" tooltip="Active passwordless secure shell connections to host fleet" />
             </section>
 
             {/* Opportunities & Sites Split Panel */}
@@ -629,10 +641,10 @@ export default function App() {
                   <div className="pad">
                     {/* KPI mini row for focused site */}
                     <div className="kpis" style={{ marginBottom: '24px' }}>
-                      <Kpi label="Organic Sessions (GA4 / 7d)" value={data.gsc.clicks7d} />
-                      <Kpi label="Average Position (GSC)" value={data.gsc.avgPos7d} />
-                      <Kpi label="Domain Authority (Semrush)" value={data.semrush.domainAuthority} />
-                      <Kpi label="Site Audit Score" value={data.gtm.score} accent="success" />
+                      <Kpi label="Organic Sessions (GA4 / 7d)" value={data.gsc.clicks7d} tooltip="Organic search clicks referred to site in the last 7 days" />
+                      <Kpi label="Average Position (GSC)" value={data.gsc.avgPos7d} tooltip="Average Google Search ranking position across all keywords" />
+                      <Kpi label="Domain Authority (Semrush)" value={data.semrush.domainAuthority} tooltip="Predictive rank score indicating overall search engine authority" />
+                      <Kpi label="Site Audit Score" value={data.gtm.score} accent="success" tooltip="Overall GTM container and tracking audit score" />
                     </div>
 
                     <div className="split-panels" style={{ marginBottom: '24px' }}>
@@ -1098,9 +1110,9 @@ export default function App() {
   );
 }
 
-function Kpi({ label, value, accent }) {
+function Kpi({ label, value, accent, tooltip }) {
   return (
-    <div className="kpi">
+    <div className="kpi" data-tooltip={tooltip} style={{ cursor: tooltip ? 'help' : 'default' }}>
       <div className="kpi-label muted">{label}</div>
       <div className={'kpi-value ' + (accent || '')}>{value}</div>
     </div>

@@ -201,3 +201,31 @@ th { font-size: 12px; color: var(--muted); font-weight: 500; text-transform: upp
   .split-panels { grid-template-columns: 1fr; }
   .floating-action-bar { width: 90%; gap: 16px; flex-direction: column; border-radius: 16px; padding: 16px; }
 }
+
+/* Custom CSS tooltips */
+[data-tooltip] {
+  position: relative;
+}
+[data-tooltip]::before {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: #020617;
+  color: var(--text);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.15s ease-out;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  z-index: 999;
+}
+[data-tooltip]:hover::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
