@@ -318,14 +318,29 @@ export default function App() {
   const avgRoas = sites.length ? (sites.reduce((s, x) => s + Number(x.roas || 0), 0) / sites.length).toFixed(2) : '0.00';
 
   // Seed standard sites if array is empty (fallback for UI presentation)
-  const displaySites = sites.length ? sites : [
-    { id: '1', name: 'Viceroy Bali', url: 'https://viceroybali.com', type: 'wordpress', seo_score: 91, traffic_7d: 14500, ad_spend: 3500, roas: 4.8, status: 'active' },
-    { id: '2', name: 'Aperitif Restaurant', url: 'https://aperitif.com', type: 'nodejs', seo_score: 87, traffic_7d: 8200, ad_spend: 1200, roas: 5.2, status: 'active' },
-    { id: '3', name: 'Tejas Spa Akatara', url: 'https://tejasspa.com/akatara', type: 'wordpress', seo_score: 84, traffic_7d: 3100, ad_spend: 500, roas: 3.9, status: 'active' },
-    { id: '4', name: 'Mondo Surf Village', url: 'https://mondosurfvillage.com', type: 'wordpress', seo_score: 82, traffic_7d: 4800, ad_spend: 800, roas: 4.1, status: 'active' },
-    { id: '5', name: 'Emana Hotels Overview', url: 'https://emanahotels.com', type: 'nodejs', seo_score: 89, traffic_7d: 6400, ad_spend: 1500, roas: 4.5, status: 'active' },
-    { id: '6', name: 'Unagi Wooden Villas', url: 'https://unagiwoodenvillas.com', type: 'wordpress', seo_score: 79, traffic_7d: 1900, ad_spend: 300, roas: 3.4, status: 'active' },
-  ];
+  const displaySites = sites.length ? sites : DIRECTORY_SITES.map((s, idx) => {
+    let hash = 0;
+    for (let i = 0; i < s.name.length; i++) {
+      hash = s.name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const seed = Math.abs(hash);
+    const seo = (seed % 15) + 80;
+    const traffic = (seed % 15000) + 1000;
+    const spend = (seed % 4000) + 100;
+    const roas = ((seed % 20) / 10 + 3.2).toFixed(1);
+    
+    return {
+      id: String(idx + 1),
+      name: s.name,
+      url: s.url,
+      type: s.type.toLowerCase(),
+      seo_score: seo,
+      traffic_7d: traffic,
+      ad_spend: spend,
+      roas: Number(roas),
+      status: 'active'
+    };
+  });
 
   // Group filter logic
   const filteredSites = displaySites.filter(s => {
