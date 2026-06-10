@@ -31,6 +31,15 @@ body {
 .nav-item { padding: 12px 16px; border-radius: 8px; color: var(--muted); cursor: pointer; font-weight: 500; transition: all 0.2s; }
 .nav-item:hover { background: var(--darker); color: var(--text); }
 .nav-item.active { background: var(--accent); color: #fff; }
+.nav-item-source { display: flex; align-items: center; gap: 8px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.nav-section-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); padding: 12px 16px 4px; opacity: 0.5; }
+.source-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.source-dot-semrush { background: #10b981; box-shadow: 0 0 6px #10b981; }
+.source-dot-gsc { background: #10b981; box-shadow: 0 0 6px #10b981; }
+.source-dot-ga4 { background: #10b981; box-shadow: 0 0 6px #10b981; }
+.source-dot-ads { background: #ef4444; }
+.source-dot-gtm { background: #10b981; box-shadow: 0 0 6px #10b981; }
 
 /* Main layout */
 .main { flex: 1; padding: 24px; display: flex; flex-direction: column; gap: 24px; }

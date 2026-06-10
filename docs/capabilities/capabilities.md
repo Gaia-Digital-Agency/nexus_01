@@ -308,6 +308,97 @@ top of solid SEO; you can't be cited if you can't be crawled and understood.
 
 ---
 
+## 4. Views and Usage (Detailed Mappings)
+
+Each of the five core datasources provides specialized views, charts, and reports that map directly to specific marketing, engineering, and business user operations.
+
+### A. Google Tag Manager (GTM)
+* **Foundation View & Workspace Status:**
+  * **Exposed Views & Charts:** Workspace Change Log, Tag/Trigger/Variable List, Version History, Release Timeline, Preview/Debug Mode Workspace.
+  * **Key Findings & Metrics:** Unsubmitted/Unsaved tags, duplicate container triggers, custom Javascript tags missing validation, load latency/event-order waterfalls.
+  * **How Users Use It:**
+    * *Analytics Engineers:* Deploy new GA4 measurement triggers, verify container variables, and validate that tracking events are fired in the correct sequence before going live.
+    * *Performance Marketers:* Verify that external marketing pixels (Facebook, TikTok, LinkedIn) and custom HTML tags are loaded asynchronously without dragging down page performance.
+    * *QA Specialists:* Run GTM Preview Mode to step through click and form submission events in real time to ensure metadata values are scraped correctly.
+* **Tag & Trigger Logic Views:**
+  * **Exposed Views & Charts:** Tag Configuration Panel, Trigger Definition Builder, User-Defined Variables Table, Custom Templates Manager.
+  * **Key Findings & Metrics:** Misfiring conversion tags (e.g., a "Purchase" tag firing on `/blog` instead of `/thank-you`), unbound trigger variables, unmapped dataLayer elements.
+  * **How Users Use It:**
+    * *Conversion Rate Optimizers (CROs):* Bind click tracking triggers to CTA buttons and form-submission elements to track exact conversion drop-offs.
+    * *Web Developers:* Map custom `dataLayer.push` events on server-side actions (such as booking validations) to expose transactional variables directly to GTM.
+
+### B. Google Analytics 4 (GA4)
+* **Realtime Reporting:**
+  * **Exposed Views & Charts:** Realtime User Map, Active Users per Minute (last 30 minutes), Top Page Title Views, Event Count by Event Name.
+  * **Key Findings & Metrics:** Instant spike in traffic, broken user journeys (e.g., immediate page exits on a new checkout path), missing custom variables during active campaigns.
+  * **How Users Use It:**
+    * *Launch Managers:* Monitor live traffic behavior immediately following a product release, system deploy, or a major marketing blast to ensure API routes and frontend forms are functioning flawlessly.
+* **Acquisition Reports:**
+  * **Exposed Views & Charts:** Traffic Acquisition Trend Line, User Acquisition Cohorts, Campaign Attribution Bar Charts, Organic Search vs. Paid Search channel breakdowns.
+  * **Key Findings & Metrics:** Session Source/Medium, Campaign-level conversion rates, First User Source, Bounce and Engagement Rates.
+  * **How Users Use It:**
+    * *Digital Marketers:* Audit budget allocations across channels by identifying which campaigns are bringing in engaged sessions versus high-bounce traffic.
+    * *SEO Managers:* Track the direct percentage of traffic arriving via organic search to evaluate search visibility and overall brand awareness.
+* **Engagement & Monetization Reports:**
+  * **Exposed Views & Charts:** Page & Screen Views, Conversion Event Counts, Landing Page Profitability Table, Ecommerce Purchase Journey Funnels, Checkout Progression Funnels.
+  * **Key Findings & Metrics:** Average engagement time per page, page-exit rates, shopping cart abandonment points, lifetime value (LTV) cohorts, average order value (AOV).
+  * **How Users Use It:**
+    * *Product Owners:* Use purchase journey and checkout funnels to pin down the exact step where users drop off during checkout to optimize UI/UX.
+    * *Content Marketers:* Analyze Landing Page reports to evaluate the engagement level of high-traffic blog entries and place conversion widgets on top-performing pages.
+
+### C. Google Search Console (GSC)
+* **Search Results Performance:**
+  * **Exposed Views & Charts:** Click/Impression/CTR/Position Over-Time Trend Lines, Queries Table, Pages List, Device & Country geo-charts, Search Appearance breakdowns (FAQ schema, Rich Snippets, Web Light).
+  * **Key Findings & Metrics:** Search query-level impressions, average position trends, click-through rate collapses (CTR dropping below expected benchmarks), position drops.
+  * **How Users Use It:**
+    * *SEOs & Content Strategists:*
+      * *Identify Quick Wins:* Filter queries ranking in positions 4–15 with high impressions to prioritize on-page content updates and metadata optimizations.
+      * *Detect CTR Collapses:* Find keywords with high search impressions but extremely low CTR to run meta-title and description rewrites.
+      * *Diagnose Traffic Drops:* Compare search periods (e.g., past 28 days vs. previous period) to determine if a traffic drop is due to a decline in search demand or a ranking position loss.
+* **Indexing & URL Inspection:**
+  * **Exposed Views & Charts:** Page Indexing Status Chart, Sitemap Status Log, Discovered/Crawled URL Lists, Mobile Usability Report, Core Web Vitals Speed Metrics (LCP, INP, CLS sparklines).
+  * **Key Findings & Metrics:** Crawled but not indexed pages, redirect loops, sitemap parser errors, mobile-unfriendly text sizing, Core Web Vitals "Needs Improvement" status.
+  * **How Users Use It:**
+    * *Technical SEOs:*
+      * Resolve sitemap discovery errors and submit bulk URL indexing requests via the Indexing API.
+      * Inspect individual URLs to verify that Google is rendering the correct canonical tag and that no page elements are blocking mobile crawler access.
+    * *Web Developers:* Track Core Web Vitals speed graphs to locate pages failing LCP (Largest Contentful Paint) or INP (Interaction to Next Paint) to optimize asset load-orders.
+
+### D. Semrush
+* **Domain Overview & Organic Research:**
+  * **Exposed Views & Charts:** Authority Score, Organic vs. Paid Traffic Trend Lines, Backlinks Sizer, Keyword Position Distribution (Top 3, 10, 20, 100), Organic Competitors Quadrant, Subdomains and Subfolders traffic splits.
+  * **Key Findings & Metrics:** Estimated competitor search traffic, competitor keyword overlap, newly discovered search competitors, ranking position shifts, authority score trends.
+  * **How Users Use It:**
+    * *SEO Managers:* Benchmark site performance against the top 5 direct competitors in the industry, identify competitor domains rising or falling in search share, and detect subfolder configurations driving competitor growth.
+* **Keyword Research & Keyword Magic Tool:**
+  * **Exposed Views & Charts:** Search Volume trends, Keyword Difficulty Index (KD%), Keyword Search Intent Tagging (Informational, Navigational, Commercial, Transactional), SERP Features breakdown, Related Terms tree, Phrase Questions matrix.
+  * **Key Findings & Metrics:** Monthly search volume, KD% rating, cost-per-click (CPC) values, competitive density, question-based search queries.
+  * **How Users Use It:**
+    * *Content Strategists:* Generate targeted content ideas by finding keywords with high search volume, low KD% (under 30%), and high commercial intent.
+    * *AEO & FAQ Authors:* Query the "Phrase Questions" database to capture conversational queries to write direct Q&A blocks and implement FAQ schemas.
+* **Backlink Analytics & Site Audit:**
+  * **Exposed Views & Charts:** Total Backlinks, Referring Domains trend, Anchor Text Cloud, Link Attributes (Follow, NoFollow, Sponsored, UGC), Toxic Score, Site Audit Health Score (0-100), Errors/Warnings/Notices breakdown.
+  * **Key Findings & Metrics:** New/lost backlinks, toxic domain links, duplicate meta tags, broken link counts, orphan pages, slow-loading assets.
+  * **How Users Use It:**
+    * *Link Builders:* Clean up toxic links to prevent algorithmic penalties and run link-building outreach by finding competitor backlink domains.
+    * *Front-End Engineers:* Run technical audits to clean up 404 broken links, add missing alt text to images, and fix duplicate title tags.
+
+### E. Google Ads
+* **Campaign & Ad Group Performance:**
+  * **Exposed Views & Charts:** Ad Spend/Cost Trend Line, Impression Share, Click-Through Rate (CTR) Bar Chart, Conversions Trend, Conversion Value (ROAS) line, Recommendation Score.
+  * **Key Findings & Metrics:** CPC, Cost-per-acquisition (CPA), Return on Ad Spend (ROAS), Impression Share lost to budget/rank, Campaign Optimization Score.
+  * **How Users Use It:**
+    * *PPC Campaign Managers:* Shift budgets dynamically from low-ROAS, saturated campaigns to high-ROAS ad groups, and monitor spend pacing to prevent budget exhaustion.
+    * *A/B Performance Testers:* Run experiment paths on ad creative versions to find which headline and description combinations yield the highest CTR and conversion value.
+* **Keyword Planner & Search Terms Report:**
+  * **Exposed Views & Charts:** Search Terms List, Impressions/Clicks/CPC by search term, Keyword Match Type distribution.
+  * **Key Findings & Metrics:** High-cost, low-conversion search terms (ad-spend leak), new high-converting query opportunities.
+  * **How Users Use It:**
+    * *PPC Buyers:* Review actual user search term reports to identify non-converting, irrelevant search queries and add them to negative keyword lists to eliminate ad-spend leakage.
+    * *SEO Strategists:* Extract paid search terms showing high conversion rates and pass them directly to the content team to prioritize organic rankings on those terms.
+
+---
+
 ## Credential checklist (GCP Secret Manager)
 
 All secrets belong in GCP Secret Manager (`03_SYSTEM_ARCHITECTURE.md`), not on disk:

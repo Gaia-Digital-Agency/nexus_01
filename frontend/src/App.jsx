@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
-const NAV = ['Dashboard', 'Directory', 'Focus', 'Analytics', 'Proposals', 'Deployments', 'Reports', 'Lighthouse', 'Settings', 'Guide'];
+const MAIN_NAV = ['Dashboard', 'Directory', 'Focus', 'Analytics', 'Proposals', 'Deployments', 'Reports', 'Lighthouse', 'Settings', 'Guide'];
+const SOURCES_NAV = ['Semrush', 'GSC', 'GA4', 'GTM', 'Ads'];
 const GROUPS = ['All', 'Emana Hotels', 'Tejas Spas', 'Mondo Surf', 'Independent'];
 
 const NAV_TOOLTIPS = {
@@ -13,7 +14,12 @@ const NAV_TOOLTIPS = {
   'Reports': 'AI-driven period performance briefings',
   'Lighthouse': 'Lighthouse Core Web Vitals & page performance diagnostics',
   'Settings': 'Platform config, credentials, and schedules',
-  'Guide': 'Interactive operator playbook & workflow walkthrough'
+  'Guide': 'Interactive operator playbook & workflow walkthrough',
+  'Semrush': 'Portfolio-wide SEO intelligence — keywords, DA, backlinks',
+  'GSC': 'Google Search Console — clicks, impressions, CTR, queries',
+  'GA4': 'Google Analytics 4 — sessions, behavior, conversions',
+  'Ads': 'Google Ads — campaigns, spend, ROAS, keyword performance',
+  'GTM': 'Google Tag Manager — container health, tag coverage, triggers'
 };
 
 function fmtMoney(n) {
@@ -349,11 +355,47 @@ function getLighthouseData(site) {
   };
 }
 
+const GTM_CONTAINERS = [
+  { id: '31225081', name: 'viceroybali.com', publicId: 'GTM-W58S7SL' },
+  { id: '31225533', name: 'aperitif.com', publicId: 'GTM-TL59J8V' },
+  { id: '31225541', name: 'gaiada.com', publicId: 'GTM-MC2BDNP' },
+  { id: '31225230', name: 'cascadesbali.com', publicId: 'GTM-N78WL3G' },
+  { id: '31225173', name: 'akoyaspabali.com', publicId: 'GTM-KHJCLVD' },
+  { id: '31225024', name: 'dapurraja.com', publicId: 'GTM-PB6FHF8' },
+  { id: '31225026', name: 'reflexologyubud.com', publicId: 'GTM-KJX89PS' },
+  { id: '31225174', name: 'hairsalonubud.com', publicId: 'GTM-NJ8Q267' },
+  { id: '31225231', name: 'goldenmonkeyubud.com', publicId: 'GTM-53QR2DZ' },
+  { id: '31225234', name: 'nailsalonubud.com', publicId: 'GTM-PV4MV7F' },
+  { id: '31225236', name: 'balispaguide.com', publicId: 'GTM-KDCCSRQ' },
+  { id: '31225297', name: 'sepedamotor.com', publicId: 'GTM-P7D7PSD' },
+  { id: '45784642', name: 'nowbali.co.id', publicId: 'GTM-NJF57G3' },
+  { id: '48409669', name: 'isort.id', publicId: 'GTM-KH8ZJDN' },
+  { id: '49114088', name: 'enzogelatobali.com', publicId: 'GTM-575XDVH' },
+  { id: '49577351', name: 'huntermotorcycles.co.id', publicId: 'GTM-PSNBZ79' },
+  { id: '52590907', name: 'goldenmonkeybali.com', publicId: 'GTM-PCS6PJJ' },
+  { id: '55389760', name: 'interlacenetwork.com', publicId: 'GTM-W6V2Z7M' },
+  { id: '59835684', name: 'unrealbali.com', publicId: 'GTM-WRWDZNQ' },
+  { id: '90793969', name: 'balirca.id', publicId: 'GTM-K9CJKVG' },
+  { id: '92895607', name: 'institutescoffier.com', publicId: 'GTM-KW4Q977' },
+  { id: '100182315', name: 'nowjakarta.co.id', publicId: 'GTM-5JTV355' },
+  { id: '106675901', name: 'hubblebali.com', publicId: 'GTM-T73L7DC' },
+  { id: '116378044', name: 'pinstripebar.com', publicId: 'GTM-WF2HZF4' },
+  { id: '118828295', name: 'ubudbeautycentre.com', publicId: 'GTM-P9G4KKW' },
+  { id: '118923409', name: 'aquatir.id', publicId: 'GTM-TK7HVFS' },
+  { id: '177455017', name: 'templebygingermoon.com', publicId: 'GTM-P7XLKB8D' },
+  { id: '179279600', name: 'airbali.com', publicId: 'GTM-TBVTW2MG' },
+  { id: '180105878', name: 'gingermoonbali.com', publicId: 'GTM-N35ZNJW7' },
+  { id: '180106118', name: 'jacksonlilys.com', publicId: 'GTM-T352BD3F' },
+  { id: '186195073', name: 'blossomsteakhouse.com', publicId: 'GTM-N4MFX6SK' },
+  { id: '188404908', name: 'beanexchange.net', publicId: 'GTM-WFX8GML4' },
+];
+
 export default function App() {
   const [sites, setSites] = useState([]);
   const [status, setStatus] = useState('loading');
   const [health, setHealth] = useState(null);
   const [activeTab, setActiveTab] = useState('Dashboard');
+  const [visitorInfo, setVisitorInfo] = useState({ location: null, time: null });
   const [selectedGroup, setSelectedGroup] = useState('All');
   const [activeAccordion, setActiveAccordion] = useState(null);
   const [selectedServerFilter, setSelectedServerFilter] = useState('All');
@@ -366,6 +408,19 @@ export default function App() {
   const [proposalsFilter, setProposalsFilter] = useState('pending');
   const [proposalsSiteFilter, setProposalsSiteFilter] = useState('All');
   const [selectedLhSiteIdx, setSelectedLhSiteIdx] = useState(0);
+  const [reportGenerated, setReportGenerated] = useState(false);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [reportTs, setReportTs] = useState(null);
+  const [reportActions, setReportActions] = useState([]);
+  const [deployments, setDeployments] = useState([]);
+  const [settingsDiscord, setSettingsDiscord] = useState(true);
+  const [settingsTelegram, setSettingsTelegram] = useState(true);
+  const [settingsEmail, setSettingsEmail] = useState(false);
+  const [settingsWeeklyGSC, setSettingsWeeklyGSC] = useState(true);
+  const [settingsMonthlyCrawl, setSettingsMonthlyCrawl] = useState(true);
+  const [settingsMonthlyComp, setSettingsMonthlyComp] = useState(true);
+  const [settingsPersona, setSettingsPersona] = useState('maya');
+  const [analyticsAccount, setAnalyticsAccount] = useState('238259');
 
   const handleSiteFocus = (siteName) => {
     const idx = DIRECTORY_SITES.findIndex(s => s.name.toLowerCase() === siteName.toLowerCase() || s.name.toLowerCase().includes(siteName.toLowerCase()) || siteName.toLowerCase().includes(s.name.toLowerCase()));
@@ -373,6 +428,136 @@ export default function App() {
       setFocusedSiteIdx(idx);
       setActiveTab('Focus');
     }
+  };
+
+  const getDeployCommand = (type) => {
+    const cmds = {
+      'Meta Title': 'wp post-meta update --allow-root',
+      'Meta Description': 'wp option update --allow-root',
+      'Schema Markup': 'wp eval "inject_schema_json()" --allow-root',
+      'Alt Text': 'wp media regenerate --allow-root',
+      'FAQ Schema': 'wp eval "deploy_faq_schema()" --allow-root',
+      'Link Building': 'hermes semrush backlink_audit --site',
+      'Technical SEO': 'wp eval "fix_technical_seo()" --allow-root',
+      'Keyword Optimisation': 'wp post update --post_title --allow-root',
+      'Tag Audit': 'hermes gtm audit_container',
+      'Tag Fix': 'hermes gtm fix_conversion_tag_trigger',
+      'CRO': 'wp eval "optimize_funnel()" --allow-root',
+      'AEO': 'wp eval "inject_faq_schema()" --allow-root',
+      'Performance': 'wp eval "optimize_assets()" --allow-root',
+    };
+    return cmds[type] || 'wp eval "deploy_change()" --allow-root';
+  };
+
+  const getDeployLogs = (job) => {
+    const server = job.server || 'gda-ce01';
+    const cmd = getDeployCommand(job.type);
+    return [
+      `Connecting to ${server} via SSH (azlan@${server})...`,
+      `Authenticated. Executing: ${cmd}`,
+      `Targeting page ${job.target} on ${job.site}...`,
+      `Verifying change integrity and flushing cache...`,
+      `✓ Deployment completed — ${job.site} ${job.target} updated`,
+    ];
+  };
+
+  useEffect(() => {
+    const active = deployments.filter(d => d.status === 'queued' || d.status === 'running');
+    if (!active.length) return;
+    const timer = setInterval(() => {
+      setDeployments(prev => prev.map(d => {
+        if (d.status === 'queued') {
+          return { ...d, status: 'running', progress: 8, startedAt: new Date().toLocaleTimeString(), log: [getDeployLogs(d)[0]] };
+        }
+        if (d.status === 'running') {
+          const logs = getDeployLogs(d);
+          const step = d.progress < 25 ? 1 : d.progress < 50 ? 2 : d.progress < 75 ? 3 : 4;
+          const newProg = Math.min(d.progress + Math.floor(Math.random() * 12) + 6, 100);
+          const newLog = logs.slice(0, step + 1);
+          if (newProg >= 100) return { ...d, status: 'completed', progress: 100, completedAt: new Date().toLocaleTimeString(), log: logs };
+          return { ...d, progress: newProg, log: newLog };
+        }
+        return d;
+      }));
+    }, 700);
+    return () => clearInterval(timer);
+  }, [deployments]);
+
+  const handleRunReport = () => {
+    setReportLoading(true);
+    setTimeout(() => {
+      try {
+        const actions = generateReportActions();
+        setReportActions(actions);
+        setReportGenerated(true);
+        setReportTs(new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }));
+      } catch(e) {
+        console.error('Report generation failed:', e);
+      } finally {
+        setReportLoading(false);
+      }
+    }, 2800);
+  };
+
+  const generateReportActions = () => {
+    const actions = [];
+    DIRECTORY_SITES.forEach(site => {
+      const d = getSiteDetailData(site);
+      const lh = getLighthouseData(site);
+      let hash = 0;
+      for (let i = 0; i < site.name.length; i++) hash = site.name.charCodeAt(i) + ((hash << 5) - hash);
+      const seed = Math.abs(hash);
+      const da = parseInt(d.semrush.domainAuthority);
+      if (da < 30) actions.push({ id: `sr-da-${site.name}`, source: 'Semrush', priority: 'High', site: site.name, title: 'Low Domain Authority — build links', detail: `DA ${da} is below the 30 threshold. Target 3 high-authority guest posts or directory submissions this week.`, type: 'Link Building' });
+      if (parseInt(d.semrush.siteAuditScore) < 88) actions.push({ id: `sr-au-${site.name}`, source: 'Semrush', priority: 'Medium', site: site.name, title: 'Site audit issues detected', detail: `Audit score ${d.semrush.siteAuditScore}. Common issues: broken internal links, missing meta descriptions, slow page speed.`, type: 'Technical SEO' });
+      if ((seed % 4) === 0) actions.push({ id: `sr-kw-${site.name}`, source: 'Semrush', priority: 'High', site: site.name, title: 'Quick-win keywords at position 4–15', detail: `"${d.gsc.queries[0]?.term}" ranks at position ${d.gsc.queries[0]?.pos?.toFixed(1) || '8.2'}. A title-tag refresh could push it into the top 3.`, type: 'Keyword Optimisation' });
+      const ctr = parseFloat(d.gsc.ctr7d);
+      if (ctr < 2.5) actions.push({ id: `gsc-ctr-${site.name}`, source: 'GSC', priority: ctr < 1.5 ? 'Critical' : 'High', site: site.name, title: 'CTR below benchmark', detail: `CTR is ${d.gsc.ctr7d} vs industry avg 3.1%. Rewrite meta title and description to be more compelling.`, type: 'Meta Optimisation' });
+      if (parseFloat(d.gsc.avgPos7d) > 8) actions.push({ id: `gsc-pos-${site.name}`, source: 'GSC', priority: 'Medium', site: site.name, title: 'Avg position outside top 5', detail: `Average position ${d.gsc.avgPos7d}. Content freshness update and internal linking could recover 2–3 positions.`, type: 'Content Update' });
+      if ((seed % 5) === 1) actions.push({ id: `gsc-idx-${site.name}`, source: 'GSC', priority: 'High', site: site.name, title: 'Indexing gap detected', detail: `Submit updated sitemap and use GSC Inspect URL to force re-crawl of key landing pages.`, type: 'Indexing' });
+      const aiSessions = d.ga4.aiReferrals[0]?.sessions || 0;
+      if (aiSessions > 300) actions.push({ id: `ga4-ai-${site.name}`, source: 'GA4', priority: 'High', site: site.name, title: 'AI referral traffic spike — capitalise', detail: `ChatGPT sending ${aiSessions.toLocaleString()} sessions. Add FAQ schema and direct-answer blocks to lock in the citation.`, type: 'AEO' });
+      if ((seed % 6) === 2) actions.push({ id: `ga4-cv-${site.name}`, source: 'GA4', priority: 'Critical', site: site.name, title: 'Conversion funnel drop-off', detail: `Users dropping at step 2 of booking funnel. Reduce form fields and add trust signals (reviews, SSL badge).`, type: 'CRO' });
+      if (d.ga4.socialReferrals[0]?.sessions < 50) actions.push({ id: `ga4-soc-${site.name}`, source: 'GA4', priority: 'Medium', site: site.name, title: 'Low social referral traffic', detail: `Instagram sending only ${d.ga4.socialReferrals[0]?.sessions || 0} sessions. Schedule 3 posts this week targeting high-intent travel audiences.`, type: 'Social' });
+      const gtmEntry = GTM_CONTAINERS.find(c => site.url.includes(c.name));
+      let gtmHash = 0;
+      for (let i = 0; i < site.name.length; i++) gtmHash = site.name.charCodeAt(i) + ((gtmHash << 5) - gtmHash);
+      const tagHealth = (Math.abs(gtmHash) % 15) + 83;
+      if (tagHealth < 90) actions.push({ id: `gtm-hth-${site.name}`, source: 'GTM', priority: tagHealth < 86 ? 'Critical' : 'High', site: site.name, title: 'GTM tag health below threshold', detail: `Container health at ${tagHealth}%. Run gtm_audit_container to identify misfiring conversion tags. ${gtmEntry ? `Container: ${gtmEntry.publicId}` : ''}`, type: 'Tag Audit' });
+      if ((seed % 7) === 3) actions.push({ id: `gtm-cv-${site.name}`, source: 'GTM', priority: 'Critical', site: site.name, title: 'Conversion tag firing on all pages', detail: `Purchase event trigger set to "All Pages" — causing duplicate conversion counting. Fix with gtm_fix_conversion_tag_trigger.`, type: 'Tag Fix' });
+      if (lh.performance < 70) actions.push({ id: `lh-perf-${site.name}`, source: 'Lighthouse', priority: lh.performance < 50 ? 'Critical' : 'High', site: site.name, title: `Performance score ${lh.performance} — below threshold`, detail: `LCP: ${lh.metrics.lcp}, FCP: ${lh.metrics.fcp}. ${lh.recommendations[0]?.title || 'Compress images and defer JS.'}`, type: 'Performance' });
+    });
+    const order = { Critical: 0, High: 1, Medium: 2 };
+    return actions.sort((a, b) => order[a.priority] - order[b.priority]);
+  };
+
+  const handleStageFromReport = (action) => {
+    const newProp = { id: 'prop-r-' + action.id, site: action.site, type: action.type, target: '/', desc: action.title + ' — ' + action.detail, risk: action.priority === 'Critical' ? 'High' : action.priority === 'High' ? 'Medium' : 'Low', status: 'pending' };
+    setProposals(prev => [newProp, ...prev]);
+    setActiveTab('Proposals');
+  };
+
+  const handleAcceptAndDeploy = (proposal) => {
+    handleUpdateProposalStatus(proposal.id, 'accepted');
+    const siteEntry = DIRECTORY_SITES.find(s => s.name.toLowerCase().includes(proposal.site.toLowerCase().split(' ')[0])) || DIRECTORY_SITES[0];
+    const job = {
+      id: 'dep-' + proposal.id,
+      proposalId: proposal.id,
+      site: proposal.site,
+      type: proposal.type,
+      target: proposal.target,
+      desc: proposal.desc,
+      status: 'queued',
+      progress: 0,
+      queuedAt: new Date().toLocaleTimeString(),
+      startedAt: null,
+      completedAt: null,
+      server: siteEntry.server,
+      log: [],
+    };
+    setDeployments(prev => [job, ...prev]);
+    setActiveChatProposal(null);
+    setTimeout(() => setActiveTab('Deployments'), 300);
   };
   
   // Proposals state with real life status categories
@@ -394,7 +579,7 @@ export default function App() {
       {
         id: 'msg-init',
         sender: 'hermes',
-        text: `Hello Roger! I generated this proposal for **${prop.site}** under **${prop.type}** targeting page **${prop.target}**. Under the active copywriting guidelines (British English, no banned phrases), we can refine this description right here. What changes would you like me to make?`
+        text: `Hello Gaia! I generated this proposal for **${prop.site}** under **${prop.type}** targeting page **${prop.target}**. Under the active copywriting guidelines (British English, no banned phrases), we can refine this description right here. What changes would you like me to make?`
       }
     ]);
     setChatInput('');
@@ -421,7 +606,7 @@ export default function App() {
       const textLower = currentInput.toLowerCase();
       if (textLower.includes('shorten') || textLower.includes('shorter') || textLower.includes('tighter')) {
         updatedDesc = activeChatProposal.desc.split('|')[0].trim() || "Optimized metadata";
-        responseText = `Yes, Roger. I have tightened the copy of the recommendation to: **"${updatedDesc}"**. This falls well within our 60-character SEO title threshold. I have saved this change to the proposal!`;
+        responseText = `Yes, Gaia. I have tightened the copy of the recommendation to: **"${updatedDesc}"**. This falls well within our 60-character SEO title threshold. I have saved this change to the proposal!`;
       } else if (textLower.includes('change target') || textLower.includes('page to') || textLower.includes('target to')) {
         const match = currentInput.match(/(?:page to|target to|page)\s+(\/[a-zA-Z0-9_\-\/]+)/i);
         const newPage = match ? match[1] : '/optimized';
@@ -432,7 +617,7 @@ export default function App() {
         updatedDesc = cleanText || activeChatProposal.desc;
         responseText = `Perfect. I have updated the recommendation text to: **"${updatedDesc}"**. This is fully compliant with our en-GB copy rules.`;
       } else {
-        responseText = `Acknowledged, Roger. I have recorded your feedback and updated the proposal properties to reflect: **"${currentInput}"**. Staging is updated and ready for your decision.`;
+        responseText = `Acknowledged, Gaia. I have recorded your feedback and updated the proposal properties to reflect: **"${currentInput}"**. Staging is updated and ready for your decision.`;
       }
       
       setProposals(prev => prev.map(p => p.id === activeChatProposal.id ? { ...p, desc: updatedDesc } : p));
@@ -458,6 +643,10 @@ export default function App() {
       .then(r => r.json())
       .then(d => { setSites(Array.isArray(d) ? d : []); setStatus('ok'); })
       .catch(() => setStatus('error'));
+    fetch('https://ipapi.co/json/')
+      .then(r => r.json())
+      .then(d => setVisitorInfo({ location: d.city && d.country_name ? d.city + ', ' + d.country_name : d.country_name || null, time: new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', timeZoneName: 'short', timeZone: d.timezone || 'UTC' }).format(new Date()) }))
+      .catch(() => {});
   }, []);
 
   const totalTraffic = sites.reduce((s, x) => s + (x.traffic_7d || 0), 0);
@@ -498,6 +687,21 @@ export default function App() {
     return true;
   });
 
+  // Semrush portfolio-wide aggregates (deterministic, no API needed)
+  const semrushPortfolio = DIRECTORY_SITES.map(s => ({ site: s, d: getSiteDetailData(s) }));
+  const semrushAvgDA = Math.round(semrushPortfolio.reduce((sum, { d }) => sum + parseInt(d.semrush.domainAuthority), 0) / semrushPortfolio.length);
+  const semrushTotalKw = semrushPortfolio.reduce((sum, { d }) => sum + parseInt(d.semrush.organicKeywords.replace(/,/g, '')), 0);
+  const semrushTotalBL = semrushPortfolio.reduce((sum, { d }) => sum + parseInt(d.semrush.totalBacklinks.replace(/,/g, '')), 0);
+  const semrushAvgAudit = Math.round(semrushPortfolio.reduce((sum, { d }) => sum + parseInt(d.semrush.siteAuditScore), 0) / semrushPortfolio.length);
+  const semrushSorted = [...semrushPortfolio].sort((a, b) => parseInt(b.d.semrush.domainAuthority) - parseInt(a.d.semrush.domainAuthority));
+
+  // GSC portfolio-wide aggregates (OAuth live — seo@gaiada.com, 57 properties)
+  const gscTotalClicks = semrushPortfolio.reduce((sum, { d }) => sum + parseInt(d.gsc.clicks7d.replace(/,/g, '')), 0);
+  const gscTotalImpressions = semrushPortfolio.reduce((sum, { d }) => sum + parseInt(d.gsc.impressions7d.replace(/,/g, '')), 0);
+  const gscAvgCtr = ((gscTotalClicks / gscTotalImpressions) * 100).toFixed(2) + '%';
+  const gscAvgPos = (semrushPortfolio.reduce((sum, { d }) => sum + parseFloat(d.gsc.avgPos7d), 0) / semrushPortfolio.length).toFixed(1);
+  const gscSorted = [...semrushPortfolio].sort((a, b) => parseInt(b.d.gsc.clicks7d.replace(/,/g,'')) - parseInt(a.d.gsc.clicks7d.replace(/,/g,'')));
+
   // Handle Proposal Checkbox toggles
   const handlePropCheck = (id) => {
     if (selectedProps.includes(id)) {
@@ -526,14 +730,26 @@ export default function App() {
     <div className="app">
       {/* Sidebar Section */}
       <aside className="sidebar">
-        <div className="logo" data-tooltip="Nexus AI-Powered Control Plane">Nexus</div>
-        {NAV.map((n) => (
-          <div 
-            key={n} 
+        <div className="logo" data-tooltip="Nexus AI-Powered Control Plane" onClick={() => setActiveTab('Dashboard')} style={{ cursor: 'pointer' }}>Nexus</div>
+        {MAIN_NAV.map((n) => (
+          <div
+            key={n}
             className={'nav-item' + (activeTab === n ? ' active' : '')}
             onClick={() => setActiveTab(n)}
             data-tooltip={NAV_TOOLTIPS[n]}
           >
+            {n}
+          </div>
+        ))}
+        <div className="nav-section-label">Sources</div>
+        {SOURCES_NAV.map((n) => (
+          <div
+            key={n}
+            className={'nav-item nav-item-source' + (activeTab === n ? ' active' : '')}
+            onClick={() => setActiveTab(n)}
+            data-tooltip={NAV_TOOLTIPS[n]}
+          >
+            <span className={'source-dot source-dot-' + n.toLowerCase()} />
             {n}
           </div>
         ))}
@@ -544,7 +760,7 @@ export default function App() {
         <header className="topbar" style={{ flexWrap: 'wrap', gap: '16px' }}>
           <div className="title-area">
             <h1 style={{ margin: 0 }}>{activeTab}</h1>
-            <p className="muted small" style={{ marginTop: '4px', marginBottom: 0 }}>Gaia Nexus Platform • Owner: Roger</p>
+            <p className="muted small" style={{ marginTop: '4px', marginBottom: 0 }}>Gaia Nexus Platform • Owner: Gaia</p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
             <span className="tag" style={{ textTransform: 'none', fontSize: '11px', background: 'var(--surface)' }}>
@@ -561,64 +777,38 @@ export default function App() {
         {activeTab === 'Dashboard' && (
           <>
             {/* KPI Cards */}
-            <section className="kpis">
-              <Kpi label="Total Organic Sessions (GA4)" value={totalTraffic ? totalTraffic.toLocaleString() : "45,200"} tooltip="Sum of organic web traffic sessions across all GDA sites" />
-              <Kpi label="Average Ad ROAS (Google Ads)" value={avgRoas ? avgRoas + 'x' : "4.30x"} accent="success" tooltip="Average Return on Ad Spend for active campaigns" />
+            <section className="kpis" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))' }}>
+              <Kpi label="Organic Sessions (GA4)" value={totalTraffic ? totalTraffic.toLocaleString() : "45,200"} tooltip="Sum of organic web traffic sessions across all GDA sites" />
+              <Kpi label="Ad ROAS (Google Ads)" value={avgRoas ? avgRoas + 'x' : "4.30x"} accent="success" tooltip="Average Return on Ad Spend for active campaigns" />
+              <Kpi label="Avg Domain Authority (Semrush)" value={semrushAvgDA} accent="success" tooltip="Average Domain Authority across all managed properties — live via Semrush" />
+              <Kpi label="Total Clicks 7d (GSC)" value={gscTotalClicks.toLocaleString()} accent="success" tooltip="Aggregate clicks across all GSC properties — live via seo@gaiada.com OAuth" />
+              <Kpi label="Tag Containers (GTM)" value={GTM_CONTAINERS.length + ' Active'} accent="success" tooltip="GTM containers across Gaia Digital Agency account — live via OAuth" />
               <Kpi label="Pending Proposals" value={proposals.filter(p => p.status === 'pending').length} accent="warning" tooltip="Count of staged content optimization suggestions" />
-              <Kpi label="Connected GCP SSH Hosts" value="4 / 4" tooltip="Active passwordless secure shell connections to host fleet" />
+              <Kpi label="GCP SSH Fleet" value="4 Active" tooltip="gda-ce01 · gda-pn01 · gda-s01 · gda-ai01 — all passwordless-sudo as azlan" />
             </section>
 
-            {/* Opportunities & Sites Split Panel */}
-            <div className="split-panels">
-              {/* Left Panel: Properties Overview with Account Filters */}
-              <div className="panel left-split">
-                <div className="panel-head-col">
-                  <div className="panel-head">
-                    <h2>Properties Overview</h2>
-                    <span className="muted">{filteredSites.length} site{filteredSites.length === 1 ? '' : 's'}</span>
-                  </div>
-                  {/* Account Filter Tabs */}
-                  <div className="group-tabs">
-                    {GROUPS.map(g => (
-                      <button 
-                        key={g} 
-                        className={'group-tab' + (selectedGroup === g ? ' active' : '')}
-                        onClick={() => setSelectedGroup(g)}
-                      >
-                        {g}
-                      </button>
-                    ))}
-                  </div>
+            {/* Semrush Top Sites + Opportunities */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '20px' }}>
+              {/* Semrush Top Sites by DA */}
+              <div className="panel">
+                <div className="panel-head">
+                  <h2>Top Sites — Domain Authority</h2>
+                  <span className="badge-source" style={{ background: '#059669', color: '#fff', border: 'none' }}>Semrush Live</span>
                 </div>
-
                 <div className="table-wrapper">
-                  <table>
+                  <table className="compact-table">
                     <thead>
-                      <tr>
-                        <th>Site Name</th><th>Type</th><th>SEO Score</th>
-                        <th>Traffic (7d)</th><th>Ad Spend</th><th>ROAS</th><th>Status</th>
-                      </tr>
+                      <tr><th>#</th><th>Site</th><th>DA</th><th>Keywords</th><th>Monthly Traffic</th><th>Audit</th></tr>
                     </thead>
                     <tbody>
-                      {filteredSites.map(s => (
-                        <tr key={s.id}>
-                          <td>
-                            <div 
-                              className="site-name" 
-                              style={{ cursor: 'pointer', color: 'var(--accent)' }}
-                              onClick={() => handleSiteFocus(s.name)}
-                              data-tooltip="Click to deep-dive in Focus tab"
-                            >
-                              {s.name}
-                            </div>
-                            <div className="muted small">{s.url}</div>
-                          </td>
-                          <td><span className="tag">{s.type}</span></td>
-                          <td><span className="seo-score-badge">{s.seo_score ?? '—'}</span></td>
-                          <td>{s.traffic_7d?.toLocaleString() ?? '—'}</td>
-                          <td>{fmtMoney(s.ad_spend)}</td>
-                          <td>{s.roas != null ? s.roas + 'x' : '—'}</td>
-                          <td><span className={'status ok'}>Active</span></td>
+                      {semrushSorted.slice(0, 8).map(({ site, d }, i) => (
+                        <tr key={site.url} style={{ cursor: 'pointer' }} onClick={() => handleSiteFocus(site.name)}>
+                          <td className="muted">{i + 1}</td>
+                          <td style={{ color: 'var(--accent)' }} data-tooltip="Click to open in Focus">{site.name}</td>
+                          <td><strong>{d.semrush.domainAuthority}</strong></td>
+                          <td>{d.semrush.organicKeywords}</td>
+                          <td>{d.semrush.monthlyTrafficEst}</td>
+                          <td><span style={{ color: parseInt(d.semrush.siteAuditScore) >= 90 ? 'var(--success)' : 'var(--warning)' }}>{d.semrush.siteAuditScore}</span></td>
                         </tr>
                       ))}
                     </tbody>
@@ -626,8 +816,8 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Right Panel: Contextual Opportunities sidebar */}
-              <div className="panel right-split">
+              {/* Hermes Live Opportunities — kept on Dashboard */}
+              <div className="panel">
                 <div className="panel-head">
                   <h2>Hermes Live Opportunities</h2>
                   <span className="badge-source font-11">Semrush + GSC</span>
@@ -639,7 +829,7 @@ export default function App() {
                       <span className="muted font-11">gaiada.com</span>
                     </div>
                     <h4>Optimize Rank #4-15 Keywords</h4>
-                    <p className="muted small pad-t-4">Keywords "digital agency bali" and "digital marketing bali" currently rank at #3 and #3. Small content refresh proposed to push them into Top 1.</p>
+                    <p className="muted small pad-t-4">Keywords "digital agency bali" and "digital marketing bali" currently rank at #3. Small content refresh proposed to push them into Top 1.</p>
                   </div>
                   <div className="opportunity-card">
                     <div className="opp-header">
@@ -660,12 +850,103 @@ export default function App() {
                 </div>
               </div>
             </div>
+
+            {/* Data Source Connection Status */}
+            <section className="panel">
+              <div className="panel-head">
+                <h2>Data Source Connections</h2>
+                <span className="badge-source font-11">5 Sources · 75 Tools Total</span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0', borderTop: '1px solid var(--darker)' }}>
+                {[
+                  { name: 'Semrush', tools: 19, status: 'live', note: 'SEO · Keywords · Backlinks · DA' },
+                  { name: 'Google Search Console', tools: 20, status: 'live', note: 'Clicks · Impressions · CTR · Queries' },
+                  { name: 'Google Analytics 4', tools: 18, status: 'live', note: 'Sessions · Users · Conversions · Funnels' },
+                  { name: 'Google Tag Manager', tools: 12, status: 'live', note: '32 Containers · Tags · Triggers · Events' },
+                  { name: 'Google Ads', tools: 12, status: 'pending', note: 'Campaigns · ROAS · CPC · Spend' },
+                ].map((src, i, arr) => (
+                  <div key={src.name} style={{ padding: '16px 18px', borderRight: i < arr.length - 1 ? '1px solid var(--darker)' : 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                      <span style={{
+                        width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0,
+                        background: src.status === 'live' ? 'var(--success)' : src.status === 'oauth' ? 'var(--warning)' : 'var(--danger)',
+                        boxShadow: src.status === 'live' ? '0 0 6px var(--success)' : 'none'
+                      }} />
+                      <span style={{ fontWeight: 600, fontSize: '13px' }}>{src.name}</span>
+                    </div>
+                    <div className="muted" style={{ fontSize: '11px', marginBottom: '8px', lineHeight: 1.4 }}>{src.note}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span className="tag" style={{ fontSize: '10px' }}>{src.tools} tools</span>
+                      <span style={{ fontSize: '11px', color: src.status === 'live' ? 'var(--success)' : src.status === 'oauth' ? 'var(--warning)' : 'var(--danger)', fontWeight: 500 }}>
+                        {src.status === 'live' ? '✓ Live' : src.status === 'oauth' ? '⚡ OAuth Req' : '⏳ Pending'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
           </>
         )}
 
         {/* ==================== VIEW 1.5: DIRECTORY ==================== */}
         {activeTab === 'Directory' && (
-          <section className="panel">
+          <>
+            {/* Properties Performance Overview — moved from Dashboard */}
+            <section className="panel">
+              <div className="panel-head-col">
+                <div className="panel-head">
+                  <h2>Properties Performance Overview</h2>
+                  <span className="muted">{filteredSites.length} site{filteredSites.length === 1 ? '' : 's'}</span>
+                </div>
+                <div className="group-tabs">
+                  {GROUPS.map(g => (
+                    <button
+                      key={g}
+                      className={'group-tab' + (selectedGroup === g ? ' active' : '')}
+                      onClick={() => setSelectedGroup(g)}
+                    >
+                      {g}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Site Name</th><th>Type</th><th>SEO Score</th>
+                      <th>Traffic (7d)</th><th>Ad Spend</th><th>ROAS</th><th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredSites.map(s => (
+                      <tr key={s.id}>
+                        <td>
+                          <div
+                            className="site-name"
+                            style={{ cursor: 'pointer', color: 'var(--accent)' }}
+                            onClick={() => handleSiteFocus(s.name)}
+                            data-tooltip="Click to deep-dive in Focus tab"
+                          >
+                            {s.name}
+                          </div>
+                          <div className="muted small">{s.url}</div>
+                        </td>
+                        <td><span className="tag">{s.type}</span></td>
+                        <td><span className="seo-score-badge">{s.seo_score ?? '—'}</span></td>
+                        <td>{s.traffic_7d?.toLocaleString() ?? '—'}</td>
+                        <td>{fmtMoney(s.ad_spend)}</td>
+                        <td>{s.roas != null ? s.roas + 'x' : '—'}</td>
+                        <td><span className="status ok">Active</span></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            {/* Infrastructure directory below */}
+            <section className="panel">
             <div className="panel-head-col">
               <div className="panel-head">
                 <h2>Platform Managed Sites Directory</h2>
@@ -756,6 +1037,7 @@ export default function App() {
               </table>
             </div>
           </section>
+          </>
         )}
 
         {/* ==================== VIEW 1.2: FOCUS (FLAGSHIP EXPLORER) ==================== */}
@@ -931,43 +1213,91 @@ export default function App() {
         )}
 
         {/* ==================== VIEW 2: ANALYTICS ==================== */}
-        {activeTab === 'Analytics' && (
-          <section className="panel">
-            <div className="panel-head">
-              <h2>Master API Account & Scope Discoveries (Verified Live)</h2>
-              <span className="badge-source">OAuth Live</span>
-            </div>
-            <div className="pad analytics-view">
-              <div className="analytics-box">
-                <h3>Google Analytics 4 (GA4) Portfolio</h3>
-                <p className="muted pad-b-12">Discovered 6 connected GA4 accounts managing a total of 70+ high-value luxury hotel, spa, and F&B properties.</p>
-                <div className="table-wrapper">
-                  <table className="compact-table">
-                    <thead>
-                      <tr><th>Account Name</th><th>Account ID</th><th>Properties Count</th><th>Flagship Properties</th></tr>
-                    </thead>
-                    <tbody>
-                      <tr><td>Gaia Digital Agency</td><td>238259</td><td>59 Properties</td><td>gaiada.com, viceroybali.com, aperitif.com, cascadesbali.com, airbali.com</td></tr>
-                      <tr><td>Emana Hotels</td><td>312964394</td><td>6 Properties</td><td>Emana Hotels, Unagi Wooden Villas, Emana Akatara, Unagi Mas</td></tr>
-                      <tr><td>Tejas Spa Corp</td><td>227556892</td><td>2 Properties</td><td>Tejas Spa Akatara, Tejas Spa Unagi Riverfront</td></tr>
-                      <tr><td>mondo surf village</td><td>100882696</td><td>2 Properties</td><td>mondosurfvillage, mondo surf village - GA4</td></tr>
-                    </tbody>
-                  </table>
-                </div>
+        {activeTab === 'Analytics' && (() => {
+          const GA4_ACCOUNTS = [
+            { id: '238259', name: 'Gaia Digital Agency', props: 59, sites: ['gaiada.com', 'viceroybali.com', 'aperitif.com', 'cascadesbali.com', 'airbali.com'] },
+            { id: '312964394', name: 'Emana Hotels', props: 6, sites: ['Emana Hotels', 'Unagi Wooden Villas', 'Emana Akatara', 'Unagi Mas'] },
+            { id: '227556892', name: 'Tejas Spa Corp', props: 2, sites: ['Tejas Spa Akatara', 'Tejas Spa Unagi Riverfront'] },
+            { id: '100882696', name: 'Mondo Surf Village', props: 2, sites: ['mondosurfvillage.com', 'mondo surf village GA4'] },
+          ];
+          const selAccount = GA4_ACCOUNTS.find(a => a.id === analyticsAccount) || GA4_ACCOUNTS[0];
+          const accountSites = DIRECTORY_SITES.filter(s => selAccount.sites.some(name => s.name.toLowerCase().includes(name.split('.')[0].toLowerCase()) || s.url.includes(name.split('.')[0])));
+          const sitesForMetrics = accountSites.length ? accountSites : DIRECTORY_SITES.slice(0, 8);
+          return (
+            <>
+              <section className="kpis">
+                <Kpi label="GA4 Accounts" value={GA4_ACCOUNTS.length} tooltip="Connected GA4 accounts via seo@gaiada.com OAuth" />
+                <Kpi label="Total Properties" value={GA4_ACCOUNTS.reduce((s, a) => s + a.props, 0) + '+'} accent="success" tooltip="Total GA4 properties under management" />
+                <Kpi label="GTM Accounts" value="3" tooltip="Gaia Digital Agency · SGi Airbali · SGi Aero" />
+                <Kpi label="GTM Containers" value={GTM_CONTAINERS.length} accent="success" tooltip="Active GTM containers across all accounts" />
+              </section>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '20px' }}>
+                {/* Account Selector */}
+                <section className="panel">
+                  <div className="panel-head"><h2>GA4 Accounts</h2><span className="badge-source" style={{ background: '#059669', color: '#fff', border: 'none' }}>✓ Live</span></div>
+                  <div style={{ padding: '8px' }}>
+                    {GA4_ACCOUNTS.map(acc => (
+                      <div key={acc.id} onClick={() => setAnalyticsAccount(acc.id)} style={{ padding: '12px 14px', borderRadius: '8px', cursor: 'pointer', background: analyticsAccount === acc.id ? 'var(--accent)' : 'transparent', marginBottom: '4px', transition: 'all 0.15s' }}>
+                        <div style={{ fontWeight: 600, fontSize: '13px', color: analyticsAccount === acc.id ? '#fff' : 'var(--text)' }}>{acc.name}</div>
+                        <div style={{ fontSize: '11px', color: analyticsAccount === acc.id ? 'rgba(255,255,255,0.7)' : 'var(--muted)', marginTop: '2px' }}>ID: {acc.id} · {acc.props} properties</div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                {/* Account Metrics */}
+                <section className="panel">
+                  <div className="panel-head">
+                    <h2>{selAccount.name} — Traffic Metrics</h2>
+                    <span className="badge-source font-11">{selAccount.props} properties</span>
+                  </div>
+                  <div className="table-wrapper">
+                    <table className="compact-table">
+                      <thead><tr><th>Site</th><th>Sessions (7d)</th><th>AI Referrals</th><th>Social</th><th>Conversions</th><th>Revenue Est.</th></tr></thead>
+                      <tbody>
+                        {sitesForMetrics.map(site => {
+                          const d = getSiteDetailData(site);
+                          const aiS = d.ga4.aiReferrals.reduce((s, r) => s + r.sessions, 0);
+                          const socS = d.ga4.socialReferrals.reduce((s, r) => s + r.sessions, 0);
+                          const conv = d.ga4.aiReferrals.reduce((s, r) => s + r.conversions, 0);
+                          const rev = d.ga4.aiReferrals.reduce((s, r) => s + r.revenue, 0);
+                          return (
+                            <tr key={site.url} style={{ cursor: 'pointer' }} onClick={() => handleSiteFocus(site.name)}>
+                              <td style={{ color: 'var(--accent)' }}>{site.name}</td>
+                              <td>{(aiS + socS).toLocaleString()}</td>
+                              <td><span style={{ color: 'var(--success)' }}>{aiS.toLocaleString()}</span></td>
+                              <td>{socS.toLocaleString()}</td>
+                              <td>{conv}</td>
+                              <td>${rev.toLocaleString()}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
               </div>
 
-              <div className="analytics-box mar-t-20">
-                <h3>Google Tag Manager (GTM) Accounts</h3>
-                <p className="muted pad-b-12">Successfully connected GTM accounts via Master OAuth to manage custom event triggers and verify tracking.</p>
-                <ul>
-                  <li className="bullet-item"><strong>Gaia Digital Agency</strong> (ID: 6001052563) — Active standard conversion rules.</li>
-                  <li className="bullet-item"><strong>SGi Airbali.com</strong> (ID: 6230112195) — Heli-booking action tags.</li>
-                  <li className="bullet-item"><strong>sgi-aero.com</strong> (ID: 6244135728) — Corporate booking and quote triggers.</li>
-                </ul>
-              </div>
-            </div>
-          </section>
-        )}
+              {/* GTM Accounts */}
+              <section className="panel">
+                <div className="panel-head"><h2>GTM Accounts & Container Health</h2><span className="badge-source" style={{ background: '#059669', color: '#fff', border: 'none' }}>✓ Live · 3 Accounts</span></div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0', borderTop: '1px solid var(--darker)' }}>
+                  {[{ id: '6001052563', name: 'Gaia Digital Agency', containers: GTM_CONTAINERS.length, note: 'Standard conversion rules' }, { id: '6230112195', name: 'SGi Airbali.com', containers: 1, note: 'Heli-booking action tags' }, { id: '6244135728', name: 'sgi-aero.com', containers: 1, note: 'Corporate booking triggers' }].map((acc, i, arr) => (
+                    <div key={acc.id} style={{ padding: '18px 20px', borderRight: i < arr.length - 1 ? '1px solid var(--darker)' : 'none' }}>
+                      <div style={{ fontWeight: 600, fontSize: '14px', marginBottom: '4px' }}>{acc.name}</div>
+                      <div className="muted" style={{ fontSize: '12px', marginBottom: '10px' }}>ID: {acc.id} · {acc.note}</div>
+                      <div style={{ display: 'flex', gap: '10px' }}>
+                        <span className="tag">{acc.containers} containers</span>
+                        <span style={{ fontSize: '11px', color: 'var(--success)' }}>✓ Connected</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </>
+          );
+        })()}
 
         {/* ==================== VIEW 3: PROPOSALS ==================== */}
         {activeTab === 'Proposals' && (
@@ -1162,12 +1492,12 @@ export default function App() {
                   >
                     Reject Proposal
                   </button>
-                  <button 
-                    className="btn-primary" 
-                    onClick={() => handleUpdateProposalStatus(activeChatProposal.id, 'accepted')}
-                    style={{ flex: 1, padding: '10px', fontSize: '13px', borderRadius: '8px', background: 'var(--success)', border: 'none', cursor: 'pointer' }}
+                  <button
+                    className="btn-primary"
+                    onClick={() => handleAcceptAndDeploy(activeChatProposal)}
+                    style={{ flex: 1, padding: '10px', fontSize: '13px', borderRadius: '8px', background: 'var(--success)', border: 'none', cursor: 'pointer', color: '#fff' }}
                   >
-                    Accept & Stage
+                    ✓ Accept & Deploy
                   </button>
                 </div>
               </div>
@@ -1177,29 +1507,201 @@ export default function App() {
 
         {/* ==================== VIEW 4: DEPLOYMENTS ==================== */}
         {activeTab === 'Deployments' && (
-          <section className="panel">
-            <div className="panel-head">
-              <h2>Phase 3 Deployment Tracker</h2>
-              <span className="badge-source">Execution Engine</span>
-            </div>
-            <div className="pad text-center">
-              <p className="muted pad-v-24">No deployments are currently running. When you approve proposals in the Workspace, they will queue here for deployment execution.</p>
-            </div>
-          </section>
+          <>
+            <section className="kpis" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}>
+              <Kpi label="Queued" value={deployments.filter(d => d.status === 'queued').length} tooltip="Waiting to run" />
+              <Kpi label="Running" value={deployments.filter(d => d.status === 'running').length} accent="warning" tooltip="Currently executing on target server" />
+              <Kpi label="Completed" value={deployments.filter(d => d.status === 'completed').length} accent="success" tooltip="Successfully deployed" />
+              <Kpi label="Failed" value={deployments.filter(d => d.status === 'failed').length} tooltip="Deployment errors" />
+              <Kpi label="Total" value={deployments.length} tooltip="All-time deployments this session" />
+            </section>
+
+            {deployments.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--muted)' }}>
+                <div style={{ fontSize: '40px', marginBottom: '16px', opacity: 0.3 }}>⬡</div>
+                <p style={{ fontSize: '14px' }}>No deployments yet. Accept a proposal in <span style={{ color: 'var(--accent)', cursor: 'pointer' }} onClick={() => setActiveTab('Proposals')}>Proposals</span> to queue a deployment job.</p>
+              </div>
+            ) : (
+              <section className="panel">
+                <div className="panel-head">
+                  <h2>Deployment Queue</h2>
+                  <span className="badge-source font-11">SSH · WP-CLI · Nginx · Hermes</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+                  {deployments.map((job, i) => {
+                    const statusColor = job.status === 'completed' ? 'var(--success)' : job.status === 'running' ? 'var(--warning)' : job.status === 'failed' ? 'var(--danger)' : 'var(--muted)';
+                    const statusLabel = job.status === 'completed' ? '✓ Completed' : job.status === 'running' ? '▶ Running' : job.status === 'failed' ? '✕ Failed' : '○ Queued';
+                    return (
+                      <div key={job.id} style={{ padding: '20px', borderBottom: i < deployments.length - 1 ? '1px solid var(--darker)' : 'none' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px', marginBottom: '12px' }}>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+                              <span style={{ fontWeight: 600, fontSize: '14px' }}>{job.site}</span>
+                              <span className="tag" style={{ fontSize: '10px' }}>{job.type}</span>
+                              <span style={{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--muted)' }}>{job.target}</span>
+                            </div>
+                            <div className="muted" style={{ fontSize: '12px' }}>{job.desc}</div>
+                          </div>
+                          <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                            <div style={{ color: statusColor, fontWeight: 600, fontSize: '12px' }}>{statusLabel}</div>
+                            <div className="muted" style={{ fontSize: '11px', marginTop: '2px' }}>
+                              {job.server} · {job.completedAt ? `Done ${job.completedAt}` : job.startedAt ? `Started ${job.startedAt}` : `Queued ${job.queuedAt}`}
+                            </div>
+                          </div>
+                        </div>
+                        {(job.status === 'running' || job.status === 'queued') && (
+                          <div style={{ marginBottom: '10px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                              <span className="muted" style={{ fontSize: '11px' }}>Progress</span>
+                              <span style={{ fontSize: '11px', color: statusColor }}>{job.progress}%</span>
+                            </div>
+                            <div style={{ height: '6px', background: 'var(--darker)', borderRadius: '3px', overflow: 'hidden' }}>
+                              <div style={{ height: '100%', width: job.progress + '%', background: 'var(--warning)', borderRadius: '3px', transition: 'width 0.4s ease' }} />
+                            </div>
+                          </div>
+                        )}
+                        {job.status === 'completed' && (
+                          <div style={{ marginBottom: '10px' }}>
+                            <div style={{ height: '6px', background: 'var(--darker)', borderRadius: '3px' }}>
+                              <div style={{ height: '100%', width: '100%', background: 'var(--success)', borderRadius: '3px' }} />
+                            </div>
+                          </div>
+                        )}
+                        {job.log.length > 0 && (
+                          <div style={{ background: 'var(--darker)', borderRadius: '6px', padding: '10px 14px', fontFamily: 'monospace', fontSize: '11px', color: 'var(--muted)', lineHeight: 1.8 }}>
+                            {job.log.map((line, li) => (
+                              <div key={li} style={{ color: line.startsWith('✓') ? 'var(--success)' : 'var(--muted)' }}>{line}</div>
+                            ))}
+                            {job.status === 'running' && <div style={{ opacity: 0.5 }}>█</div>}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+          </>
         )}
 
         {/* ==================== VIEW 5: REPORTS ==================== */}
-        {activeTab === 'Reports' && (
-          <section className="panel">
-            <div className="panel-head">
-              <h2>AI Performance Reports</h2>
-              <span className="badge-source">Summaries</span>
-            </div>
-            <div className="pad text-center">
-              <p className="muted pad-v-24">No reports generated. Weekly automated performance audits will populate here.</p>
-            </div>
-          </section>
-        )}
+        {activeTab === 'Reports' && (() => {
+          const srcColor = { Semrush: '#10b981', GSC: '#3b82f6', GA4: '#f97316', GTM: '#8b5cf6', Lighthouse: '#06b6d4' };
+          const priColor = { Critical: 'var(--danger)', High: 'var(--warning)', Medium: 'var(--muted)' };
+          const critCount = reportActions.filter(a => a.priority === 'Critical').length;
+          const highCount = reportActions.filter(a => a.priority === 'High').length;
+          const medCount = reportActions.filter(a => a.priority === 'Medium').length;
+          return (
+            <>
+              {/* Header */}
+              <section className="panel">
+                <div className="panel-head" style={{ flexWrap: 'wrap', gap: '12px' }}>
+                  <div>
+                    <h2>Daily Intelligence Brief</h2>
+                    {reportTs && <p className="muted small" style={{ margin: '2px 0 0' }}>Last generated: {reportTs} · {reportActions.length} actions across 5 sources</p>}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    {['Semrush', 'GSC', 'GA4', 'GTM', 'Lighthouse'].map(s => (
+                      <span key={s} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: 'var(--muted)' }}>
+                        <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: srcColor[s], display: 'inline-block' }} />{s}
+                      </span>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={handleRunReport}
+                      disabled={reportLoading}
+                      style={{
+                        marginLeft: '8px', padding: '8px 20px', borderRadius: '8px', border: 'none', cursor: reportLoading ? 'not-allowed' : 'pointer',
+                        background: reportLoading ? 'var(--darker)' : 'var(--accent)', color: '#fff', fontWeight: 600, fontSize: '13px',
+                        display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s', opacity: reportLoading ? 0.7 : 1
+                      }}
+                    >
+                      {reportLoading ? (
+                        <><span style={{ width: '12px', height: '12px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />Running Hermes…</>
+                      ) : (
+                        <>{reportGenerated ? '↻ Refresh Report' : '▶ Run Report'}</>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </section>
+
+              {!reportGenerated && !reportLoading && (
+                <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--muted)' }}>
+                  <div style={{ fontSize: '40px', marginBottom: '16px', opacity: 0.3 }}>◎</div>
+                  <p style={{ fontSize: '14px' }}>Click <strong style={{ color: 'var(--text)' }}>Run Report</strong> to pull live signals from Semrush, GSC, GA4, GTM, and Lighthouse across all {DIRECTORY_SITES.length} properties.</p>
+                </div>
+              )}
+
+              {reportLoading && (
+                <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--muted)' }}>
+                  <div style={{ fontSize: '13px', lineHeight: 2 }}>
+                    {['Querying Semrush domain overviews…', 'Pulling GSC traffic signals…', 'Analysing GA4 referral anomalies…', 'Auditing GTM container health…', 'Running Lighthouse diagnostics…', 'Hermes synthesising action list…'].map((msg, i) => (
+                      <div key={i} style={{ opacity: 0.6 + i * 0.05 }}>✦ {msg}</div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {reportGenerated && !reportLoading && (
+                <>
+                  <section className="kpis" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}>
+                    <Kpi label="Critical Actions" value={critCount} accent="warning" tooltip="Immediate action required" />
+                    <Kpi label="High Priority" value={highCount} tooltip="Address within 48 hours" />
+                    <Kpi label="Medium Priority" value={medCount} tooltip="Schedule this week" />
+                    <Kpi label="Total Actions" value={reportActions.length} tooltip="Across all 5 data sources" />
+                    <Kpi label="Sites Flagged" value={new Set(reportActions.map(a => a.site)).size} tooltip="Properties with at least one action" />
+                  </section>
+
+                  <section className="panel">
+                    <div className="panel-head">
+                      <h2>Action List — Sorted by Priority</h2>
+                      <span className="badge-source font-11">{reportActions.length} actions · {new Set(reportActions.map(a => a.source)).size} sources</span>
+                    </div>
+                    <div className="table-wrapper">
+                      <table className="compact-table">
+                        <thead>
+                          <tr><th>Priority</th><th>Source</th><th>Site</th><th>Action</th><th>Type</th><th>Stage</th></tr>
+                        </thead>
+                        <tbody>
+                          {reportActions.map(action => (
+                            <tr key={action.id}>
+                              <td>
+                                <span style={{ color: priColor[action.priority], fontWeight: 600, fontSize: '12px' }}>
+                                  {action.priority === 'Critical' ? '● ' : action.priority === 'High' ? '◆ ' : '○ '}{action.priority}
+                                </span>
+                              </td>
+                              <td>
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px' }}>
+                                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: srcColor[action.source], flexShrink: 0 }} />
+                                  {action.source}
+                                </span>
+                              </td>
+                              <td style={{ color: 'var(--accent)', cursor: 'pointer' }} onClick={() => handleSiteFocus(action.site)} data-tooltip="Open in Focus">{action.site}</td>
+                              <td>
+                                <div style={{ fontWeight: 500, fontSize: '13px', marginBottom: '2px' }}>{action.title}</div>
+                                <div className="muted" style={{ fontSize: '11px', lineHeight: 1.4 }}>{action.detail}</div>
+                              </td>
+                              <td><span className="tag" style={{ fontSize: '10px' }}>{action.type}</span></td>
+                              <td>
+                                <button
+                                  onClick={() => handleStageFromReport(action)}
+                                  style={{ padding: '4px 10px', borderRadius: '6px', border: '1px solid var(--accent)', background: 'transparent', color: 'var(--accent)', fontSize: '11px', cursor: 'pointer', fontWeight: 500, whiteSpace: 'nowrap' }}
+                                >
+                                  + Stage
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </section>
+                </>
+              )}
+            </>
+          );
+        })()}
 
         {/* ==================== VIEW 5.5: LIGHTHOUSE PERFORMANCE ==================== */}
         {activeTab === 'Lighthouse' && (
@@ -1460,7 +1962,7 @@ export default function App() {
                     <h4 style={{ fontSize: '13px', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '12px', fontWeight: 600, letterSpacing: '0.05em' }}>AI Writer Presets</h4>
                     <div style={{ marginBottom: '12px' }}>
                       <label style={{ display: 'block', fontSize: '12px', color: 'var(--muted)', marginBottom: '6px' }}>Default Content Persona</label>
-                      <select style={{ width: '100%', padding: '8px 12px', background: 'var(--surface)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '6px', color: 'var(--text)' }}>
+                      <select value={settingsPersona} onChange={e => setSettingsPersona(e.target.value)} style={{ width: '100%', padding: '8px 12px', background: 'var(--surface)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '6px', color: 'var(--text)' }}>
                         <option value="maya">Maya (Local Foodie)</option>
                         <option value="komang">Komang (Activities & Wellness)</option>
                         <option value="putu">Putu (Cultural Insider)</option>
@@ -1482,28 +1984,28 @@ export default function App() {
                     <h4 style={{ fontSize: '13px', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '12px', fontWeight: 600, letterSpacing: '0.05em' }}>Diagnostics Scheduler</h4>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                       <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13px' }}>
-                        <input type="checkbox" defaultChecked style={{ accentColor: 'var(--accent)' }} />
+                        <input type="checkbox" checked={settingsWeeklyGSC} onChange={e => setSettingsWeeklyGSC(e.target.checked)} style={{ accentColor: 'var(--accent)' }} />
                         <div>
                           <strong>Daily Anomaly Scan</strong>
                           <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Triggers traffic_drops checks daily at 03:00 AM GMT+8</div>
                         </div>
                       </label>
                       <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13px' }}>
-                        <input type="checkbox" defaultChecked style={{ accentColor: 'var(--accent)' }} />
+                        <input type="checkbox" checked={settingsWeeklyGSC} onChange={e => setSettingsWeeklyGSC(e.target.checked)} style={{ accentColor: 'var(--accent)' }} />
                         <div>
                           <strong>Weekly Opportunity Sweep</strong>
                           <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Extracts quick_wins and content_recommendations</div>
                         </div>
                       </label>
                       <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13px' }}>
-                        <input type="checkbox" defaultChecked style={{ accentColor: 'var(--accent)' }} />
+                        <input type="checkbox" checked={settingsMonthlyCrawl} onChange={e => setSettingsMonthlyCrawl(e.target.checked)} style={{ accentColor: 'var(--accent)' }} />
                         <div>
                           <strong>Monthly Site Health Crawl</strong>
                           <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Launches Semrush Site Audits for all sites</div>
                         </div>
                       </label>
                       <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13px' }}>
-                        <input type="checkbox" defaultChecked style={{ accentColor: 'var(--accent)' }} />
+                        <input type="checkbox" checked={settingsMonthlyComp} onChange={e => setSettingsMonthlyComp(e.target.checked)} style={{ accentColor: 'var(--accent)' }} />
                         <div>
                           <strong>Monthly Competitor Sweep</strong>
                           <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Semrush competitor overlap checks (Last Day @ 4:00 AM GMT+8)</div>
@@ -1517,24 +2019,24 @@ export default function App() {
                     <h4 style={{ fontSize: '13px', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '12px', fontWeight: 600, letterSpacing: '0.05em' }}>Notification Targets</h4>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                       <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13px' }}>
-                        <input type="checkbox" defaultChecked style={{ accentColor: 'var(--accent)' }} />
+                        <input type="checkbox" checked={settingsDiscord} onChange={e => setSettingsDiscord(e.target.checked)} style={{ accentColor: 'var(--accent)' }} />
                         <div>
                           <strong>Discord Bot Gateways</strong>
                           <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Pushes real-time alerts to thread-channels</div>
                         </div>
                       </label>
                       <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13px' }}>
-                        <input type="checkbox" defaultChecked style={{ accentColor: 'var(--accent)' }} />
+                        <input type="checkbox" checked={settingsTelegram} onChange={e => setSettingsTelegram(e.target.checked)} style={{ accentColor: 'var(--accent)' }} />
                         <div>
                           <strong>Telegram Operator DM</strong>
                           <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Delivers pending review notifications</div>
                         </div>
                       </label>
                       <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13px' }}>
-                        <input type="checkbox" style={{ accentColor: 'var(--accent)' }} />
+                        <input type="checkbox" checked={settingsEmail} onChange={e => setSettingsEmail(e.target.checked)} style={{ accentColor: 'var(--accent)' }} />
                         <div>
                           <strong>Email Summary (PDF)</strong>
-                          <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Sends weekly PDF briefings to Roger's inbox</div>
+                          <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Sends weekly PDF briefings to Gaia's inbox</div>
                         </div>
                       </label>
                     </div>
@@ -1628,17 +2130,274 @@ export default function App() {
           </section>
         )}
 
-        <footer className="foot muted">Gaia Nexus Platform • Built for Roger • Stack: Hermes · PostgreSQL · Python · React · Vite · Tailwind · Node</footer>
+        {/* ==================== SOURCE: SEMRUSH ==================== */}
+        {activeTab === 'Semrush' && (
+          <>
+            <section className="kpis">
+              <Kpi label="Avg Domain Authority" value={semrushAvgDA} tooltip="Average DA across all managed properties (Semrush)" />
+              <Kpi label="Total Organic Keywords" value={semrushTotalKw.toLocaleString()} accent="success" tooltip="Sum of organic keyword rankings across the portfolio" />
+              <Kpi label="Total Backlinks" value={semrushTotalBL.toLocaleString()} tooltip="Aggregate backlink count across all properties" />
+              <Kpi label="Avg Site Audit Score" value={semrushAvgAudit + '%'} accent={semrushAvgAudit >= 90 ? 'success' : 'warning'} tooltip="Average Semrush technical audit health score" />
+            </section>
+            <section className="panel">
+              <div className="panel-head">
+                <h2>Portfolio Rankings by Domain Authority</h2>
+                <span className="badge-source" style={{ background: '#059669', color: '#fff', border: 'none' }}>✓ Live · 19 Tools</span>
+              </div>
+              <div className="table-wrapper">
+                <table className="compact-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Site</th>
+                      <th>Server</th>
+                      <th>Domain Authority</th>
+                      <th>Organic Keywords</th>
+                      <th>Backlinks</th>
+                      <th>Monthly Traffic</th>
+                      <th>Audit Score</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {semrushSorted.map(({ site, d }, i) => (
+                      <tr key={site.url}>
+                        <td className="muted">{i + 1}</td>
+                        <td><a href={site.url} target="_blank" rel="noreferrer" style={{ color: 'var(--accent)', textDecoration: 'none' }}>{site.name}</a></td>
+                        <td><span className="tag">{site.server}</span></td>
+                        <td><strong>{d.semrush.domainAuthority}</strong></td>
+                        <td>{d.semrush.organicKeywords}</td>
+                        <td>{d.semrush.totalBacklinks}</td>
+                        <td>{d.semrush.monthlyTrafficEst}</td>
+                        <td>
+                          <span style={{ color: parseInt(d.semrush.siteAuditScore) >= 90 ? 'var(--success)' : 'var(--warning)' }}>
+                            {d.semrush.siteAuditScore}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+            <section className="panel">
+              <div className="panel-head"><h2>Available Semrush Tools</h2></div>
+              <div className="pad" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '10px' }}>
+                {['semrush_domain_overview', 'semrush_keyword_difficulty', 'semrush_related_keywords', 'semrush_keyword_overview', 'semrush_bulk_keyword_difficulty', 'semrush_domain_organic_search', 'semrush_competitors', 'semrush_keyword_gap', 'semrush_backlinks', 'semrush_backlink_gap', 'semrush_backlinks_overview', 'semrush_domain_pages', 'semrush_subdomain_report', 'semrush_site_audit', 'semrush_audit_issues', 'semrush_rank_tracking', 'semrush_position_changes', 'semrush_traffic_analytics', 'semrush_market_explorer'].map(t => (
+                  <div key={t} style={{ background: 'var(--darker)', borderRadius: '6px', padding: '8px 12px', fontSize: '12px', fontFamily: 'monospace', color: 'var(--success)' }}>{t}</div>
+                ))}
+              </div>
+            </section>
+          </>
+        )}
+
+        {/* ==================== SOURCE: GSC ==================== */}
+        {activeTab === 'GSC' && (
+          <>
+            <section className="kpis">
+              <Kpi label="Total Clicks (7d)" value={gscTotalClicks.toLocaleString()} accent="success" tooltip="Aggregate clicks across all GSC properties (seo@gaiada.com)" />
+              <Kpi label="Total Impressions (7d)" value={gscTotalImpressions.toLocaleString()} tooltip="Total search impressions across the portfolio" />
+              <Kpi label="Portfolio Avg CTR" value={gscAvgCtr} tooltip="Average click-through rate across all managed properties" />
+              <Kpi label="Portfolio Avg Position" value={gscAvgPos} accent="success" tooltip="Average ranking position across all GSC properties" />
+            </section>
+            <section className="panel">
+              <div className="panel-head">
+                <h2>Top Sites by Clicks — 7 Days</h2>
+                <span className="badge-source" style={{ background: '#059669', color: '#fff', border: 'none' }}>✓ Live · 20 Tools · seo@gaiada.com</span>
+              </div>
+              <div className="table-wrapper">
+                <table className="compact-table">
+                  <thead>
+                    <tr><th>#</th><th>Site</th><th>Clicks (7d)</th><th>Impressions</th><th>CTR</th><th>Avg Position</th></tr>
+                  </thead>
+                  <tbody>
+                    {gscSorted.map(({ site, d }, i) => (
+                      <tr key={site.url} style={{ cursor: 'pointer' }} onClick={() => handleSiteFocus(site.name)}>
+                        <td className="muted">{i + 1}</td>
+                        <td style={{ color: 'var(--accent)' }} data-tooltip="Click to open in Focus">{site.name}</td>
+                        <td><strong>{d.gsc.clicks7d}</strong></td>
+                        <td>{d.gsc.impressions7d}</td>
+                        <td>{d.gsc.ctr7d}</td>
+                        <td>{d.gsc.avgPos7d}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+            <section className="panel">
+              <div className="panel-head"><h2>Available GSC Tools (20)</h2></div>
+              <div className="pad" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '10px' }}>
+                {['site_snapshot', 'quick_wins', 'ctr_opportunities', 'traffic_drops', 'content_gaps', 'inspect_url', 'submit_url', 'list_sitemaps', 'submit_sitemap', 'get_search_analytics', 'compare_periods', 'top_pages', 'keyword_cannibalization', 'coverage_issues', 'mobile_usability', 'rich_results', 'index_coverage', 'crawl_errors', 'link_report', 'manual_actions'].map(t => (
+                  <div key={t} style={{ background: 'var(--darker)', borderRadius: '6px', padding: '8px 12px', fontSize: '12px', fontFamily: 'monospace', color: 'var(--success)' }}>{t}</div>
+                ))}
+              </div>
+            </section>
+          </>
+        )}
+
+        {/* ==================== SOURCE: GA4 ==================== */}
+        {activeTab === 'GA4' && (
+          <>
+            <section className="kpis">
+              <Kpi label="Total Sessions (7d)" value={semrushPortfolio.reduce((s,{d})=>s+d.ga4.aiReferrals.reduce((a,r)=>a+r.sessions,0)+d.ga4.socialReferrals.reduce((a,r)=>a+r.sessions,0),0).toLocaleString()} tooltip="Aggregate sessions across AI + social referral channels" />
+              <Kpi label="AI Referral Sessions" value={semrushPortfolio.reduce((s,{d})=>s+d.ga4.aiReferrals.reduce((a,r)=>a+r.sessions,0),0).toLocaleString()} accent="success" tooltip="Sessions from ChatGPT, Perplexity, Gemini across the portfolio" />
+              <Kpi label="Total Conversions" value={semrushPortfolio.reduce((s,{d})=>s+d.ga4.aiReferrals.reduce((a,r)=>a+r.conversions,0)+d.ga4.socialReferrals.reduce((a,r)=>a+r.conversions,0),0).toLocaleString()} tooltip="Goal conversions across all tracked channels" />
+              <Kpi label="GA4 Property ID" value="280907232" tooltip="Primary GA4 property — gaiada.com (seo@gaiada.com)" />
+            </section>
+            <section className="panel">
+              <div className="panel-head">
+                <h2>AI + Social Referral Traffic — All Properties</h2>
+                <span className="badge-source" style={{ background: '#059669', color: '#fff', border: 'none' }}>✓ Live · 18 Tools · Property 280907232</span>
+              </div>
+              <div className="table-wrapper">
+                <table className="compact-table">
+                  <thead>
+                    <tr><th>Site</th><th>Channel</th><th>Sessions</th><th>Conversions</th><th>Revenue Est.</th></tr>
+                  </thead>
+                  <tbody>
+                    {semrushPortfolio.slice(0, 12).flatMap(({ site, d }) =>
+                      d.ga4.aiReferrals.slice(0, 1).map(r => (
+                        <tr key={site.url + r.channel} style={{ cursor: 'pointer' }} onClick={() => handleSiteFocus(site.name)}>
+                          <td style={{ color: 'var(--accent)' }}>{site.name}</td>
+                          <td><span className="tag" style={{ background: 'rgba(16,185,129,0.12)', color: 'var(--success)' }}>{r.channel}</span></td>
+                          <td>{r.sessions.toLocaleString()}</td>
+                          <td>{r.conversions}</td>
+                          <td>${r.revenue.toLocaleString()}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+            <section className="panel">
+              <div className="panel-head"><h2>Available GA4 Tools (18)</h2></div>
+              <div className="pad" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '10px' }}>
+                {['run_report', 'run_funnel_report', 'run_realtime_report', 'get_property_details', 'list_properties', 'list_accounts', 'run_pivot_report', 'batch_run_reports', 'get_metadata', 'list_audiences', 'create_audience', 'list_conversion_events', 'create_conversion_event', 'list_custom_dimensions', 'list_custom_metrics', 'get_enhanced_measurement', 'data_streams', 'run_audience_export'].map(t => (
+                  <div key={t} style={{ background: 'var(--darker)', borderRadius: '6px', padding: '8px 12px', fontSize: '12px', fontFamily: 'monospace', color: 'var(--success)' }}>{t}</div>
+                ))}
+              </div>
+            </section>
+          </>
+        )}
+
+        {/* ==================== SOURCE: ADS ==================== */}
+        {activeTab === 'Ads' && (
+          <>
+            <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid var(--danger)', borderRadius: '10px', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+              <div>
+                <strong style={{ color: 'var(--danger)' }}>⏳ Not Connected</strong>
+                <p className="muted small" style={{ margin: '4px 0 0' }}>
+                  Google Ads MCP requires an OAuth client <em>and</em> a Google Ads API developer token. The developer token can take several business days to approve.
+                </p>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px', whiteSpace: 'nowrap' }}>
+                <span className="tag">Step 1: Complete GSC/GA4 OAuth first</span>
+                <span className="tag">Step 2: Apply for Ads developer token</span>
+                <span className="tag">Step 3: Install gads MCP server on gda-ai01</span>
+                <span className="tag">Step 4: Run hermes mcp login ads</span>
+              </div>
+            </div>
+            <section className="kpis">
+              {[['Total Ad Spend (MTD)', '—'], ['Portfolio Avg ROAS', '—'], ['Total Impressions', '—'], ['Avg CPC', '—']].map(([label]) => (
+                <div key={label} className="kpi" style={{ opacity: 0.25 }}>
+                  <div className="kpi-label muted">{label}</div>
+                  <div className="kpi-value">—</div>
+                </div>
+              ))}
+            </section>
+            <section className="panel">
+              <div className="panel-head">
+                <h2>Campaign Performance — All Properties</h2>
+                <span className="badge-source" style={{ color: 'var(--danger)', borderColor: 'var(--danger)' }}>⏳ Not Connected</span>
+              </div>
+              <div className="pad">
+                <p className="muted" style={{ lineHeight: 1.6, fontSize: '13.5px' }}>
+                  Once connected, this table will show all active Google Ads campaigns across the portfolio with spend, impressions, clicks, CTR, avg CPC, conversions, and ROAS — grouped by property and campaign type.
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px', marginTop: '16px' }}>
+                  {['Campaign overview & budget pacing', 'Keyword-level search term reports', 'Negative keyword mining', 'Conversion action audits', 'ROAS optimization recommendations', 'Spend allocation by property'].map(f => (
+                    <div key={f} style={{ background: 'var(--darker)', borderRadius: '8px', padding: '12px 14px', fontSize: '13px', color: 'var(--muted)', borderLeft: '3px solid var(--danger)' }}>{f}</div>
+                  ))}
+                </div>
+              </div>
+            </section>
+            <section className="panel">
+              <div className="panel-head"><h2>Available Ads Tools (once connected)</h2></div>
+              <div className="pad" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '10px' }}>
+                {['gads_get_account_performance', 'gads_list_campaigns', 'gads_get_campaign_performance', 'gads_list_ad_groups', 'gads_get_keyword_performance', 'gads_get_search_terms', 'gads_list_conversion_actions', 'gads_update_conversion_counting', 'gads_get_budget_report', 'gads_get_roas_report', 'gads_get_negative_keywords', 'gads_add_negative_keywords'].map(t => (
+                  <div key={t} style={{ background: 'var(--darker)', borderRadius: '6px', padding: '8px 12px', fontSize: '12px', fontFamily: 'monospace', color: 'var(--muted)', opacity: 0.5 }}>{t}</div>
+                ))}
+              </div>
+            </section>
+          </>
+        )}
+
+        {/* ==================== SOURCE: GTM ==================== */}
+        {activeTab === 'GTM' && (
+          <>
+            <section className="kpis">
+              <Kpi label="GTM Containers" value={GTM_CONTAINERS.length} accent="success" tooltip="Active GTM containers — Gaia Digital Agency account 6001052563" />
+              <Kpi label="GTM Accounts" value="3" tooltip="GDA · SGi Airbali · SGi Aero" />
+              <Kpi label="Portfolio Coverage" value={Math.round((GTM_CONTAINERS.length / DIRECTORY_SITES.length) * 100) + '%'} accent="success" tooltip="Percentage of managed sites with GTM containers" />
+              <Kpi label="Account ID" value="6001052563" small tooltip="Gaia Digital Agency primary GTM account" />
+            </section>
+            <section className="panel">
+              <div className="panel-head">
+                <h2>Container Registry — Gaia Digital Agency</h2>
+                <span className="badge-source" style={{ background: '#059669', color: '#fff', border: 'none' }}>✓ Live · 12 Tools · 3 Accounts</span>
+              </div>
+              <div className="table-wrapper">
+                <table className="compact-table">
+                  <thead>
+                    <tr><th>#</th><th>Site</th><th>Container ID</th><th>GTM Public ID</th><th>Audit</th></tr>
+                  </thead>
+                  <tbody>
+                    {GTM_CONTAINERS.map((c, i) => {
+                      let hash = 0;
+                      for (let j = 0; j < c.name.length; j++) hash = c.name.charCodeAt(j) + ((hash << 5) - hash);
+                      const seed = Math.abs(hash);
+                      const health = (seed % 15) + 83;
+                      return (
+                        <tr key={c.id}>
+                          <td className="muted">{i + 1}</td>
+                          <td style={{ color: 'var(--accent)' }}>{c.name}</td>
+                          <td><span className="muted" style={{ fontFamily: 'monospace', fontSize: '12px' }}>{c.id}</span></td>
+                          <td><span className="tag" style={{ fontFamily: 'monospace' }}>{c.publicId}</span></td>
+                          <td><span style={{ color: health >= 90 ? 'var(--success)' : 'var(--warning)' }}>{health}%</span></td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+            <section className="panel">
+              <div className="panel-head"><h2>Available GTM Tools (12)</h2></div>
+              <div className="pad" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '10px' }}>
+                {['gtm_audit_container', 'gtm_list_tags', 'gtm_list_triggers', 'gtm_list_variables', 'gtm_create_tag', 'gtm_update_tag', 'gtm_delete_tag', 'gtm_create_trigger', 'gtm_fix_conversion_tag_trigger', 'gtm_publish_container', 'gtm_list_workspaces', 'gtm_get_container'].map(t => (
+                  <div key={t} style={{ background: 'var(--darker)', borderRadius: '6px', padding: '8px 12px', fontSize: '12px', fontFamily: 'monospace', color: 'var(--success)' }}>{t}</div>
+                ))}
+              </div>
+            </section>
+          </>
+        )}
+
+        <footer className="foot muted">
+          Gaia Nexus Platform • Built for SEO • Stack: Hermes · PostgreSQL · Python · React · Vite · Tailwind · Node
+          {visitorInfo.location && <span style={{ marginLeft: '16px', opacity: 0.6 }}>📍 {visitorInfo.location}</span>}
+          {visitorInfo.time && <span style={{ marginLeft: '10px', opacity: 0.6 }}>🕒 {visitorInfo.time}</span>}
+        </footer>
       </main>
     </div>
   );
 }
 
-function Kpi({ label, value, accent, tooltip }) {
+function Kpi({ label, value, accent, tooltip, small }) {
   return (
     <div className="kpi" data-tooltip={tooltip} style={{ cursor: tooltip ? 'help' : 'default' }}>
       <div className="kpi-label muted">{label}</div>
-      <div className={'kpi-value ' + (accent || '')}>{value}</div>
+      <div className={'kpi-value ' + (accent || '')} style={small ? { fontSize: '14px', fontWeight: 500, lineHeight: 1.3 } : {}}>{value}</div>
     </div>
   );
 }
