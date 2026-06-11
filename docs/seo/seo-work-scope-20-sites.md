@@ -4,6 +4,8 @@
 **Source:** Semrush MCP (ID database) + GSC MCP + Nexus DB + WordPress inspection
 **Status:** Documentation phase — findings only, no changes made
 
+> **2026-06-11 reconciliation:** all 32 in-scope sites now have audit reports in `docs/audits/` (Tier 1/2/3). The per-site “❌ Not started” audit flags below were **stale** and have been updated to ✅ Done. Progress is tracked in `docs/todo.md`; consolidated view in `docs/action_summary.md`.
+
 ---
 
 ## Summary
@@ -117,7 +119,7 @@
 | **Keywords (Semrush ID)** | 1,390 |
 | **Traffic/mo (Semrush ID)** | 15,719 |
 | **Age** | 14 years |
-| **Audit Status** | ❌ Not started |
+| **Audit Status** | ✅ Done — report in docs/audits/ |
 
 **Work Needed:**
 
@@ -140,7 +142,7 @@
 | **Keywords (Semrush ID)** | 231 |
 | **Traffic/mo (Semrush ID)** | 867 |
 | **Age** | 11 years |
-| **Audit Status** | ❌ Not started |
+| **Audit Status** | ✅ Done — report in docs/audits/ |
 
 **Work Needed:**
 
@@ -163,7 +165,7 @@
 | **Keywords (Semrush ID)** | 6 |
 | **Traffic/mo (Semrush ID)** | 2 |
 | **Age** | 7 years |
-| **Audit Status** | ❌ Not started |
+| **Audit Status** | ✅ Done — report in docs/audits/ |
 
 **Work Needed:**
 
@@ -187,7 +189,7 @@
 | **Keywords (Semrush ID)** | 178 |
 | **Traffic/mo (Semrush ID)** | 892 |
 | **Age** | 6 years |
-| **Audit Status** | ❌ Not started |
+| **Audit Status** | ✅ Done — report in docs/audits/ |
 
 **Work Needed:**
 
@@ -214,7 +216,7 @@
 | **Keywords (Semrush ID)** | 39 |
 | **Traffic/mo (Semrush ID)** | 160 |
 | **Age** | 7 years |
-| **Audit Status** | ❌ Not started |
+| **Audit Status** | ✅ Done — report in docs/audits/ |
 
 **Work Needed:**
 
@@ -237,7 +239,7 @@
 | **Keywords (Semrush ID)** | 37 |
 | **Traffic/mo (Semrush ID)** | 60 |
 | **Age** | 6 years |
-| **Audit Status** | ❌ Not started |
+| **Audit Status** | ✅ Done — report in docs/audits/ |
 
 **Work Needed:**
 
@@ -260,7 +262,7 @@
 | **Keywords (Semrush ID)** | 54 |
 | **Traffic/mo (Semrush ID)** | 131 |
 | **Age** | 6 years |
-| **Audit Status** | ❌ Not started |
+| **Audit Status** | ✅ Done — report in docs/audits/ |
 
 **Work Needed:**
 
@@ -282,7 +284,7 @@
 | **Keywords (Semrush ID)** | 14 |
 | **Traffic/mo (Semrush ID)** | 4 |
 | **Age** | 6 years |
-| **Audit Status** | ❌ Not started |
+| **Audit Status** | ✅ Done — report in docs/audits/ |
 
 **Work Needed:**
 
@@ -305,7 +307,7 @@
 | **Keywords (Semrush ID)** | 27 |
 | **Traffic/mo (Semrush ID)** | 2,938 |
 | **Age** | 6 years |
-| **Audit Status** | ❌ Not started |
+| **Audit Status** | ✅ Done — report in docs/audits/ |
 
 **Work Needed:**
 
@@ -330,7 +332,7 @@
 | **GSC (28d)** | 94 clicks, 8,634 impressions, CTR 1.09%, pos 19.8 |
 | **Posts** | 0 blog posts |
 | **Plugins** | 28 (RankMath + Yoast + Redirection + UpdraftPlus + Salon Booking) |
-| **Audit Status** | ❌ Not started |
+| **Audit Status** | ✅ Done — report in docs/audits/ |
 
 **Work Needed:**
 
@@ -354,7 +356,7 @@
 | **Keywords (Semrush ID)** | 78 |
 | **Traffic/mo (Semrush ID)** | 180 |
 | **Age** | 6 years |
-| **Audit Status** | ❌ Not started |
+| **Audit Status** | ✅ Done — report in docs/audits/ |
 
 **Work Needed:**
 
@@ -377,7 +379,7 @@
 | **Keywords (Semrush ID)** | 30 |
 | **Traffic/mo (Semrush ID)** | 81 |
 | **Age** | 3 years |
-| **Audit Status** | ❌ Not started |
+| **Audit Status** | ✅ Done — report in docs/audits/ |
 
 **Work Needed:**
 
@@ -400,7 +402,7 @@
 | **Keywords (Semrush ID)** | 1 |
 | **Traffic/mo (Semrush ID)** | 1 |
 | **Age** | 4 years |
-| **Audit Status** | ❌ Not started |
+| **Audit Status** | ✅ Done — report in docs/audits/ |
 
 **Work Needed:**
 
@@ -423,7 +425,7 @@
 | **Keywords (Semrush ID)** | 0 |
 | **Traffic/mo (Semrush ID)** | 0 |
 | **Age** | 4 years |
-| **Audit Status** | ❌ Not started |
+| **Audit Status** | ✅ Done — report in docs/audits/ |
 
 **Work Needed:**
 
@@ -446,7 +448,7 @@
 | **Keywords (Semrush ID)** | 32 |
 | **Traffic/mo (Semrush ID)** | 55 |
 | **Age** | 6 years |
-| **Audit Status** | ❌ Not started |
+| **Audit Status** | ✅ Done — report in docs/audits/ |
 
 **Work Needed:**
 
@@ -468,7 +470,7 @@
 | **Keywords (Semrush ID)** | 253 |
 | **Traffic/mo (Semrush ID)** | 1,741 |
 | **Age** | 10 years |
-| **Audit Status** | ❌ Not started |
+| **Audit Status** | ✅ Done — report in docs/audits/ |
 
 **Work Needed:**
 

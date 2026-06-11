@@ -118,7 +118,7 @@ To run a scenario, simply tell Hermes what you want. Examples:
 |---|---|
 | **Google Ads** | Need `GADS_CLIENT_ID`, `GADS_CLIENT_SECRET`, `GADS_REFRESH_TOKEN` in gda-ai01 config.yaml |
 | **gda-pn01** | SSH access broken — needs SSH key registration |
-| **Nexus app** | Currently a scaffold with 1 placeholder site row in DB; needs data population to scale to 50 sites |
+| **Nexus app** | DB seeded 2026-06-11 with the 20 active-scope sites (replaced 34 demo rows); scaling toward the full ~50-site portfolio |
 | **Payload CMS** | Not yet deployed — planned for full architecture |
 | **Secrets** | Currently in flat files (`key.txt`) — should migrate to GCP Secret Manager |
 

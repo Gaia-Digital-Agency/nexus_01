@@ -64,11 +64,13 @@
 
 ### Critical Issues Found Across Portfolio
 
+> **2026-06-11 reconciliation:** the robots.txt / sitemap-404 / IP-based-sitemap rows were verified as **FALSE POSITIVES** — the audit did not follow http→https / non-www redirects. All flagged sites serve a valid robots.txt (200) and sitemap_index.xml. The GSC-unverified ×4 should also be live re-checked before action.
+
 | Issue | Sites Affected | Count |
 |---|---|---|
-| 🔴 Missing robots.txt | hairsalonubud, nailsalonubud, caviar, russiancaviarhouse, motagarage, goldenmonkeybali, beanexchange | 7 |
-| 🔴 Sitemap returns 404 | russiancaviarhouse.id, motagarage.com | 2 |
-| 🔴 IP-based sitemap URLs | isort.id, huntermotorcycles.co.id | 2 |
+| ⚠️ ~~Missing robots.txt~~ **VERIFIED CLEAN** (false positive — all serve valid robots.txt) | hairsalonubud, nailsalonubud, caviar, russiancaviarhouse, motagarage, goldenmonkeybali, beanexchange | 0 |
+| ⚠️ ~~Sitemap returns 404~~ **VERIFIED CLEAN** (valid sitemap_index.xml; only bare /sitemap.xml alias 404s — cosmetic) | russiancaviarhouse.id, motagarage.com | 0 |
+| ⚠️ ~~IP-based sitemap URLs~~ **VERIFIED CLEAN** (sitemaps use proper domain locs) | isort.id, huntermotorcycles.co.id | 0 |
 | 🔴 Domain parked / not serving WP | interlace.com, pegasus.com.au (migrated to Wix) | 2 |
 | 🔴 GSC not verified | blossomsteakhouse.com, institutescoffier.com, sepedamotor.com, pinstripebar.com | 4 |
 | 🔴 CTR collapse (<1% on high impression pages) | viceroybali, aperitif, pinstripebar, nusapenida, cascadessuites | 5 |

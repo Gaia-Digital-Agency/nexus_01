@@ -70,6 +70,7 @@ The work plan lists tasks per site; reordered here into batched waves that fix t
 3. **Resolve plugin conflicts** — reduce gaiada.com to one SEO plugin (keep RankMath, the cluster standard); de-duplicate caching on the 3 affected sites.
 4. **Rotate the shared WP auth keys** on goldenmonkeysanur + goldenmonkeyubud (security).
 5. **Decide on parked domains** — interlace.com and pegasus.com.au are not on WordPress; confirm whether they stay in scope.
+6. **Update outdated Yoast Premium** — nusapenida (v26.7) and cascadessuites (v24.4) to current; re-check premium licence status.
 
 ### Wave 1 — Meta rewrites (batch, ~1 week — highest ROI)
 - ~100 title/description rewrites across the portfolio, prioritising the high-impression / low-CTR pages.
@@ -107,7 +108,8 @@ The work plan lists tasks per site; reordered here into batched waves that fix t
 | **Google Ads** — no GADS credentials configured | ❌ Dev token generated in API Center but unviewable (2SV on seo@gaiada.com); googleads API not enabled on gda-viceroy | 6 paid-ad campaigns (Wave 4) | Clear 2SV via Workspace admin → backup codes; then connect Google Ads MCP |
 | **Google Business Profile** — no API access | ❌ Not approved (quota 0 QPM); mybusiness* APIs not enabled | 18 GBP setups (Wave 4) | Submit Business Profile API access request (verified profile, 60+ days); then connect GBP MCP |
 | **gda-pn01** | ❌ SSH key not registered | Partner Node.js sites | Register SSH key |
-| **Nexus DB** | Scaffold — 1 placeholder row | Live portfolio dashboard | Seed the 20–32 audited sites into the `sites` table |
+| **Nexus DB** | ✅ Seeded 2026-06-11 (20 active sites) | Live portfolio dashboard | Done — 34 demo rows replaced with 20 scope sites |
+| **hostinger-wp write access** | ⚠️ Direct SSH view-only / unreachable | All WP-level fixes (Wave 0/1/2) on the 18 hostinger sites | Make changes via Hostinger API MCP, WP admin (Playwright), or phpMyAdmin — see `docs/todo.md` “Access methods” |
 
 **Key linkage:** Wave 4 (local + paid + social — the GBP and Ads columns of the work plan) is gated on the **exact same Google Ads developer token + GBP API access** that gates the standalone MCP connector work. Resolving those two credentials unblocks 18 GBP setups + 6 ad campaigns at once. Images are already solved (Imagen 3 via OpenClaw).
 

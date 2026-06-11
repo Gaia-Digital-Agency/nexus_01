@@ -36,7 +36,7 @@ scopes; the VMs' own service accounts do **not** (can't resize/detach disks from
 - **Live: https://nexus.gaiada.online** (certbot cert → 2026-09-01, HTTP→HTTPS redirect).
 - Backend on `127.0.0.1:3100` via **pm2** app `gaia-nexus-backend` (`pm2 restart gaia-nexus-backend`).
 - DB: **PostgreSQL 18** @ `127.0.0.1:5432`, database `gaia_nexus`, user `nexus_user`, table `sites`
-  (1 placeholder row). Creds in `backend/.env` and `key.txt`.
+  (20 active scope sites, seeded 2026-06-11). Creds in `backend/.env` and `key.txt`.
 - Other apps on this host use ports 3006/3007/3010/3080/8081 — pick free ports only; nginx config is
   the dedicated `sites-available/nexus.gaiada.online` block.
 
