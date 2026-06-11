@@ -4,7 +4,12 @@
 > Merges: (a) the live SKILLS.md from `.openclaw-ess/workspace-copywriter/` on `gda-ai01`; (b) the 22-item on-page SEO production checklist; (c) the four persona voice presets (Maya · Komang · Putu · Sari).
 > Target instance: `.openclaw-seo/workspace-copywriter/` on `gda-ai01` (to be created — currently planning).
 > Status: **planning draft**, intended as the canonical SKILLS.md to be copied into `.openclaw-seo/workspace-copywriter/SKILLS.md` at bootstrap.
-> Drafted 2026-05-22. Living document — update when criteria, personas, or skill signatures change.
+> Drafted 2026-05-22. Updated 2026-06-11 (cross-linked sibling skills). Living document — update when criteria, personas, or skill signatures change.
+>
+> **Sibling skills** (this folder): the **SEO sub-agent** referenced throughout (`keyword-research`,
+> `optimize-meta`, `schema-markup`, `internal-link`) is specified in `SKILLS-seo.md`; the audit
+> workflow that feeds content briefs is in `SKILLS-auditor.md`; GBP/paid/social in
+> `SKILLS-local-marketing.md`. Portfolio findings + plan: `../action_summary.md`.
 
 ## 1. What this agent does
 

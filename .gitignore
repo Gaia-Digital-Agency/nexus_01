@@ -16,3 +16,9 @@ build/
 .DS_Store
 .idea/
 .vscode/
+
+# Secrets & local backups (added 2026-06-11)
+docs/key.txt
+docs/keys/
+*.bak
+*.bak.*

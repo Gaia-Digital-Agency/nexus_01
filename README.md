@@ -1,35 +1,49 @@
 # Gaia Nexus Platform — Master Operator Guide
 
-Welcome to the master control panel and developer reference for the **Gaia Nexus Platform** (located at `/var/www/nexus` on `gda-s01`). This platform provides a unified SaaS-grade interface enabling search engine, conversational search (AEO), paid marketing analytics, and on-page SEO optimization across Gaia Digital Agency's (GDA) portfolio of **34 luxury properties** in Bali, Jakarta, and internationally.
-
-The platform is designed, built, and autonomously orchestrated from the AI command center on **`gda-ai01`** using the **Hermes AI Agent**.
+Master control panel and developer reference for the **Gaia Nexus Platform** (`/var/www/nexus` on `gda-s01`). Gaia Nexus is the unified SEO / AEO / SEM / SMM control plane for Gaia Digital Agency's (GDA) property portfolio across Bali, Jakarta, and internationally. It is designed, built, and autonomously orchestrated from the AI command centre on **`gda-ai01`** by the **Hermes AI Agent**.
 
 > **Live Production URL:** https://nexus.gaiada.online
-> **Secrets/Credentials:** `key.txt` (chmod 600) — local only, NEVER commit.
+> **Secrets/Credentials:** `docs/key.txt` (chmod 600) — local only, NEVER commit.
+> **Last updated:** 11 June 2026
+
+---
+
+## 📐 0. Portfolio scope (read this first)
+
+Earlier drafts of this guide quoted different portfolio sizes. The reconciled reality is **layered**, not a single number:
+
+| Layer | Count | Meaning |
+|---|---|---|
+| Managed domains (target) | ~50 | 40 WordPress + 10 Node.js — the full portfolio ambition |
+| Audited (2026-06-10) | 32 | Reports in `docs/audits/` |
+| Active SEO work scope | 20 | Sites in the current work plan (`docs/seo/`) |
+| Seeded in Nexus DB | 20 | Active scope sites — seeded 2026-06-11 (replaced 34 demo rows; prior data backed up) |
+
+The UI, API, DB, and orchestration are live, and the `sites` table now holds the 20 active scope sites (identity + ad-spend where known; `seo_score`/`traffic_7d`/`roas` populate via the daily GSC/GA4 sync). The earlier 34 rows were demo/placeholder data and have been replaced. See `docs/action_summary.md`.
 
 ---
 
 ## 🚀 1. Platform Architecture
 
-The Gaia Nexus Platform uses the **PRVTN** stack to deliver extreme speed, responsive visualization, and seamless AI orchestration:
+Gaia Nexus uses the **PRVTN** stack:
 
 ```
 Browser ──HTTPS (SSL)──▶ Nginx (nexus.gaiada.online)
-                             ├── /             → frontend/dist (React SPA, Vite Build)
+                             ├── /             → frontend/dist (React SPA, Vite build)
                              └── /api/*        → 127.0.0.1:3100 (Express Node API)
                                                       │
                                                       ▼
                                            PostgreSQL 18 (gaia_nexus DB)
                                                       ▲
-                                                      │ (Database Queries / Updates)
+                                                      │ (queries / updates)
    Orchestration Host (gda-ai01) ──[SSH/MCP]──▶ Hermes Agent
 ```
 
-*   **P**ostgreSQL 18 — Active, relational master database mapping all 34 real-world properties and marketing states.
-*   **R**eact 19 — High-performance, single-page application (SPA) client interface.
-*   **V**ite 6 — Extreme-speed bundler compiling static assets for production deployment.
-*   **T**oolchain (Node/Express) — Robust backend API handling secure database operations and platform state.
-*   **N**ginx 1.24 — Acts as the front-line reverse proxy and TLS/SSL termination point.
+- **P**ostgreSQL 18 — relational master DB (`gaia_nexus`, user `nexus_user`, table `sites`).
+- **R**eact 19 — single-page dashboard client.
+- **V**ite 6 — production bundler (`frontend/dist`, served by Nginx).
+- **T**oolchain (Node/Express) — backend API on `127.0.0.1:3100` via pm2 (`gaia-nexus-backend`).
+- **N**ginx 1.24 — reverse proxy + TLS termination (dedicated `sites-available/nexus.gaiada.online` block).
 
 ---
 
@@ -37,132 +51,95 @@ Browser ──HTTPS (SSL)──▶ Nginx (nexus.gaiada.online)
 
 ```
 nexus/
-├── README.md                 # This Master Guide and System Reference
-├── README-SCAFFOLD.md        # Technical guide for local rebuilds / DB setup
-├── CLAUDE.md                 # Workspace playbook and operational guidelines
-├── backend/                  # Node.js + Express API
-│   ├── server.js             # ESM Express API entrypoint
-│   ├── package.json          # Dependencies: pg, cors, dotenv, express
-│   └── .env                  # Port, database URL, credentials (chmod 600, untracked)
-├── frontend/                 # React 19 Client Dashboard
-│   ├── index.html            # Main HTML wrapper
-│   ├── vite.config.js        # Vite compilation rules and dev API proxy to Port 3100
-│   ├── package.json          # Dependencies: react 19, tailwind css, lucide-react
-│   ├── src/
-│   │   ├── main.jsx          # DOM rendering entrypoint
-│   │   ├── App.jsx           # Core SaaS UI Layout (All interactive tabs)
-│   │   └── index.css         # Styling framework, responsive queries, circular PABS gauges
-│   └── dist/                 # Vite production build (served directly by Nginx)
-├── docs/                     # Centralized Documentation
-│   ├── app_design/           # Design briefs, Concept plans, and System specs (Docs 01-09)
-│   └── capabilities/
-│       ├── capabilities.md   # Live deployment status and MCP credentials audit
-│       └── SKILLS-copywriter.md # GDA British English (en-GB) and copywriting standards
-└── pipeline/                 # Automated Collectors & AI Integrations
-    ├── collect.py            # Metrics collectors stub
-    └── requirements.txt
+├── README.md                 # This master guide
+├── CLAUDE.md                 # Workspace playbook + operational guardrails
+├── HERMES.md                 # How the Hermes agent controls the platform
+├── backend/                  # Node.js + Express API (server.js, .env [chmod 600])
+├── frontend/                 # React 19 + Vite client
+│   ├── src/ (main.jsx, App.jsx, index.css)
+│   └── dist/                 # Vite production build (served by Nginx)
+├── pipeline/                 # Python metrics collectors (collect.py stub)
+└── docs/
+    ├── app_design/           # Design specs, docs 01–08 (concept → UI brief)
+    ├── audits/               # 32 tiered SEO audit reports + INDEX.md
+    ├── seo/                  # seo-work-scope-20-sites.md — the work plan
+    ├── capabilities/         # capabilities.md + the SKILLS-*.md agent specs
+    ├── action_summary.md     # Consolidated audit + scope findings & action plan
+    ├── key.txt               # SENSITIVE (chmod 600) — secrets
+    └── keys/                 # SENSITIVE — credential store
 ```
+
+### Agent skill specs (`docs/capabilities/`)
+
+| File | Agent | Status |
+|---|---|---|
+| `SKILLS-copywriter.md` | Copywriter — on-page SEO content (4 personas, en-GB) | Planning draft |
+| `SKILLS-seo.md` | SEO sub-agent — keyword research, meta, schema, internal links, clustering | Planning draft |
+| `SKILLS-auditor.md` | Auditor — the tiered audit methodology behind `docs/audits/` | Planning draft |
+| `SKILLS-local-marketing.md` | Local Marketing — GBP, paid search, social | **Planned — blocked** (Ads + GBP credentials) |
 
 ---
 
-## 🎛️ 3. Core Workspace Tabs & Features
+## 🎛️ 3. Core Dashboard Tabs
 
-The live application features an elegant, dark-mode, mobile-responsive dashboard containing six dedicated control centers:
-
-### 📊 A. Global Dashboard
-Provides a consolidated high-level portfolio overview of GDA's properties.
-- **Unified KPI Counters**: Live metrics representing cumulative Active Properties, Total Monthly Clicks, Average CTR, and Total Paid Ads Spend across the entire agency footprint.
-- **Row-to-Focus Transitions**: Clicking on any key property name automatically transitions the view to the **Focus** tab and pre-selects the corresponding property.
-
-### 🌐 B. Global Property Directory
-Displays all **34 production properties** mapped directly to their hosting topology:
-- **Server Tracking**: Filterable by Node Groups: `gda-ce01` (GCP WordPress Cluster), `hostinger-wp` (Hostinger Shared), and `gda-pn01` (Partner NodeJS).
-- **Competitor Analytics**: Displays high-level organic search competitors, domain authority (DA) comparison, keyword overlap counts, and GDA's current competitive DA lead.
-
-### 🎯 C. Dynamic Focus Inspector
-A site-by-site, deep-dive panel enabling granular analysis of individual properties:
-- **Property Selector**: Dropdown to select any of GDA's 34 properties.
-- **SEO & Search Console**: Loads top-performing Google Search Console (GSC) organic keywords, query volumes, average impressions, and CTR metrics.
-- **Tracking & Tagging**: Displays active Google Tag Manager (GTM) Container IDs and specific setup verification (e.g. ecommerce vs generic tags).
-- **AEO (Conversational Search)**: Visualizes incoming conversational search and AI reference referrals (ChatGPT, Gemini, Perplexity) categorized by traffic source.
-
-### 📝 D. Staging Proposals & Chat Drawer
-- **Recommendations Pipeline**: A structured 4-lifecycle recommendations board (Pending, Accepted, Rejected, Archived) enabling operators to accept or dismiss on-page SEO recommendations.
-- **Hermes Chat Slide-Over**: A sliding chat drawer that lets operators consult with the Hermes AI Agent directly to refine, rewrite, or shorten titles, meta descriptions, and copy according to GDA on-page SEO checklist standards.
-
-### 🚨 E. Lighthouse (PABS Audits & Alerts)
-- **Circular PABS Gauges**: Renders interactive, SVG-driven circular gauges representing Google Lighthouse scores for **P**erformance, **A**ccessibility, **B**est Practices, and **S**EO.
-- **Critical PABS Alerts**: A real-time alerting panel identifying any properties scoring in the **Red** (below `50`) for any metric. Includes pre-seeded anomaly test cases like *Nail Salon Ubud* and *Bali Spa Guide*. Clicking any flagged alert automatically populates and expands that property's details.
-
-### 📖 F. Interactive Guide
-A step-by-step Operator Playbook walking managers through daily auditing workflows, proposal reviews, database schema alterations, and Hermes execution parameters.
+1. **📊 Global Dashboard** — portfolio KPI counters (active properties, monthly clicks, avg CTR, total ad spend); row-to-focus transitions.
+2. **🌐 Property Directory** — all properties mapped to hosting topology (gda-ce01 / hostinger-wp / gda-pn01); competitor analytics (DA comparison, keyword overlap).
+3. **🎯 Focus Inspector** — per-site deep dive: GSC keywords, GTM container IDs, AEO (ChatGPT/Gemini/Perplexity referrals).
+4. **📝 Staging Proposals + Hermes Chat** — 4-stage recommendations board (Pending → Accepted → Rejected → Archived) + a slide-over chat to consult Hermes on rewrites.
+5. **🚨 Lighthouse (PABS)** — circular gauges for Performance / Accessibility / Best Practices / SEO; red-score (<50) alerting.
+6. **📖 Interactive Guide** — operator playbook for daily workflows.
 
 ---
 
 ## 🤖 4. AI Orchestration with Hermes (`gda-ai01`)
 
-The platform's frontend, database, and background processes are built and autonomously maintained by the **Hermes AI Agent** operating from the orchestration host **`gda-ai01`**.
+The frontend, DB, and background processes are built and maintained by **Hermes** (Claude Opus) from `gda-ai01:/opt/hermes-seo`.
 
-### How Hermes Operates & Compiles
-1.  **Secure Passwordless SSH**: Hermes uses cryptographic key auth to log in to `gda-s01` as the `azlan` user, allowing it to modify backend code, alter schemas, run SQL seeds, and rebuild assets.
-2.  **Remote Vite Compilation**: When code modifications are made to `App.jsx` or `index.css`, Hermes issues a remote command to rebuild the client bundle on the server:
-    ```bash
-    ssh gda-s01 "cd /var/www/nexus/frontend && npm run build"
-    ```
-    Nginx immediately picks up and serves the newly generated `dist/` bundle live.
-3.  **Active MCP Integration**: Hermes utilizes the **Model Context Protocol (MCP)** inside `/home/azlan/.hermes/config.yaml` to securely query GDA's marketing credentials from `gda-ai01`:
-    -   **Semrush MCP**: Connected with live API keys for keyword overlap sweeps.
-    -   **Google Search Console MCP**: Authenticated via Master OAuth (`~/.gsc-mcp/oauth-token.json`).
-    -   **Google Analytics 4 MCP**: Deployed using the Master Service Account Key (`ga4-user-credentials.json`).
-    -   **Google Tag Manager MCP**: Consolidated using the Master Service Account key for real-time tracking audits.
+- **Passwordless SSH** as `azlan` into `gda-s01` — modify code, alter schemas, run seeds, rebuild assets.
+- **Remote Vite build:** `ssh gda-s01 "cd /var/www/nexus/frontend && npm run build"` — Nginx serves the new `dist/` immediately.
+- **MCP data tools** (config in `gda-ai01:/opt/hermes-seo/config.yaml`): Semrush, GSC, GA4, GTM, Figma — all live. Google Ads is partial (needs developer token). See `docs/capabilities/capabilities.md`.
 
-### Automated Cron Routines
-Hermes executes automated sync schedules on `gda-ai01` to fetch metrics and keep the PostgreSQL database on `gda-s01` fresh:
--   **Daily Sync Routine**: Triggers at **3:00 AM GMT+8** (Singapore Time) to execute GSC and GA4 sweeps.
--   **Monthly Competitor Sweep**: Runs on the **last day of every month at 4:00 AM GMT+8** to refresh Semrush domain overlap statistics.
+### Cron routines
+- **Daily 03:00 GMT+8** — GSC + GA4 sweeps.
+- **Last day of month 04:00 GMT+8** — Semrush competitor refresh.
 
 ---
 
 ## 🛠️ 5. Operator CLI Playbook
 
-### A. Deploying Frontend Updates
-To make frontend adjustments live manually:
 ```bash
-# Log in to gda-s01
-ssh gda-s01
+# Deploy frontend
+ssh gda-s01 "cd /var/www/nexus/frontend && npm run build"
 
-# Navigate and rebuild
-cd /var/www/nexus/frontend
-npm run build
-```
-
-### B. Managing Backend API
-To view API logs or restart the backend service:
-```bash
-# View active processes
+# Backend API
 pm2 list
-
-# View live backend log streams
 pm2 logs gaia-nexus-backend
-
-# Restart API
 pm2 restart gaia-nexus-backend
-```
 
-### C. Seeding the Database
-To reset or re-seed the 34 production properties inside PostgreSQL 18:
-```bash
-# From gda-ai01, copy the seed script
-scp /home/azlan/seed.sql gda-s01:/tmp/seed.sql
+# Reload nginx (safe — isolated config)
+ssh gda-s01 "sudo nginx -t && sudo systemctl reload nginx"
 
-# SSH into gda-s01 and execute seed
+# Seed the database
 ssh gda-s01 "psql -U nexus_user -d gaia_nexus -h 127.0.0.1 -f /tmp/seed.sql"
 ```
 
 ---
 
-## ⚠️ 6. Key Operator Constraints
-1.  **Plan First, Execute Second**: In compliance with agency policy, the AI Agent must propose and receive explicit approval before running code updates, server configurations, or database actions.
-2.  **No Global Restarts**: Never execute global restarts on PostgreSQL or shared system services on `gda-s01` to prevent interrupting other active agency sites. Only restart individual PM2 containers or reload Nginx.
-3.  **British English Standard**: All system copy, user interface titles, and recommendations must strictly conform to **British English (`en-GB`)** spelling conventions, adhering to guidelines in `SKILLS-copywriter.md`.
-4.  **Raw URLs Only**: Roger's terminal client completely strips formatted markdown links. Always output raw, plain-text URLs rather than markdown anchors in reports or terminal readouts.
+## 📈 6. Current SEO Programme
+
+The portfolio has been audited and a 20-site work plan drawn up. Start here:
+
+- **`docs/action_summary.md`** — the consolidated findings + prioritised waves (technical hygiene → meta rewrites → content → audits → local/paid/social).
+- **`docs/audits/INDEX.md`** — all 32 reports + the cross-site issue rollup.
+- **`docs/seo/seo-work-scope-20-sites.md`** — per-site work tables.
+
+**Two long-lead blockers** gate the local/paid/social wave (and are worth starting now): the Google Ads **developer token** (2SV on seo@gaiada.com blocks viewing it) and **GBP API access** (approval pending). Both are detailed in `docs/action_summary.md` §5.
+
+---
+
+## ⚠️ 7. Key Operator Constraints
+1. **Plan first, execute second** — propose and get explicit approval before code, server, or DB changes.
+2. **No global restarts** — `gda-s01` is shared. Never restart PostgreSQL or shared services; only restart individual pm2 apps or reload Nginx.
+3. **British English (en-GB)** — all UI copy, titles, and recommendations. See `docs/capabilities/SKILLS-copywriter.md`.
+4. **Raw URLs only** — Roger's terminal strips formatted markdown links. Output plain-text URLs in reports and terminal readouts.
+5. **Secrets stay out of committed docs** — `key.txt` / `keys/` only; target is GCP Secret Manager (per `docs/app_design/03_SYSTEM_ARCHITECTURE.md`).

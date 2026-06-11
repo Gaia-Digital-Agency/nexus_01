@@ -14,8 +14,13 @@ to the Hermes Python collectors (`hermes/collectors/*.py`).
 | Semrush | `mcp.semrush.com/v1/mcp` (official) or `mrkooblu/semrush-mcp` (community) | API key / OAuth | read-only (official) |
 | GA4 | `googleanalytics/google-analytics-mcp` (official) | OAuth / service account | read-only |
 | Search Console | `Suganthans-GSC-MCP` (community) | OAuth | read + Indexing API |
-| Google Ads | `googleads/google-ads-mcp` (official) | OAuth + developer token | read-only |
+| Google Ads | `google-marketing-solutions/google_ads_mcp` (official) | OAuth + developer token | read-only by default |
 | Tag Manager | `stape-io/google-tag-manager-mcp-server` (community) | OAuth | read + publish |
+| Business Profile (GBP) | `jmdurant/gbp-mcp-server` (community, 28 tools) | OAuth + GBP API access | read + publish |
+
+> See also the agent skill specs in this folder: `SKILLS-copywriter.md`, `SKILLS-seo.md`,
+> `SKILLS-auditor.md`, `SKILLS-local-marketing.md`. The consolidated SEO findings + action plan
+> live in `../action_summary.md`.
 
 ---
 
@@ -39,6 +44,22 @@ What is **actually configured on the Hermes agent** (gda-ai01, `/home/azlan/.her
 - **Google Analytics 4 (GA4):** Fully integrated via a service account key file (`/home/azlan/google-oauth/ga4-user-credentials.json`).
 - **Google Tag Manager (GTM) & Google Ads:** Deployed concurrently under a unified server utilizing the `@ainative/gtm-mcp` package, sharing credentials from the same service account JSON. This bypasses separate OAuth setups and enables seamless campaign auditing and trigger creation.
 - **Semrush:** Active and operating with an enterprise key containing ~2M units.
+
+### Addendum — current status (Updated 2026-06-11)
+
+The 2026-06-04 record above reflects the Hermes agent deployment. Two gaps remain for the **full
+SEO/SEM/local programme** (see `../action_summary.md` §5):
+
+- **Google Ads (standalone, write-capable):** the GTM-merged `@ainative/gtm-mcp` exposes only 4
+  read tools. A dedicated **`google_ads_mcp`** (official, read-only by default) is the recommended
+  path for campaign reporting/management. ⛔ Blocked: a Google Ads **developer token** was generated
+  in API Center but cannot be viewed because seo@gaiada.com requires 2-Step Verification (resolve via
+  Workspace admin → backup codes); `googleads.googleapis.com` is not yet enabled on `gda-viceroy`.
+- **Google Business Profile (GBP):** not configured. ⛔ Blocked: GBP API access is not approved
+  (quota 0 QPM); `mybusiness*` + `businessprofileperformance` APIs not enabled on `gda-viceroy`.
+  Required for the 18 GBP setups in the work scope.
+
+Both blockers are long-lead (Google-side approval) — start them now. Figma is also live.
 
 ---
 
@@ -175,6 +196,29 @@ Read + publish (GTM API v2).
 
 > Read tools cover Phase 1/2 (conversion validation, custom metrics). Publishing is a Phase 3
 > deployment action — gate behind human approval like all other Hermes mutations.
+
+---
+
+## 6. Google Business Profile (GBP)
+
+**Collector:** `hermes/collectors/gbp_collector.py` (planned) — local presence, reviews, posts, insights.
+**Server:** `jmdurant/gbp-mcp-server` (community, node, **28 tools across 6 surfaces**) — forked/extended
+from `satheeshds/gbp-review-agent`. Read + publish.
+**Auth:** OAuth (`GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`) **+ approved Google Business Profile API
+access** (the gating requirement — see below).
+
+**Surfaces & tools:**
+- **Reviews (5):** `list_locations`, `get_unreplied_reviews`, `generate_reply`, `post_reply`, `delete_review_reply`
+- **Posts (4):** `get_local_posts`, `create_local_post`, `update_local_post`, `delete_local_post`
+- **Q&A (4):** `get_questions`, `upsert_answer`, `delete_answer`, `delete_question`
+- **Media (4):** `get_media`, `create_media`, `start_media_upload`, `delete_media`
+- **Insights (3):** `get_daily_metrics`, `get_multi_daily_metrics`, `get_search_keywords`
+- **Business Info (7):** location details, attributes, services, categories, verifications
+
+> ⛔ **Blocked — not yet configured.** GBP API access requires a verified profile active 60+ days and
+> an approved access request; quota flips from 0 → 300 QPM on approval. Required for the **18 GBP
+> setups** in the work scope. GBP is critical for hyperlocal clients (salons, garages, accommodation)
+> where the map pack drives discovery more than organic rankings. See `SKILLS-local-marketing.md`.
 
 ---
 
