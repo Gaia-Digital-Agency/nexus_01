@@ -43,9 +43,9 @@ scopes; the VMs' own service accounts do **not** (can't resize/detach disks from
 - **Live: https://nexus.gaiada.online** (certbot cert → 2026-09-01, HTTP→HTTPS redirect).
 - Backend on `127.0.0.1:3100` via **pm2** app `gaia-nexus-backend` (`pm2 restart gaia-nexus-backend`).
 - DB: **PostgreSQL 18** @ `127.0.0.1:5432`, database `gaia_nexus`, user `nexus_user`, table `sites`.
-  Currently **20 active-scope rows** (seeded 2026-06-11); `seo_score`/`traffic_7d`/`roas` **not yet
-  populated** (pipeline stub). Wave 0 audited 63 sites, but the table is **not yet expanded to 63**.
-  Creds in `backend/.env` and `key.txt`.
+  Holds all **63 live sites** (seeded 2026-06-11); `seo_score` populated for the 54 active sites
+  (Semrush organic-visibility index, `us` db). `traffic_7d`/`roas` **not yet populated** — await
+  GSC/GA4 + Ads; `pipeline/collect.py` is still a stub. Creds in `backend/.env` and `key.txt`.
 - Other apps on this host use ports 3006/3007/3010/3080/8081 — pick free ports only; nginx config is
   the dedicated `sites-available/nexus.gaiada.online` block.
 

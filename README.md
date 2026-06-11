@@ -17,9 +17,9 @@ The portfolio is **layered**, not a single number:
 | Managed domains (target) | ~50 | 40 WordPress + 10 Node.js — the full portfolio ambition |
 | **Live sites audited (2026-06-11)** | **63** | **Wave 0 complete** — every live site has BOTH a technical audit (`docs/audits/`) and an SEO analysis (`docs/seo/`). Spread: gda-ce01 (17) · gda-pn01 (5) · hostinger (41) |
 | Active SEO work scope | ~7 earners | Sites with meaningful organic traffic — where Wave 2 effort concentrates |
-| Seeded in Nexus DB | 20 | The `sites` table holds 20 active-scope rows; `seo_score`/`traffic_7d`/`roas` are **not yet populated** (the GSC/GA4 sync in `pipeline/collect.py` is still a stub). **Not yet expanded to the full 63.** |
+| Seeded in Nexus DB | 63 | The `sites` table holds all 63 live sites (seeded 2026-06-11). `seo_score` is populated for the 54 active sites from Semrush organic visibility (`us` db); `traffic_7d`/`roas` remain **not yet populated** — they await the GSC/GA4/Ads pipeline (`pipeline/collect.py` is still a stub). |
 
-Diagnosis (Wave 0) is done for all 63 live sites. Two open data-layer items remain: expand the `sites` table from 20 → 63, and implement the pipeline that populates the score/traffic/ROAS columns. See `docs/plan/action_summary.md` and `docs/plan/findings.md`.
+Diagnosis (Wave 0) is done for all 63 live sites, and the DB now mirrors the full portfolio with Semrush-derived SEO scores. The one remaining data-layer item is the live pipeline that populates `traffic_7d` (GSC/GA4) and `roas` (Ads) — blocked on Google OAuth. See `docs/plan/action_summary.md` and `docs/plan/findings.md`.
 
 ---
 
