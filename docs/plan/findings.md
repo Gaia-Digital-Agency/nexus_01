@@ -1,286 +1,115 @@
-# SEO Audit + Scope — Compiled Findings
+# Gaia Portfolio — Audit + SEO Findings (consolidated)
 
-**Source:** 32 audit reports in `docs/audits/` + `INDEX.md` + `docs/seo/seo-work-scope-20-sites.md` (gda-s01). Audits dated 2026-06-10; reconciliation 2026-06-11. Pulled verbatim from the files, not from memory.
+**Updated:** 2026-06-11 · **Coverage:** 63 live sites across gda-ce01, gda-pn01, hostinger. Per-site detail: `docs/audits/<domain>.md` (technical) + `docs/seo/<domain>.md` (search).
+**Boundary:** audits = technical/site-health only; seo = search/content only (no overlap). Analysis only — nothing executed.
+**Method:** signals gathered live (curl + ce01/pn01 SSH + Hostinger API + Semrush). Items not verifiable are flagged per-site under "Could not verify".
 
-> **RECONCILIATION (INDEX.md, 2026-06-11):** Several technical findings were verified as **FALSE POSITIVES** because the original audit didn't follow http→https / non-www redirects. Verified CLEAN:
-> - "Missing robots.txt" (hairsalonubud, nailsalonubud, caviar, russiancaviarhouse, motagarage, goldenmonkeybali, beanexchange) — all serve valid robots.txt (200).
-> - "Sitemap 404" (russiancaviarhouse.id, motagarage.com) — valid `sitemap_index.xml`; only bare `/sitemap.xml` alias 404s (cosmetic).
-> - "IP-based sitemap URLs" (isort.id, huntermotorcycles.co.id) — sitemaps use proper domain locs.
-> - "GSC not verified" ×4 (blossomsteakhouse, institutescoffier, sepedamotor, pinstripebar) — live re-check before action.
-> Findings affected are annotated **[VERIFIED CLEAN]** below.
+## Portfolio coverage — gap CLOSED
 
----
-
-## Cross-site repeated issues
-
-- **GSC misconfigured / pointing at gaiada.com:** blossomsteakhouse, aperitif, pinstripebar, sepedamotor, institutescoffier (same "wrong property" symptom). The block "94 clicks / 8,6xx imps / 1.09% CTR / pos 19.8" appears verbatim for aperitif, institutescoffier AND hairsalonubud — it's the **gaiada proxy data**, not their own.
-- **CTR collapse (<1%) on high-impression pages:** viceroybali, aperitif, pinstripebar, nusapenida, cascadessuites.
-- **Conflicting SEO plugins:** gaiada (3: AIOSEO+RankMath+Yoast), reflexologyubud (RankMath+Yoast), hairsalonubud, nailsalonubud, blossomsteakhouse (Rank Math residual), cascadesbali (orphaned ACF-for-Yoast under RankMath).
-- **Dual/multiple caching plugins:** reflexologyubud (LiteSpeed+WP Super Cache), goldenmonkeyubud (LiteSpeed+W3TC), viceroybali (WP Rocket+LiteSpeed), sepedamotor (4 caching plugins).
-- **Identical auth keys/salts (critical security):** goldenmonkeysanur ↔ goldenmonkeyubud (all 8 constants identical → cross-site cookie forgery).
-- **Outdated/inactive Yoast Premium:** nusapenida (Premium 26.7), cascadessuites (Yoast 24.4, 3 majors behind), aperitif (Premium inactive), blossomsteakhouse.
-- **Plugin bloat:** sepedamotor (46), nailsalonubud (35), balirca (32), hairsalonubud (31), huntermotorcycles (20/28 updates pending), ubudbeautycentre (23), amertaspa (21).
-- **`Crawl-Delay: 20` (conservative):** widespread (gaiada, pinstripebar, huntermotorcycles, akoyaspabali, hubblebali, interlace, interlacenetwork, isort, amertaspa, ubudbeautycentre, dapurraja, goldenmonkey sanur/ubud…).
-- **Sitemap not referenced in robots.txt:** pinstripebar, institutescoffier, akoyaspabali, hubblebali, interlacenetwork, isort, amertaspa, ubudbeautycentre.
-- **Default `wp_` table prefix (security):** goldenmonkeybali, caviar, motagarage.
-- **Charset utf8 (not utf8mb4):** cascadessuites, reflexologyubud.
-- **Stale/abandoned content:** sepedamotor (0 posts since Sep 2022), hubblebali (~3 yrs stale), pegasus (→Wix), dapurraja (301→enzosushitrain), interlace (parked).
-- **Weak homepage title / missing brand:** blossomsteakhouse, amertaspa ("Home"), sepedamotor (OG "Home"), beanexchange (missing space), interlacenetwork (double hyphen).
-
-**Servers:** gda-ce01 (14 sites, full SSH) + hostinger-wp (18 sites, view-only SSH).
-
----
-
-## TIER 1 — Deep audits
-
-### blossomsteakhouse.com (ce01)
-- GSC NOT verified — API "insufficient permission"; no verification tokens. **[VERIFIED CLEAN-adjacent: re-check live]**
-- robots.txt served as `text/html` not `text/plain` (virtual, none on disk).
-- Homepage title omits brand ("Steakhouse Sanur — …"); no branded search coverage.
-- Stale Rank Math metadata (incomplete migration to Yoast).
-- 28 active plugins; dual WhatsApp plugins; 128 MB PHP limit.
-- 3 theme versions on disk; active theme `style.css` corrupted ("Snow Effect Demo").
-- Stale legacy GUIDs referencing `blossombali.com`.
-- Keyword gap: ranks US "steak sides" info content but not zero-difficulty local terms (steakhouse sanur, best steak bali — KD 0); `/steakhouse-sides/` = ~30-35% of traffic.
-- No paid presence. Metrics: DR 104,297; 10,154 keywords; 18,099 traffic/mo; $5,424/mo. Score 7.1/10.
-
-### aperitif.com (ce01)
-- CTR collapse: imps +131% (8,631), clicks −18.3% (94), CTR 3.08%→1.09%, pos 17.8→19.8.
-- Low-CTR pages: `/blog/how-many-michelin-stars…` 47,435 imps @0.13%; `…bib-gourmand` 19,470 @0.17%; `/news/michelin-star-vs-james-beard` 13,419 @0.25%.
-- Title/H1/OG-title mismatch on homepage.
-- Cannibalization: Michelin keywords duplicated across `/blog/` and `/news/`.
-- "fine dining" at #31 (27,100/mo) — missing pillar page.
-- Sitemap not submitted to GSC; author sitemap stale (Dec 2024).
-- WP Schema Pro 4 versions behind; Yoast Premium inactive; residual Rank Math; unused plugins.
-- Metrics: DR 423,654; 2,778 keywords; 3,505 traffic/mo. Health 6.5/10.
-
-### pinstripebar.com (ce01)
-- Single-page dependency: `/blog/what-to-order-as-a-guy…` = 64% of clicks; dominates 46/50 top keywords.
-- Severe CTR: `/blog/bali-drinking-age/` 59,799 imps, 10 clicks (0.02%, pos 13.2).
-- Low-CTR cluster: 6 pages = 118,632 imps / 342 clicks (avg 0.29%).
-- Homepage pos 9.8, CTR 1.35%.
-- robots.txt missing sitemap ref; Crawl-Delay 20; geo sitemap stale (May 2024).
-- Missing LocalBusiness/Menu/Event schema (Local SEO plugin installed, schema off).
-- GSC property = gaiada.com. **[re-check live]**
-- Metrics: DR 578,986; 811 keywords; 2,348 traffic/mo; $667/mo. Score 71/100.
-
-### nusapenida.org (hostinger-wp)
-- Very low CTR (0.24%–1.85%) despite pos 3–7. how-to-get-to-nusa-penida 75,536 imps @0.76%; "nusa penida" 49,959 @0.24%; "kelingking beach" 28,954 @0.48%.
-- robots.txt does NOT exist on server (NOT in INDEX clean-list → treat as open).
-- Homepage is a blog post set as static front page (extra hop).
-- Empty tagline → blank schema description.
-- Yoast 27.7→27.8; Yoast Premium 26.7 (very outdated).
-- Schema type = Person not Organization. Redundant analytics (Site Kit+GA+Matomo). 27 plugins.
-- X-Robots-Tag: noindex,follow on sitemap (verify).
-- Keyword gaps: accommodation, diving, manta point, snorkeling, best time to visit. ID pages convert better (8–14% CTR vs <1% EN).
-- Metrics: DR 1,362,670; 494 keywords; ~690 traffic/mo.
-
-### sepedamotor.com (hostinger-wp)
-- Content abandonment: 0 posts since Sep 2022 (~3.75 yrs); 902-post 2021 push then stop.
-- Top keywords locked to 2021 model years; no 2023–2026 content.
-- GSC property wrong (gaiada.com). **[re-check live]**
-- 2,267 tags (severe bloat); 27 categories.
-- 46 active plugins; 4 caching plugins; 2 page builders (Elementor+WP Bakery); redundant backups.
-- Homepage meta description empty; OG title "Home".
-- Yoast 27.7→27.8; Yoast Premium 18.1 (very old).
-- 122 images missing alt; `var_dump` debug left in child theme functions.php (production).
-- 6.1 GB uploads / 127,348 files.
-- Metrics: DR 15,730; 1,390 keywords; 15,719 traffic/mo; $719/mo; 1,481 posts.
-
-### institutescoffier.com (hostinger-wp)
-- GSC misconfiguration — data from gaiada.com. **[re-check live]**
-- Contact-form logs in sitemap (privacy): `contact-form-log-sitemap.xml`, `form-title-sitemap.xml` indexable.
-- Sitemap not in robots.txt; no HSTS.
-- Stale `project-sitemap.xml` / `project_category-sitemap.xml` (June 2021).
-- Very low CTR 1.09% @ pos 19.8 (suspect gaiada proxy).
-- Minor: no WP_HOME/WP_SITEURL; duplicate .htaccess rewrite; WP Rocket remnant in wp-config; XML-RPC enabled; Divi heavy; obsolete WPML zips (Weglot is live multilingual).
-- Keyword ops: "mastering the art of french cooking" #21 (12,100/mo); "executive chef" #23 (4,400/mo); "five mother sauces" #37 (3,600/mo).
-- Metrics: DR 3,192,021; 464 keywords; 11 yrs. Score 65/100.
-
-### cascadessuites.com (hostinger-wp)
-- Yoast 3 majors behind (24.4 vs 27.8) — critical; Yoast Premium inactive.
-- Very low visibility: 7 keywords, ~32 visits/mo.
-- WP Schema Pro + WP Mail SMTP Pro outdated; 6 social-feed plugins (redundant).
-- 2 large theme zips (~950 MB); inactive legacy themes.
-- DB charset utf8 (not utf8mb4); no DISALLOW_FILE_EDIT; empty tagline.
-- 5 admin users incl. cross-site emails (pr@/gm@viceroybali.com, gaiada.com).
-- CTR collapse flagged at INDEX level. robots/sitemap clean (bare `/sitemap.xml` 404 cosmetic).
-
-### huntermotorcycles.co.id (ce01)
-- robots.txt sitemap pointed to internal IP `34.158.47.112`. **[VERIFIED CLEAN — uses proper domain locs]**
-- 20/28 active plugins need updates (LiteSpeed, Yoast, WooCommerce, Wordfence…).
-- Crawl-Delay 20; only 13 posts in 6 yrs; 31 keywords, ~35 visits/mo.
-- Author sitemap exposes 6 admin accounts; product sitemaps 2–4 stale (2023).
-- 5 unused default themes; 10 inactive plugins; no DISALLOW_FILE_EDIT; theme "tested to WP 5.4". 4,646 Woo products.
-
-### viceroybali.com (ce01) — "already done" reference
-- CTR crisis: imps +128%, clicks −21%, CTR 3.08%→1.07%. 8 ready meta rewrites: Best Time to Visit 225k @0.10%; Galungan&Kuningan 232k @0.20%; Bali Currency 144k @0.28%; Power Adapter 90k @0.29%; Is Bali Safe 90k @0.15%; Trip Cost 107k @0.42% (title "2025" outdated); 6-Star Hotel 44k @0.28%; Honeymoon 17k @0.85%.
-- Sitemap X-Robots-Tag: noindex,follow (may block discovery).
-- WP Rocket + LiteSpeed both active.
-- robots.txt disallows 5 blog category paths.
-- Blog→booking funnel broken; Honeymoon (high-intent) at pos 15.2.
-- Luxury keywords (KD 0–40) unranked. Theme tested to WP 5.4.
-- Metrics: DR 129,308; 5,545 keywords; ~14,138 traffic/mo.
-
----
-
-## TIER 2 — Standard audits
-
-### gaiada.com (hostinger-wp)
-- Triple SEO plugin conflict (AIOSEO+RankMath+Yoast) — critical.
-- No WP_CACHE defined (LiteSpeed maybe not operational); no WP_AUTO_UPDATE_CORE; Crawl-Delay 20; DISALLOW_FILE_EDIT false.
-- Very low traffic: 7 visits/mo, 35 keywords (red flag for an SEO agency).
-
-### reflexologyubud.com (hostinger-wp)
-- Dual SEO plugins (RankMath+Yoast); dual caching (LiteSpeed+WP Super Cache).
-- Overlong robots.txt (13 lines); unusual Yandex block; homepage meta description truncated; charset utf8.
-
-### goldenmonkeybali.com (hostinger-wp)
-- No robots.txt. **[VERIFIED CLEAN]**
-- Default `wp_` prefix (security); 8 installed themes; WP_AUTO_UPDATE_CORE minor-only; fragmented multi-location theme (bali/ubud/canggu). On-page SEO good.
-
-### goldenmonkeysanur.com (hostinger-wp)
-- Identical auth keys/salts with goldenmonkeyubud (critical security).
-- 301-redirect-only domain → goldenmonkeybali, yet full redundant WP install.
-- Minimal robots.txt; weak DB password (8 chars); residual theme zips. 14 keywords, 4 visits/mo.
-
-### goldenmonkeyubud.com (hostinger-wp)
-- Identical auth keys/salts with goldenmonkeysanur (critical security).
-- Dual caching (LiteSpeed+W3TC); 301-redirect-only with full WP install; minimal robots.txt; weak DB password; git artifacts on production; no WP_AUTO_UPDATE_CORE.
-- 27 keywords but 2,938 traffic/mo (strong for low kw — investigate).
-
-### hairsalonubud.com (hostinger-wp)
-- No robots.txt. **[VERIFIED CLEAN]**
-- Dual SEO plugins (RankMath inactive + Yoast); redundant backups; no GSC/Analytics; 31 plugins; 0 blog posts.
-- GSC figures match gaiada proxy (94 clicks/8,634 imps/1.09%/pos 19.8).
-
-### nailsalonubud.com (hostinger-wp)
-- No robots.txt. **[VERIFIED CLEAN]**
-- WP Super Cache inactive alongside LiteSpeed; Google Site Kit inactive; dual SEO plugins; 35 plugins; shared `4bXazL_` prefix with hairsalonubud (verify DB isolation).
-- Ranks #1 for "nail salon ubud" (protect).
-
-### caviar.id (hostinger-wp)
-- No robots.txt. **[VERIFIED CLEAN]**
-- Default `wp_` prefix; Wordfence inactive on ecommerce; Elementor/Pro inactive; Yoast update.
-- 19 keywords, 0 monthly traffic.
-
-### russiancaviarhouse.id (hostinger-wp)
-- Sitemap 404 + no robots.txt. **[VERIFIED CLEAN — valid sitemap_index.xml; serves robots.txt]**
-- Wordfence inactive (ecommerce); LiteSpeed inactive (audit internally contradictory — verify); ACF Pro major gap (5.9.8→6.8.4); Yoast update.
-- 1 keyword, 1 visit/mo.
-
-### motagarage.com (hostinger-wp)
-- Sitemap 404 + no robots.txt. **[VERIFIED CLEAN]**
-- Default `wp_` prefix; LiteSpeed inactive (no caching); Wordfence absent (ecommerce); draft pages; 0 keywords, 0 traffic.
-
-### balirca.id (hostinger-wp)
-- WP_DEBUG_LOG enabled (true) in production; 32 plugins (many inactive); meta grammar ("a association"); ACF Pro update; LiteSpeed inactive.
-- Best-configured robots.txt in batch; sitemap 200 OK.
-
-### cascadesbali.com (ce01)
-- LiteSpeed only caching layer; homepage 301 chain (verify single hop); draft pages ("home-2" duplicate); orphaned `acf-content-analysis-for-yoast-seo` under RankMath; WP-Optimize update; Classic Editor.
-- Discrepancy: scope says "no SEO plugin", audit says RankMath active. 135 keywords, ~25 visits/mo, PHP 8.3.31. Scope: 253 keywords / 1,741 traffic/mo.
-
----
-
-## TIER 3 — Lite audits
-
-### amertaspa.com — title "Home"; empty tagline; minimal robots.txt; 7 inactive themes; 21 plugins; bare `/sitemap.xml` 404 (index works).
-### ubudbeautycentre.com — empty tagline; minimal robots.txt; 23 plugins (Elementor+Pro weight); all-caps title; `sitemap.xml`/`wp-sitemap.xml` 404 (index works).
-### pegasus.com.au — **migrated to Wix (critical):** WP orphaned; live sitemap is Wix-generated. 3 keywords, 0 traffic. Target the Wix site.
-### dapurraja.com — **full 301 → enzosushitrain.com (critical):** rebrand; no SEO work on dapurraja. Keep domain registered.
-### aquatir.id — robots.txt blocks `/shop/` (unusual for Woo — review); bare `/sitemap.xml` 404 (Yoast index works); 3 inactive themes. Otherwise best-configured of lite batch.
-### beanexchange.net — no robots.txt **[VERIFIED CLEAN]**; title missing space ("Roasts,Exceptional"); Yoast update; stale sitemap lastmods. Good hreflang/OG/schema.
-### akoyaspabali.com — LiteSpeed inactive; no sitemap in robots.txt; 72 keywords, ~7 visits/mo; plugin updates pending. Good title/RankMath schema.
-### hubblebali.com — 4 redirect plugins active (conflict); ~3 yrs stale content; no sitemap in robots.txt; plugin updates. Strong on-page (Restaurant schema, hreflang).
-### interlace.com — **parked at GoDaddy (critical):** redirects to AdSense lander; WP home/siteurl malformed; no SEO possible until repointed.
-### interlacenetwork.com — double-hyphen title (AIOSEO separator); no sitemap in robots.txt; stale content (Oct 2025); Gravity Forms major gap; UpdraftPlus inactive.
-### isort.id — sitemap `<loc>` used internal IP `34.158.47.112` per audit, but **[VERIFIED CLEAN — INDEX 2026-06-11 says proper domain locs; conflict — verify]**; plugin updates pending. Good RankMath schema/hreflang.
-
----
-
-## Stub / status-only audits (minimal actionable findings)
-- **dapurraja.com** — 301 to enzosushitrain.com; nothing else.
-- **interlace.com** — parked; WP offline.
-- **pegasus.com.au** — migrated to Wix; WP orphaned.
-- **goldenmonkeysanur.com / goldenmonkeyubud.com** — redirect-only; main finding is shared-auth-keys security issue.
-
----
-
-# SEO Work-Scope (docs/seo/seo-work-scope-20-sites.md) — work-plan matters
-
-> This is the **work plan** for the 20 active-scope sites — distinct from the diagnostic findings above. Tiers: 8 deep + 12 standard (+ viceroybali already done).
-
-## Per-site planned work (20 sites)
-
-| # | Site | Tier | Blog articles | Meta rewrites | GBP | Paid ads | Social |
-|---|---|---|---|---|---|---|---|
-| 1 | blossomsteakhouse.com | 1 | scale from 42 + local landing pages | 8 ready | P2 | $15/day local | IG 3×/wk |
-| 2 | aperitif.com | 1 | 8 + "Fine Dining" pillar | refresh low-CTR | P2 | optimise $1,200/mo | IG |
-| 3 | pinstripebar.com | 1 | 6 nightlife | brand keywords | P2 | scale to $10/day | IG/FB daily |
-| 4 | nusapenida.org | 1 | 10 travel guides | location keywords | P2 | optimise $1,100/mo | IG |
-| 5 | sepedamotor.com | 1 | refresh + 10 | 2026/27 dates | P3 | — | — |
-| 6 | institutescoffier.com | 1 | 8 culinary (ID) | ID titles | P2 | — | IG |
-| 7 | cascadessuites.com | 1 | 10 accommodation | homepage rewrite | P2 | $10/day hotel | IG |
-| 8 | huntermotorcycles.co.id | 1 | 8 (ID) | product titles | P2 | — | IG |
-| 9 | gaiada.com | 2 | 10 (marketing/case studies) | low-CTR rewrite | P2 | — | LinkedIn 2×/wk |
-| 10 | reflexologyubud.com | 2 | 6 | service keywords | P1 | $10/day LSA | — |
-| 11 | goldenmonkeybali.com | 2 | 6 | local keywords | P2 | — | — |
-| 12 | goldenmonkeysanur.com | 2 | 6 | Sanur keywords | P2 | — | IG |
-| 13 | goldenmonkeyubud.com | 2 | 4 | title CTAs | P2 | — | — |
-| 14 | hairsalonubud.com | 2 | 10 | service + location | P1 | $10/day LSA | IG 3×/wk |
-| 15 | nailsalonubud.com | 2 | 6 | protect #1 | P1 | — | IG 3×/wk |
-| 16 | caviar.id | 2 | 6 + e-commerce | expand keywords | P2 | — | — |
-| 17 | russiancaviarhouse.id | 2 | 6 + e-commerce | homepage rewrite | P3 | — | — |
-| 18 | motagarage.com | 2 | 8 (ID) | SEO foundation | P1 | $10/day LSA | — |
-| 19 | balirca.id | 2 | 4 | local/industry | P3 | — | — |
-| 20 | cascadesbali.com | 2 | 8 waterpark | location + attraction | P2 | — | IG |
-
-## Work volume (scope doc)
-
-| Work type | Volume | Estimate |
+| Server | Sites | Access used |
 |---|---|---|
-| Blog articles | ~140 | 5 weeks @ 6/wk |
-| Meta rewrites | ~100 | ~1 week |
-| Full audits "remaining" | 16 | ⚠️ stale — all 32 already exist |
-| GBP setups | 18 | ~2 days (after API) |
-| Hero images | ~140 | Imagen 3, ~30s each (solved) |
-| Ad campaigns | 6 | after GADS setup |
+| gda-ce01 | 17 | full SSH — plugin/config-level depth |
+| gda-pn01 | 5 | SSH — Node.js apps (not WP) |
+| hostinger | 41 | curl + Hostinger API (no file SSH) |
+| **Total** | **63** | every live site has BOTH a technical audit and an SEO analysis |
 
-## Gaps remaining (scope doc)
-- **Images** — ✅ solved (reuse OpenClaw Imagen 3).
-- **Ads** — ❌ missing GADS env vars (browser setup as seo@gaiada.com).
-- **GBP** — ❌ no API configured (enable Business Profile API + invite service account).
+**Status mix:** ~54 live · ~7 redirect-only domains · ~2 parked. The earlier "~17 blocked/403" was an **intermittent security challenge** on Hostinger CDN — all were accessible on retry and are now fully audited (no site left unverified for that reason).
 
----
+## Cross-site TECHNICAL issues (recurring)
 
-# Audit Coverage Gap — sites NOT audited
+- **No HSTS header — near-universal:** almost every HTTPS site enforces TLS but omits `Strict-Transport-Security` (only dreamcatchervillas has it). Portfolio-wide quick win.
+- **Identical/shared WP auth keys & salts:** goldenmonkeysanur ↔ goldenmonkeyubud reuse key material (cross-site cookie forgery) — **highest-severity security item**; plus weak DB passwords on that family.
+- **Default `wp_` table prefix:** ayrwater, goldenmonkeybali, motagarage, caviar class.
+- **Debug/file-edit hardening gaps:** viceroybali exposes `WP_DEBUG` via `?WP_DEBUG=` URL param and has `DISALLOW_FILE_EDIT` commented out; balirca has `WP_DEBUG` on.
+- **Dual caching plugins:** viceroybali (WP Rocket + LiteSpeed), goldenmonkeyubud (LiteSpeed + W3TC), reflexologyubud (LiteSpeed + WP Super Cache).
+- **Dual/conflicting SEO plugins:** gaiada (AIOSEO+RankMath+Yoast), reflexologyubud & nailsalonubud (RankMath+Yoast).
+- **Caching left off / uncached (CDN DYNAMIC):** beanexchange, balihiddenvillas, horizonviewsproperties, bimc-cosmedic — page cache disabled or bypassed.
+- **Intermittent 403 security challenge to crawlers:** 7originfilm, balihiddenvillas, bruinsma-ac, dacaviar, enzosushitrain, tacconsultancy, horizonviewsproperties — can block Googlebot if mis-tuned.
+- **Plugin/theme bloat & duplicates:** ayrwater (ACF Pro installed twice; 6 backup themes), viceroybali (`viceroy*-git` themes + a stray `.xlsx` in the themes dir), mail-smtp duplicated on balicatering.
+- **Generic/weak admin accounts:** balihiddenvillas login is `admin`; several use personal Gmail logins.
+- **WordPress core not latest (6.8.x/6.9.x vs 7.0):** 7originfilm, ayrwater, horizonviewsproperties, bimc-cosmedic.
+- **Exposed config/backup risk:** akoyaspabali wp-config backup php; Duplicator archives to confirm on balicatering.
 
-**Method:** live inventory — `nginx server_name` on gda-ce01 + gda-pn01, and Hostinger API WordPress-installations list, cross-referenced against the 32 audit reports.
+## Cross-site SEO issues (recurring)
 
-> The 32 audits are a **curated subset**, not full coverage. **gda-pn01 was never audited** (and is reachable now — the old "SSH key not registered" blocker is out of date). These sites below have **no findings above** because they have never been audited.
+- **Overwhelmingly low-presence:** of 63 sites, only ~7 have a real organic footprint — **aperitif, blossomsteakhouse, cascadesbali, nusapenida, pinstripebar, sepedamotor, viceroybali**. Most others return near-zero / "NOTHING FOUND" in Semrush.
+- **CTR collapse on the earners:** the high-impression sites draw large volume at <1% CTR — weak meta titles, not weak rankings → meta rewrites = highest ROI.
+- **Defensive #1s with no content moat:** nailsalonubud ranks #1 for "nail salon ubud" but has no blog — vulnerable.
+- **Redirect/parked domains carry no SEO value:** dapurraja→enzosushitrain, goldenmonkeysanur/ubud→goldenmonkeybali, balihideawayvillas→balihiddenvillas, **dreamcatchervillas→Instagram (302)**, russiancaviarhouse, interlace (parked), pegasus (Wix). Effort belongs on the live successor.
+- **Thin/placeholder titles:** cloudkitchenbali ("Cloud Kitchen"), beanexchange ("Roasts,Exceptional" missing space).
+- **GSC not available this run:** SEO docs are Semrush-grounded; reconnect GSC for CTR/position depth.
 
-| Server | Audited | Live sites hosted | Unaudited (live client) |
-|---|---|---|---|
-| gda-ce01 | 11 | ~18 | ~7 |
-| gda-pn01 | **0** | ~5 (Node.js) | **~5 — none audited** |
-| hostinger (u521276830) | 21 | **~55 WP installs** | **~20 live + ~14 staging/temp** |
+## Per-site index (63)
 
-## gda-ce01 — unaudited live client domains
-(audited on ce01: akoyaspabali, aperitif, blossomsteakhouse, cascadesbali, hubblebali, huntermotorcycles, interlace, interlacenetwork, isort.id, pinstripebar, viceroybali)
-- ayrwater.com · balicatering.com · balispaguide.com · blossomcatering.online · luxurydefined.com.au · ypi-asia.com · essentialbali.com *(also on pn01)* · isort.co.id *(separate TLD — likely alias of audited isort.id; verify)*
+| Site | Server | Status | Top technical fix | Top SEO move |
+|---|---|---|---|---|
+| 7originfilm.com | hostinger | live (intermittent 403 securit | Update WordPress core 6.8.5 → 7.0. | Blog: Develop foundational content strategy to build topical authority around core film/ |
+| akoyaspabali.com | ce01 | live | Remove the public wp-config backup PHP file plus `.backup_info`/`.backup_log` from webro | Blog: Develop content around high-volume, lower-position keywords like "ubud wellness sp |
+| amertaspa.com | hostinger | live | Remove the deprecated `Crawl-Delay` directive from `robots.txt`. | Blog: Develop content around Balinese wellness, spa treatments, Ubud attractions, and he |
+| aperitif.com | ce01 | live | Add HSTS (`Strict-Transport-Security`) header on the canonical HTTPS host (after confirm | Blog: Develop a content calendar focused on improving positions for existing information |
+| aquatir.id | hostinger | live | Reconsider `Disallow: /shop/` — if products should rank, remove it. | Blog: Develop content around sturgeon farming, caviar types, recipes, health benefits, a |
+| ayrwater.com | ce01 | live | Remove the duplicate ACF Pro install (`advanced-custom-fields-pro-2`); keep one. | Blog: Develop foundational content around core services/products related to "Ayr Water"  |
+| balicatering.com | ce01 | live | Remove the non-Pro `wp-mail-smtp` duplicate. | **Blog:** Develop content around specific catering types (e.g., "Wedding Catering Bali," |
+| baligirls.gaiada2.online | pn01 | live | Correct the sitemap generation to output valid XML content for `https://baligirls.gaiada | Blog: Develop a content strategy to address keyword gaps and build topical authority aro |
+| balihiddenvillas.com | hostinger | live (intermittent 403 challen | Rename the `admin` user / enforce strong auth + 2FA. | Blog: Develop content around informational keywords (e.g., "bali ceremony", "best hikes  |
+| balihideawayvillas.com | hostinger | redirect → balihiddenvillas.co | If the domain is purely a redirect, replace the full WP install with a lightweight 301 ( | Blog: Develop content around Bali travel guides, luxury villa experiences, and specific  |
+| balipropertybargains.com.au | hostinger | live | Correct the `sitemap_index.xml` URL or ensure it serves a valid XML sitemap index, or re | Blog: Develop a content strategy to target relevant keywords (e.g., "bali property for s |
+| balirca.id | hostinger | live | **Resolve robots.txt and sitemap conflicts:** Align `robots.txt` disallows with sitemap  | Blog: Develop targeted content clusters around identified themes (e.g., "Canggu local se |
+| balirestaurantguide.com | hostinger | live | **Address Server Unresponsiveness and HTTP Header Delivery:** Investigate and resolve th | Blog: Develop content around specific restaurant types, locations, cuisines, and dining  |
+| balispaguide.com | ce01 | live | Generate and properly configure XML sitemaps (`sitemap_index.xml`, `sitemap.xml`) to ens | Blog: Develop content clusters around Bali spa types, locations, benefits, and experienc |
+| beanexchange.net | hostinger | live | Re-enable LiteSpeed page caching. | Blog: Develop foundational content around coffee types, brewing methods, sourcing, or co |
+| bimc-cosmedic-01.gaiada.com | hostinger | live (staging/subdomain on gai | Confirm staging vs production. If staging, add `noindex` + `Disallow: /` and/or HTTP aut | **Blog:** Develop content around long-tail keywords related to digital marketing service |
+| blossomcatering.online | ce01 | live | Address exposed server configuration details immediately. | Blog: Develop a content strategy to target relevant long-tail keywords related to cateri |
+| blossomsteakhouse.com | ce01 | live | Remove/block the publicly downloadable theme archive at /wp-content/themes/blossom-git.z | **Blog:** Develop comprehensive content clusters around "steak sides" and "what goes wit |
+| bruinsma-ac.com | hostinger | live (intermittent 403 challen | Allow verified bots through the security challenge; add HSTS. | Blog: Develop foundational content targeting core service keywords and common customer q |
+| cascadesbali.com | ce01 | live | Re-activate Wordfence (or confirm an equivalent active WAF) — a dormant security plugin  | **Blog:** Develop content around "Best Restaurants in Ubud with a View" (featuring Casca |
+| cascadessuites.com | hostinger | live | Add an `<h1>` tag to the homepage for improved SEO and accessibility. | Blog: Develop content around 'Ubud luxury suites', 'Bali accommodation', and 'Ubud dinin |
+| caviar.id | hostinger | live | Review and consolidate `robots.txt` directives to remove the redundant `Disallow:` withi | Blog: Develop a content programme around caviar types, origins, serving suggestions, and |
+| cloudkitchenbali.com | hostinger | live | Confirm project status (live vs dormant); add HSTS. | Blog: Develop a content strategy focusing on long-tail keywords related to "food deliver |
+| dacaviar.com | hostinger | live (intermittent 403 challen | Allow verified search bots through the security challenge; add HSTS. | Blog: Initiate a content strategy focusing on caviar types, serving suggestions, and lux |
+| dapurraja.com | hostinger | redirect → enzosushitrain.com | Keep the 301 (good for equity) but consider collapsing the WP install to a static redire | Blog: Develop a content strategy focusing on Balinese and Chinese cuisine, local Ubud ex |
+| dreamcatchervillas.com | hostinger | redirect → instagram.com/dream | Decide intent: either build a real site, or replace the WP install with a lightweight re | Blog: Develop a content strategy focusing on villa features, destinations, experiences,  |
+| enzogelatobali.com | hostinger | live | Address site responsiveness and connectivity issues (timeouts on redirect checks, HTTP 0 | Blog: Develop content around gelato flavors, ingredients, and local Bali experiences to  |
+| enzosushitrain.com | hostinger | live (the successor brand of d | Add HSTS; verify page caching (avoid persistent BYPASS). | Blog: Develop foundational content around the sushi train experience, menu items, and lo |
+| essentialbali.com | pn01 | live | Resolve the "Cannot GET" error for `sitemap_index.xml` or remove its declaration. | Blog: Develop a foundational blog content strategy targeting core Bali-related topics (e |
+| gaiada.com | hostinger | live | Review and remove or significantly reduce the `Crawl-Delay: 20` directive in `robots.txt | Blog: Address content gaps identified by low keyword footprint and weak positions for re |
+| gaiadaweb.gaiada2.online | pn01 | live | Investigate and resolve the `sitemap_index.xml` issue. If this URL is not intended to be | Blog: No organic keywords or content identified to inform blog strategy; initial content |
+| goldenmonkeybali.com | hostinger | live (canonical Golden Monkey  | Upgrade PHP to 8.2/8.3. | Blog: Develop content around Chinese cuisine, specific dishes (e.g., "Best Dim Sum in Ub |
+| goldenmonkeysanur.com | hostinger | redirect → goldenmonkeybali.co | Rotate AUTH keys/salts so they differ from goldenmonkeyubud.com. | **Blog:** Develop a content strategy focused on Chinese cuisine, Sanur dining experience |
+| goldenmonkeyubud.com | hostinger | redirect → goldenmonkeybali.co | Rotate AUTH keys/salts (must differ from sanur). | **Blog:** Develop a content program focusing on "Things to do in Ubud," "Ubud Dining Gui |
+| hairsalonubud.com | hostinger | live | Investigate the reported WordPress 7.0 version to confirm its accuracy and ensure the pl | Blog: Develop content around specific hair treatments, beauty services, and "near me" va |
+| horizonviewsproperties.com | hostinger | live (intermittent 403 challen | Enable page caching (LiteSpeed); update WP core to 7.0. | Blog: Develop a foundational content strategy to target relevant long-tail keywords in t |
+| hubblebali.com | ce01 | live | Remove/deny public access to /error_log (and rotate/delete the 10 MB file) — it leaks se | Blog: Develop a content strategy around Bali experiences, local attractions, and service |
+| huntermotorcycles.co.id | ce01 | live | Fix robots.txt Sitemap line to `https://www.huntermotorcycles.co.id/sitemap_index.xml` ( | **Blog:** Develop a robust content strategy focusing on motorcycle types (e.g., in-depth |
+| institutescoffier.com | hostinger | live | Address the `sitemap.xml` 404 error by configuring Yoast SEO to output to `sitemap.xml`  | **Blog:** Develop a content program to target identified keyword gaps, focusing on high- |
+| interlace.com | ce01 | parked (GoDaddy/AWS domain-par | Repoint DNS A records for interlace.com (and www) from the parking edge to the ce01 serv | Blog: Develop a content strategy to create keyword-targeted articles addressing user int |
+| interlacenetwork.com | ce01 | live | Remove the stray `wp-config-backup-*.php`, `.htaccess.bk`, and the 47 MB `error_log` fro | Blog: Develop a content strategy focused on core services/topics, targeting relevant lon |
+| isort.id | ce01 | live | Delete or regenerate the static /var/www/isort/public_html/sitemap.xml (currently expose | Blog: Develop a content program to target related keywords, tutorials, use cases, and co |
+| jackaroodigital.com.au | pn01 | live | Implement a `robots.txt` file to control crawler access and prevent 404 errors for this  | Blog: Develop a foundational content strategy targeting core digital marketing services  |
+| kalugaqueen.id | hostinger | live | Investigate the `x-hcdn-cache-status: BYPASS` from the Hostinger CDN to determine if fur | Blog: Develop a content strategy focusing on caviar types, serving suggestions, luxury f |
+| lastminuteroomsbali.com | hostinger | parked | Address server unresponsiveness and connectivity issues (indicated by `curl` timeout and | Blog: Develop a content strategy to address keyword gaps and build topical authority aro |
+| luxurydefined.com.au | ce01 | live | Implement and correctly configure `sitemap.xml` and `sitemap_index.xml` to improve crawl | Blog: Develop a content strategy focusing on luxury real estate trends, lifestyle, and s |
+| motagarage.com | hostinger | live | Install/activate a security plugin (Wordfence) on the store. | Blog: Develop foundational content targeting core services and local search terms. |
+| nailsalonubud.com | hostinger | live | Delete the inactive RankMath; trim inactive plugins (Site Kit etc.). | **Blog:** 6 articles — "Nail Art Trends Bali", "Gel vs Acrylic Guide", "Best Nail Salon  |
+| nusapenida.org | hostinger | redirect:https://nusapenida.or | Review and adjust the 301 redirect from the root domain (`nusapenida.org`) to ensure it  | Blog: Develop new content targeting long-tail keywords related to existing attractions ( |
+| orison.io | hostinger | live | **Security: Hide PHP version:** Configure the web server or PHP to suppress the `x-power | Blog: Develop content around industry topics, services, and solutions to attract non-bra |
+| pegasus.com.au | hostinger | live | Resolve the `sitemap_index.xml` 400 error and `noindex` tag to ensure proper sitemap dis | **Blog:** Develop a content strategy to address identified keyword gaps and build author |
+| pinstripebar.com | ce01 | live | Activate Wordfence (or another WAF/malware scanner) — currently the site has no active s | **Blog:** Develop comprehensive content around the "manly cocktails" theme, expanding on |
+| reflexologyubud.com | hostinger | live | Remove one SEO plugin and one caching plugin (keep RankMath + LiteSpeed). | **Blog:** Develop content around specific reflexology benefits, types of reflexology, "w |
+| russiancaviarhouse.id | hostinger | redirect:https://www.russianca | Resolve conflicting `User-agent: *` blocks in `robots.txt` to ensure proper crawling dir | Blog: Develop content around "caviar indonesia" and related topics to expand footprint a |
+| scamcheck-global.com | hostinger | live | Investigate and optimize Hostinger CDN caching strategy, particularly for static assets, | Blog: Develop a content strategy to address various scam types, "how-to" guides for scam |
+| schoolcatering.gaiada2.online | pn01 | live | Correct the sitemap configuration to ensure a valid, accessible, and indexable sitemap i | Blog: Develop foundational content around school catering services, menu options, nutrit |
+| sepedamotor.com | hostinger | live | Cut the redundant caching stack down to LiteSpeed Cache only; remove Autoptimize, WP Fas | Blog: Develop a content strategy to target high-volume, lower-ranking keywords (e.g., "h |
+| suriresidence.com | hostinger | live | Address server unresponsiveness and timeouts to ensure the site is consistently accessib | Blog: Develop foundational content around property features, local attractions, and gues |
+| tacconsultancy.com | hostinger | live (intermittent 403 challen | Allow verified bots through the challenge; add HSTS. | Blog: Develop a foundational content strategy to target relevant industry keywords, addr |
+| ubudbeautycentre.com | hostinger | live | Remove or significantly reduce the `Crawl-Delay: 20` directive in `robots.txt` to allow  | **Blog:** Develop content around beauty tips, spa experiences in Ubud, and detailed serv |
+| uniqueweightloss.com.au | hostinger | live | Remove or obfuscate the `generator` meta tag to prevent exposing WordPress and Elementor | Blog: Develop foundational content around key weight loss topics relevant to the Austral |
+| viceroybali.com | ce01 | live | Remove the `$_GET['WP_DEBUG']` branch from wp-config; force debug off. | Blog: Develop content clusters for informational keywords (e.g., 'bali culture', 'nyepi  |
+| ypi-asia.com | ce01 | live | Change default WordPress database table prefix `wp_` to a unique, random string to enhan | Blog: Develop a content strategy to target relevant industry keywords beyond current bra |
 
-## gda-pn01 — unaudited (Node.js; NONE audited)
-- essentialbali.com (CMS) · baligirls (baligirls.gaiada2.online) · jackaroodigital.com.au · schoolcatering (schoolcatering.gaiada2.online) · gaiadaweb (gaiada2.online)
+## Blockers / not-verified
 
-## hostinger — unaudited live client domains
-(audited on hostinger: amertaspa, aquatir, balirca, beanexchange, caviar, cascadessuites, dapurraja, gaiada, goldenmonkeybali, goldenmonkeysanur, goldenmonkeyubud, hairsalonubud, institutescoffier, motagarage, nailsalonubud, nusapenida, reflexologyubud, russiancaviarhouse, sepedamotor, ubudbeautycentre, pegasus.com.au)
-- 7originfilm.com · balihiddenvillas.com · balihideawayvillas.com · balipropertybargains.com.au · balirestaurantguide.com · bruinsma-ac.com · cloudkitchenbali.com · dacaviar.com · dreamcatchervillas.com · enzogelatobali.com · enzosushitrain.com *(dapurraja.com 301s here — live successor)* · horizonviewsproperties.com · kalugaqueen.id · lastminuteroomsbali.com · orison.io · scamcheck-global.com · suriresidence.com · tacconsultancy.com · uniqueweightloss.com.au · bimc-cosmedic-01.gaiada.com *(subdomain)*
-
-## hostinger — staging / temp / internal (probably out of scope)
-`*.hostingersite.com` temp + `*.gaiada.com` test: Claisebrook Bar, Uluwatu School, Arrivi, Arrivi Legal, Christos Medicine, Luxury Bali, MST Edge, Aquatir (staging), Mota Garage (staging), staging.suriresidence.com, pegasus.gaiada.com, testmodule.gaiada.com, orangered-bat-981597.
-
-## Caveats / to verify
-- `isort.co.id` vs audited `isort.id` — same site or distinct?
-- `gaiada.com` audited; ce01 has `gaiadaweb` dir and pn01 a `gaiadaweb` node app — confirm the live property.
-- Hostinger ~55 = **WordPress installs**; non-WP addon websites not yet enumerated — true total may be higher.
+- **No file SSH on hostinger (41 sites):** plugin lists/versions inferred from HTTP + prior audits + Hostinger API (which confirms WP-install validity but not plugins). True plugin-level depth needs phpMyAdmin / WP-admin (Playwright).
+- **GSC live data:** not pulled this run — reconnect GSC (verify properties) for CTR/position/impressions.
+- **Staging vs production:** `bimc-cosmedic-01.gaiada.com` appears to be a staging subdomain that is currently indexable — confirm intent.
+- **CWV field data:** not captured this run.
