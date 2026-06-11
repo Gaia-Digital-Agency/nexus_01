@@ -4,6 +4,17 @@
 **Boundary:** audits = technical/site-health only; seo = search/content only (no overlap). Analysis only — nothing executed.
 **Method:** signals gathered live (curl + ce01/pn01 SSH + Hostinger API + Semrush). Items not verifiable are flagged per-site under "Could not verify".
 
+## Wave model (how these findings become work)
+
+| Wave | Scope | This doc feeds it via | Status |
+|---|---|---|---|
+| **0 · Audit production** | the 63 audits + 63 SEO analyses + this rollup | — (this IS Wave 0) | ✅ Complete |
+| **1 · Audit scope of work** | execute the **technical** fixes | the *Cross-site TECHNICAL issues* section + each audit's "Top technical fixes" | ⏳ not started |
+| **2 · SEO scope of work** | execute **meta rewrites + content** | the *Cross-site SEO issues* section + each SEO doc's "Work plan" | ⏳ not started |
+| **3 · GBP / Ads / social** | local + paid + social | the *Blockers* section | ⛔ Google 2SV + GBP API |
+
+Backlog: `docs/plan/todo.md`. Summary: `docs/plan/action_summary.md`.
+
 ## Portfolio coverage — gap CLOSED
 
 | Server | Sites | Access used |
