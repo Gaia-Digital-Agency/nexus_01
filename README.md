@@ -3,23 +3,23 @@
 Master control panel and developer reference for the **Gaia Nexus Platform** (`/var/www/nexus` on `gda-s01`). Gaia Nexus is the unified SEO / AEO / SEM / SMM control plane for Gaia Digital Agency's (GDA) property portfolio across Bali, Jakarta, and internationally. It is designed, built, and autonomously orchestrated from the AI command centre on **`gda-ai01`** by the **Hermes AI Agent**.
 
 > **Live Production URL:** https://nexus.gaiada.online
-> **Secrets/Credentials:** `docs/key.txt` (chmod 600) — local only, NEVER commit.
+> **Secrets/Credentials:** `docs/keys/` + `docs/key.txt` (chmod 600) — local only, NEVER commit.
 > **Last updated:** 11 June 2026
 
 ---
 
 ## 📐 0. Portfolio scope (read this first)
 
-Earlier drafts of this guide quoted different portfolio sizes. The reconciled reality is **layered**, not a single number:
+The portfolio is **layered**, not a single number:
 
 | Layer | Count | Meaning |
 |---|---|---|
 | Managed domains (target) | ~50 | 40 WordPress + 10 Node.js — the full portfolio ambition |
-| Audited (2026-06-10) | 32 | Reports in `docs/audits/` |
-| Active SEO work scope | 20 | Sites in the current work plan (`docs/seo/`) |
-| Seeded in Nexus DB | 20 | Active scope sites — seeded 2026-06-11 (replaced 34 demo rows; prior data backed up) |
+| **Live sites audited (2026-06-11)** | **63** | **Wave 0 complete** — every live site has BOTH a technical audit (`docs/audits/`) and an SEO analysis (`docs/seo/`). Spread: gda-ce01 (17) · gda-pn01 (5) · hostinger (41) |
+| Active SEO work scope | ~7 earners | Sites with meaningful organic traffic — where Wave 2 effort concentrates |
+| Seeded in Nexus DB | 20 | The `sites` table holds 20 active-scope rows; `seo_score`/`traffic_7d`/`roas` are **not yet populated** (the GSC/GA4 sync in `pipeline/collect.py` is still a stub). **Not yet expanded to the full 63.** |
 
-The UI, API, DB, and orchestration are live, and the `sites` table now holds the 20 active scope sites (identity + ad-spend where known; `seo_score`/`traffic_7d`/`roas` populate via the daily GSC/GA4 sync). The earlier 34 rows were demo/placeholder data and have been replaced. See `docs/action_summary.md`.
+Diagnosis (Wave 0) is done for all 63 live sites. Two open data-layer items remain: expand the `sites` table from 20 → 63, and implement the pipeline that populates the score/traffic/ROAS columns. See `docs/plan/action_summary.md` and `docs/plan/findings.md`.
 
 ---
 
@@ -40,14 +40,14 @@ Browser ──HTTPS (SSL)──▶ Nginx (nexus.gaiada.online)
 ```
 
 - **P**ostgreSQL 18 — relational master DB (`gaia_nexus`, user `nexus_user`, table `sites`).
-- **R**eact 19 — single-page dashboard client.
+- **R**eact 19 — single-page dashboard client (SPA, not SSR).
 - **V**ite 6 — production bundler (`frontend/dist`, served by Nginx).
-- **T**oolchain (Node/Express) — backend API on `127.0.0.1:3100` via pm2 (`gaia-nexus-backend`).
+- **T**oolchain (Node/Express) — backend API on `127.0.0.1:3100` via pm2 (`gaia-nexus-backend`, entry `backend/server.js`).
 - **N**ginx 1.24 — reverse proxy + TLS termination (dedicated `sites-available/nexus.gaiada.online` block).
 
 ---
 
-## 📂 2. Repository Layout (`/var/www/nexus`)
+## 📂 2. Repository Layout (`/var/www/nexus` — git repo)
 
 ```
 nexus/
@@ -55,16 +55,16 @@ nexus/
 ├── CLAUDE.md                 # Workspace playbook + operational guardrails
 ├── HERMES.md                 # How the Hermes agent controls the platform
 ├── backend/                  # Node.js + Express API (server.js, .env [chmod 600])
-├── frontend/                 # React 19 + Vite client
+├── frontend/                 # React 19 + Vite 6 SPA client
 │   ├── src/ (main.jsx, App.jsx, index.css)
 │   └── dist/                 # Vite production build (served by Nginx)
-├── pipeline/                 # Python metrics collectors (collect.py stub)
+├── pipeline/                 # Python metrics collectors (collect.py — stub)
 └── docs/
     ├── app_design/           # Design specs, docs 01–08 (concept → UI brief)
-    ├── audits/               # 32 tiered SEO audit reports + INDEX.md
-    ├── seo/                  # seo-work-scope-20-sites.md — the work plan
+    ├── audits/               # 63 technical audit reports (one per live site)
+    ├── seo/                  # 63 SEO analyses (one per live site)
     ├── capabilities/         # capabilities.md + the SKILLS-*.md agent specs
-    ├── action_summary.md     # Consolidated audit + scope findings & action plan
+    ├── plan/                 # action_summary.md · findings.md · todo.md (the 4-wave plan)
     ├── key.txt               # SENSITIVE (chmod 600) — secrets
     └── keys/                 # SENSITIVE — credential store
 ```
@@ -93,11 +93,11 @@ nexus/
 
 ## 🤖 4. AI Orchestration with Hermes (`gda-ai01`)
 
-The frontend, DB, and background processes are built and maintained by **Hermes** (Claude Opus) from `gda-ai01:/opt/hermes-seo`.
+The frontend, DB, and background processes are built and maintained by **Hermes** (Claude Opus) from `gda-ai01:/opt/hermes`.
 
 - **Passwordless SSH** as `azlan` into `gda-s01` — modify code, alter schemas, run seeds, rebuild assets.
 - **Remote Vite build:** `ssh gda-s01 "cd /var/www/nexus/frontend && npm run build"` — Nginx serves the new `dist/` immediately.
-- **MCP data tools** (config in `gda-ai01:/opt/hermes-seo/config.yaml`): Semrush, GSC, GA4, GTM, Figma — all live. Google Ads is partial (needs developer token). See `docs/capabilities/capabilities.md`.
+- **MCP data tools** (config in `gda-ai01:/opt/hermes/config.yaml`): Semrush, GSC, GA4 live; GTM/Google Ads pending OAuth + developer token. See `docs/capabilities/capabilities.md`.
 
 ### Cron routines
 - **Daily 03:00 GMT+8** — GSC + GA4 sweeps.
@@ -125,15 +125,23 @@ ssh gda-s01 "psql -U nexus_user -d gaia_nexus -h 127.0.0.1 -f /tmp/seed.sql"
 
 ---
 
-## 📈 6. Current SEO Programme
+## 📈 6. Current SEO Programme — the 4-wave model
 
-The portfolio has been audited and a 20-site work plan drawn up. Start here:
+Wave 0 (diagnosis) is **complete** for all 63 live sites. Start here:
 
-- **`docs/action_summary.md`** — the consolidated findings + prioritised waves (technical hygiene → meta rewrites → content → audits → local/paid/social).
-- **`docs/audits/INDEX.md`** — all 32 reports + the cross-site issue rollup.
-- **`docs/seo/seo-work-scope-20-sites.md`** — per-site work tables.
+- **`docs/plan/action_summary.md`** — the summary layer: wave model + status.
+- **`docs/plan/findings.md`** — consolidated cross-site technical + SEO findings.
+- **`docs/plan/todo.md`** — the full prioritised backlog (regenerated from the 63 docs).
+- Per-site detail: `docs/audits/<domain>.md` (technical) + `docs/seo/<domain>.md` (search).
 
-**Two long-lead blockers** gate the local/paid/social wave (and are worth starting now): the Google Ads **developer token** (2SV on seo@gaiada.com blocks viewing it) and **GBP API access** (approval pending). Both are detailed in `docs/action_summary.md` §5.
+| Wave | Scope | Status |
+|---|---|---|
+| **0 · Audit production** | 63 technical audits + 63 SEO analyses + findings | ✅ **Complete** |
+| **1 · Technical scope of work** | execute the technical fixes (HSTS portfolio-wide, shared WP auth keys, `wp_` prefixes, debug flags, dual-plugin cleanup) | ⏳ not started |
+| **2 · SEO scope of work** | meta rewrites + content, focused on the ~7 earners | ⏳ not started |
+| **3 · GBP / Ads / social** | GBP + ad campaigns + social | ⛔ blocked (Google 2SV + GBP API) |
+
+**Two long-lead blockers** gate Wave 3 (worth starting now): the Google Ads **developer token** (2SV on seo@gaiada.com blocks viewing it) and **GBP API access** (approval pending). Both detailed in `docs/plan/action_summary.md`.
 
 ---
 

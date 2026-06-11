@@ -1,21 +1,28 @@
 # CLAUDE.md — Gaia Nexus Platform workspace
 
-Context for Claude Code working in `~/Downloads/hermes`. This dir is the **operator workspace**
-for the Gaia Nexus engagement (it is **not** a git repo).
+Context for Claude Code / Hermes working in **`/var/www/nexus`** on `gda-s01`. This dir **is a git repo**
+(the deployed platform). The AI command centre that builds and orchestrates it is `gda-ai01`.
 
 ## What Gaia Nexus is
-AI-powered control plane for a portfolio of **50 sites** (40 WordPress + 10 Node.js) on GCP, to
-automate SEO/AEO/SEM/SMM. The AI layer is **Hermes** (Claude Opus) running on a dedicated VM.
-Stack = **PRVTN**: Payload CMS · React 19 + Vite SSR · PostgreSQL · Python pipeline · Node.
+AI-powered control plane for a portfolio of ~50 managed domains (40 WordPress + 10 Node.js) on GCP, to
+automate SEO/AEO/SEM/SMM. **63 live sites are now audited — Wave 0 (diagnosis) is complete.** The AI
+layer is **Hermes** (Claude Opus) running on a dedicated VM.
+Stack = **PRVTN**: **P**ostgreSQL 18 · **R**eact 19 · **V**ite 6 (SPA) · **T**oolchain (Node/Express,
+`backend/server.js`) · **N**ginx 1.24. (No Payload CMS, no SSR.)
 
-## Workspace layout
-- `app_design/` — the spec (docs 01–08): concept, plans, system/app architecture, file structure,
-  GCP deployment, implementation, **08 = UI design brief** (sitemap + Claude Design prompts).
-- `capabilities.md` — MCP capabilities for the 5 data sources + SEO/AEO/SEM/SMM best-practice playbook
-  + a **Deployment Status** section (what's actually installed).
-- `key.txt` — **SENSITIVE (chmod 600)**: Semrush/Discord/Anthropic keys, Google login, DB creds,
-  OAuth setup checklist, infra map. Do NOT commit; gitignore if this dir ever becomes a repo.
-- `chat_01/` — prior conversation export (reference).
+## Repo layout (`/var/www/nexus`)
+- `README.md` — master operator guide (architecture, dashboard tabs, CLI playbook).
+- `HERMES.md` — how the Hermes agent controls the platform.
+- `backend/` — Express API (`server.js`, `.env` chmod 600); pm2 app `gaia-nexus-backend` on `127.0.0.1:3100`.
+- `frontend/` — React 19 + Vite 6 SPA; build → `dist/` (served by Nginx).
+- `pipeline/` — Python metrics collector (`collect.py` — **stub**; GSC/GA4 sync not yet live).
+- `docs/app_design/` — the spec (docs 01–08): concept → system/app architecture → UI brief.
+- `docs/audits/` (63) + `docs/seo/` (63) — per-site technical audit + SEO analysis (Wave 0 output).
+- `docs/plan/` — `action_summary.md` (summary) · `findings.md` (consolidated) · `todo.md` (backlog).
+  **4-wave model:** 0 audit ✅ · 1 technical ⏳ · 2 SEO ⏳ · 3 GBP/Ads/social ⛔ (Google 2SV + GBP API).
+- `docs/capabilities/` — `capabilities.md` + the `SKILLS-*.md` agent specs.
+- `docs/key.txt` + `docs/keys/` — **SENSITIVE (chmod 600)**: Semrush/Discord/Anthropic keys, Google
+  login, DB creds, OAuth setup checklist, infra map. Do NOT commit (gitignored).
 
 ## Infrastructure (GCP project `gda-viceroy`, region asia-southeast1)
 SSH hosts (all passwordless-sudo as user **azlan**): `gda-ce01`, `gda-pn01`, `gda-s01`, `gda-ai01`,
@@ -31,12 +38,14 @@ scopes; the VMs' own service accounts do **not** (can't resize/detach disks from
 - Caution: a pre-existing `python-dotenv` parse warning around `.env` line ~482 (not ours).
 
 ### Nexus app — `gda-s01` (MULTI-SERVER — isolate everything, never restart shared services)
-- Dir `/var/www/nexus` → `backend/` (Express), `frontend/` (Vite/React, build → `dist/`),
-  `pipeline/` (Python stub), `README.md`.
+- Dir `/var/www/nexus` → `backend/` (Express), `frontend/` (Vite/React SPA, build → `dist/`),
+  `pipeline/` (Python stub), `docs/`.
 - **Live: https://nexus.gaiada.online** (certbot cert → 2026-09-01, HTTP→HTTPS redirect).
 - Backend on `127.0.0.1:3100` via **pm2** app `gaia-nexus-backend` (`pm2 restart gaia-nexus-backend`).
-- DB: **PostgreSQL 18** @ `127.0.0.1:5432`, database `gaia_nexus`, user `nexus_user`, table `sites`
-  (20 active scope sites, seeded 2026-06-11). Creds in `backend/.env` and `key.txt`.
+- DB: **PostgreSQL 18** @ `127.0.0.1:5432`, database `gaia_nexus`, user `nexus_user`, table `sites`.
+  Currently **20 active-scope rows** (seeded 2026-06-11); `seo_score`/`traffic_7d`/`roas` **not yet
+  populated** (pipeline stub). Wave 0 audited 63 sites, but the table is **not yet expanded to 63**.
+  Creds in `backend/.env` and `key.txt`.
 - Other apps on this host use ports 3006/3007/3010/3080/8081 — pick free ports only; nginx config is
   the dedicated `sites-available/nexus.gaiada.online` block.
 
