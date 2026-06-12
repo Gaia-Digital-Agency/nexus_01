@@ -1,19 +1,14 @@
-# Gaia Portfolio — Audit + SEO Findings (consolidated)
+# Findings — What We Found Across All 63 Sites
 
-**Updated:** 2026-06-11 · **Coverage:** 63 live sites across gda-ce01, gda-pn01, hostinger. Per-site detail: `docs/audits/<domain>.md` (technical) + `docs/seo/<domain>.md` (search).
-**Boundary:** audits = technical/site-health only; seo = search/content only (no overlap). Analysis only — nothing executed.
-**Method:** signals gathered live (curl + ce01/pn01 SSH + Hostinger API + Semrush). Items not verifiable are flagged per-site under "Could not verify".
+**Updated:** 2026-06-11 · **You are here:** Plan → **Findings** → Action Summary → Todo
+**In the app:** this is the *Reports* layer — the consolidated briefing across the portfolio.
+**Built from:** every `audits/<site>.md` (technical) + `seo/<site>.md` (search). **Feeds:** `action_summary.md` → `todo.md`.
 
-## Wave model (how these findings become work)
+This is the big-picture read: the patterns that showed up again and again across the portfolio. Per-site detail is in the audit and SEO files; the decision about what to *do* with all this is in `action_summary.md`.
 
-| Wave | Scope | This doc feeds it via | Status |
-|---|---|---|---|
-| **0 · Audit production** | the 63 audits + 63 SEO analyses + this rollup | — (this IS Wave 0) | ✅ Complete |
-| **1 · Audit scope of work** | execute the **technical** fixes | the *Cross-site TECHNICAL issues* section + each audit's "Top technical fixes" | ⏳ not started |
-| **2 · SEO scope of work** | execute **meta rewrites + content** | the *Cross-site SEO issues* section + each SEO doc's "Work plan" | ⏳ not started |
-| **3 · GBP / Ads / social** | local + paid + social | the *Blockers* section | ⛔ Google 2SV + GBP API |
+> **How to read the two lists below.** We split everything we found into **Site-Health issues** (is the site safe and can Google read it?) and **Search issues** (can the site win the rankings it should?). Each item leads with what it *means* for the business, with the technical term kept in (parentheses) so the engineer doing the fix knows exactly what's meant.
 
-Backlog: `docs/plan/todo.md`. Summary: `docs/plan/action_summary.md`.
+**What we checked, and how:** all 63 live sites, with real live signals — the sites' own responses, server access where we have it (gda-ce01, gda-pn01), the Hostinger API, and Semrush. Anything we couldn't confirm is flagged per-site under "Could not verify". **Nothing here has been changed on a live site — this is analysis only.**
 
 ## Portfolio coverage — gap CLOSED
 
@@ -26,29 +21,30 @@ Backlog: `docs/plan/todo.md`. Summary: `docs/plan/action_summary.md`.
 
 **Status mix:** ~54 live · ~7 redirect-only domains · ~2 parked. The earlier "~17 blocked/403" was an **intermittent security challenge** on Hostinger CDN — all were accessible on retry and are now fully audited (no site left unverified for that reason).
 
-## Cross-site TECHNICAL issues (recurring)
+## Site-Health issues (the patterns we saw again and again)
 
-- **No HSTS header — near-universal:** almost every HTTPS site enforces TLS but omits `Strict-Transport-Security` (only dreamcatchervillas has it). Portfolio-wide quick win.
-- **Identical/shared WP auth keys & salts:** goldenmonkeysanur ↔ goldenmonkeyubud reuse key material (cross-site cookie forgery) — **highest-severity security item**; plus weak DB passwords on that family.
-- **Default `wp_` table prefix:** ayrwater, goldenmonkeybali, motagarage, caviar class.
-- **Debug/file-edit hardening gaps:** viceroybali exposes `WP_DEBUG` via `?WP_DEBUG=` URL param and has `DISALLOW_FILE_EDIT` commented out; balirca has `WP_DEBUG` on.
-- **Dual caching plugins:** viceroybali (WP Rocket + LiteSpeed), goldenmonkeyubud (LiteSpeed + W3TC), reflexologyubud (LiteSpeed + WP Super Cache).
-- **Dual/conflicting SEO plugins:** gaiada (AIOSEO+RankMath+Yoast), reflexologyubud & nailsalonubud (RankMath+Yoast).
-- **Caching left off / uncached (CDN DYNAMIC):** beanexchange, balihiddenvillas, horizonviewsproperties, bimc-cosmedic — page cache disabled or bypassed.
-- **Intermittent 403 security challenge to crawlers:** 7originfilm, balihiddenvillas, bruinsma-ac, dacaviar, enzosushitrain, tacconsultancy, horizonviewsproperties — can block Googlebot if mis-tuned.
-- **Plugin/theme bloat & duplicates:** ayrwater (ACF Pro installed twice; 6 backup themes), viceroybali (`viceroy*-git` themes + a stray `.xlsx` in the themes dir), mail-smtp duplicated on balicatering.
-- **Generic/weak admin accounts:** balihiddenvillas login is `admin`; several use personal Gmail logins.
-- **WordPress core not latest (6.8.x/6.9.x vs 7.0):** 7originfilm, ayrwater, horizonviewsproperties, bimc-cosmedic.
-- **Exposed config/backup risk:** akoyaspabali wp-config backup php; Duplicator archives to confirm on balicatering.
+*Ordered roughly worst-first. "What it means" leads; the technical term is in (parentheses).*
 
-## Cross-site SEO issues (recurring)
+- **🔴 Two sister sites can be broken into through each other.** goldenmonkeysanur and goldenmonkeyubud share the same secret login keys (identical WP auth keys & salts → cross-site cookie forgery), plus weak database passwords. This is the single most serious thing we found — fix first.
+- **🔴 One site has a guessable admin login.** balihiddenvillas still uses the username `admin` — half of a break-in is already done for an attacker. Rename + add 2-factor.
+- **🔴 One site leaks its inner workings through the address bar.** viceroybali turns on debug mode if you add `?WP_DEBUG=` to the URL, and its file-editor lockdown is switched off (`DISALLOW_FILE_EDIT` commented out). balirca has debug left on too.
+- **🟠 Almost no site has the standard "always use HTTPS" lock.** The header that tells browsers to refuse insecure connections (HSTS / `Strict-Transport-Security`) is missing nearly everywhere (only dreamcatchervillas has it). Cheap to add across the whole portfolio.
+- **🟠 We're accidentally telling Google to go away on some sites.** A few sites either block pages that should rank (e.g. aquatir blocks its own `/shop/`) or challenge Google's crawler like it's a bot (intermittent 403 on 7originfilm, balihiddenvillas, bruinsma-ac, dacaviar, enzosushitrain, tacconsultancy, horizonviewsproperties). That's lost ranking we can simply switch back on.
+- **🟠 A staging/test site is publicly visible to Google.** bimc-cosmedic-01 looks like a test subdomain but is indexable — confirm and hide it (`noindex`) so it doesn't compete with the real site.
+- **🟠 Default database naming makes attacks easier.** A handful still use the out-of-the-box table prefix (`wp_`): ayrwater, goldenmonkeybali, motagarage, caviar.
+- **🟡 Plugins fighting each other / piling up.** Two caching plugins on the same site (viceroybali, goldenmonkeyubud, reflexologyubud) can corrupt pages; duplicate/unused plugins and themes (ayrwater has ACF Pro twice + 6 leftover themes; viceroybali has stray dev themes and a stray spreadsheet) are dead weight and extra attack surface.
+- **🟡 Caching switched off** on beanexchange, balihiddenvillas, horizonviewsproperties, bimc-cosmedic — slower pages, which hurts both visitors and rankings.
+- **🟡 A few sites are behind on software** (WordPress 6.8/6.9 vs current 7.0): 7originfilm, ayrwater, horizonviewsproperties, bimc-cosmedic.
+- **🟡 Leftover backup/config files sitting in public view** (e.g. akoyaspabali's wp-config backup; Duplicator archives to confirm on balicatering) — these can hand an attacker the keys.
 
-- **Overwhelmingly low-presence:** of 63 sites, only ~7 have a real organic footprint — **aperitif, blossomsteakhouse, cascadesbali, nusapenida, pinstripebar, sepedamotor, viceroybali**. Most others return near-zero / "NOTHING FOUND" in Semrush.
-- **CTR collapse on the earners:** the high-impression sites draw large volume at <1% CTR — weak meta titles, not weak rankings → meta rewrites = highest ROI.
-- **Defensive #1s with no content moat:** nailsalonubud ranks #1 for "nail salon ubud" but has no blog — vulnerable.
-- **Redirect/parked domains carry no SEO value:** dapurraja→enzosushitrain, goldenmonkeysanur/ubud→goldenmonkeybali, balihideawayvillas→balihiddenvillas, **dreamcatchervillas→Instagram (302)**, russiancaviarhouse, interlace (parked), pegasus (Wix). Effort belongs on the live successor.
-- **Thin/placeholder titles:** cloudkitchenbali ("Cloud Kitchen"), beanexchange ("Roasts,Exceptional" missing space).
-- **GSC not available this run:** SEO docs are Semrush-grounded; reconnect GSC for CTR/position depth.
+## Search issues (the patterns we saw again and again)
+
+- **Most sites barely show up in search.** Of 63 sites, only ~7 have a real organic footprint — **aperitif, blossomsteakhouse, cascadesbali, nusapenida, pinstripebar, sepedamotor, viceroybali**. The rest are near-zero in Semrush. *This is the single most important fact for the plan: concentrate effort, don't spread it.*
+- **The sites with traffic are leaving clicks on the table.** Our high-traffic sites get plenty of search impressions but a tiny share of clicks (<1% CTR) — that's a **weak page-title problem, not a ranking problem.** Rewriting titles is the cheapest, highest-return SEO move we have.
+- **We hold a #1 with nothing protecting it.** nailsalonubud ranks #1 for "nail salon ubud" but has no supporting blog content — a competitor could take it. Defend it.
+- **Redirect-only and parked domains earn nothing — don't invest in them.** dapurraja→enzosushitrain, goldenmonkeysanur/ubud→goldenmonkeybali, balihideawayvillas→balihiddenvillas, dreamcatchervillas→Instagram, russiancaviarhouse, interlace (parked), pegasus (Wix). Put the effort into the live site behind each.
+- **A couple of sites have placeholder titles** that read as unfinished: cloudkitchenbali ("Cloud Kitchen"), beanexchange ("Roasts,Exceptional" — missing space).
+- **Caveat on this round's data:** rankings/keywords are grounded in Semrush; live Google Search Console data (exact clicks/positions) wasn't connected this run — reconnecting it will sharpen the click-through picture.
 
 ## Per-site index (63)
 

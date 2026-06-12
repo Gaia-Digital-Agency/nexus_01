@@ -1,8 +1,16 @@
-# Gaia Nexus — Execution Backlog (by wave)
+# Todo — The Work, Site by Site
 
-**Compiled:** 11 June 2026 from the 63 audit docs (`docs/audits/`) + 63 SEO docs (`docs/seo/`).
-**Wave model:** 0 Audit production (done) · 1 Audit scope (technical fixes) · 2 SEO scope (meta+content) · 3 GBP/Ads/social (blocked).
-**Legend:** [ ] to do · [x] done · ⛔ blocked. Analysis is complete; these are the EXECUTION actions (not yet started).
+**Compiled:** 11 June 2026 from the 63 audits (`docs/audits/`) + 63 SEO analyses (`docs/seo/`).
+**You are here:** Plan → Findings → Action Summary → **Todo** · **In the app:** this is the *Deployments / Act* layer — the actual tasks being executed.
+
+> **What this is.** The detailed task list behind the plan. If `action_summary.md` is *what we'll do and why*, this is *every individual job, grouped by site.* You don't have to read it end to end — skim the **"Do first"** block below for the priorities; the per-site sections are the working checklist for whoever does each fix.
+
+**How it's organised:** three streams of work, matching the Action Summary —
+1. **Site Health** — security & crawlability fixes (cheap, portfolio-wide). *App: Act → Deployments.*
+2. **SEO** — title rewrites + content, concentrated on the earners. *App: Decide → Proposals, then Deployments.*
+3. **Local / Paid / Social** — Business Profiles, Google Ads, social — blocked on one Google permission.
+
+**Legend:** `[ ]` to do · `[x]` done · ⛔ blocked. Everything below is **execution** — the analysis is finished; these tasks are mostly not yet started.
 
 ---
 
@@ -14,17 +22,17 @@
 
 ---
 
-## Wave 1 — Audit scope of work (execute technical fixes)
+## Stream 1 — Site Health (execute the technical fixes)
 
-**Cross-cutting priorities (do first — highest severity / portfolio-wide):**
-- [ ] 🔴 **Rotate shared WP auth keys/salts** — goldenmonkeysanur ↔ goldenmonkeyubud (identical = cross-site cookie forgery); make unique.
-- [ ] 🔴 **viceroybali**: remove `$_GET['WP_DEBUG']` branch + enable `DISALLOW_FILE_EDIT`; drop one of WP Rocket / LiteSpeed (dual cache).
-- [ ] 🔴 **balihiddenvillas**: rename the `admin` user + enforce 2FA.
-- [ ] 🔴 **bimc-cosmedic-01.gaiada.com**: confirm staging; if so, `noindex` + `Disallow: /` (currently indexable).
-- [ ] 🔴 **aquatir.id**: reconsider robots `Disallow: /shop/` (blocking WooCommerce products).
-- [ ] 🟠 **HSTS portfolio-wide**: add `Strict-Transport-Security` (near-universally missing).
-- [ ] 🟠 **Default `wp_` prefix**: ayrwater, goldenmonkeybali, motagarage, caviar.
-- [ ] 🟠 **Dual SEO / caching plugins**: gaiada (3 SEO), reflexologyubud, nailsalonubud; caching on goldenmonkeyubud.
+**Do first — biggest risk / whole-portfolio (each line: what it protects → the fix):**
+- [ ] 🔴 **Stop the two sister sites breaking into each other** — goldenmonkeysanur ↔ goldenmonkeyubud share identical login keys (cross-site cookie forgery). Rotate WP auth keys/salts so they're unique.
+- [ ] 🔴 **Close viceroybali's debug leak** — remove the `?WP_DEBUG=` URL switch (`$_GET['WP_DEBUG']` branch) + turn the file-editor lockdown back on (`DISALLOW_FILE_EDIT`); drop one of the two caching plugins (WP Rocket / LiteSpeed).
+- [ ] 🔴 **Kill the guessable login on balihiddenvillas** — rename the `admin` user + enforce 2-factor.
+- [ ] 🔴 **Hide the test site from Google** — bimc-cosmedic-01.gaiada.com: confirm it's staging, then `noindex` + `Disallow: /` (it's currently indexable).
+- [ ] 🔴 **Let Google into aquatir's shop** — reconsider robots `Disallow: /shop/` (it's blocking the WooCommerce products from ranking).
+- [ ] 🟠 **Add the "always-HTTPS" lock everywhere** — `Strict-Transport-Security` (HSTS) header, near-universally missing.
+- [ ] 🟠 **Drop the default database naming** (`wp_` prefix) on ayrwater, goldenmonkeybali, motagarage, caviar.
+- [ ] 🟠 **Stop plugins fighting each other** — duplicate SEO plugins on gaiada (3!), reflexologyubud, nailsalonubud; duplicate caching on goldenmonkeyubud.
 
 **Per-site technical checklist — sites with High-severity findings (40):**
 
@@ -240,7 +248,7 @@
 
 ### schoolcatering.gaiada2.online  _(live)_
 - [ ] Correct the sitemap configuration to ensure a valid, accessible, and indexable sitemap is declared and served from the primary domain.
-- [ ] Implement relevant JSON-LD schema markup (e.g
+- [ ] Implement relevant JSON-LD schema markup (e.g., Organization, LocalBusiness, FoodEstablishment) on the homepage and key service pages.
 
 ### sepedamotor.com  _(live)_
 - [ ] Cut the redundant caching stack down to LiteSpeed Cache only; remove Autoptimize, WP Fastest Cache, WP Compress to eliminate conflicts and overhead.
@@ -371,13 +379,13 @@
 - [ ] Remove or obfuscate the `generator` meta tag to prevent exposing WordPress and Elementor versions, reducing the attack surface.
 - [ ] Review WordPress REST API exposure (`wp-json`) and consider implementing authentication or restricting access to specific endpoints if not required for public use, enhancing security.
 
-> Execution note: ce01/pn01 sites are SSH-writable (scriptable). Hostinger sites (41) need WP-admin / phpMyAdmin / Playwright — no file SSH.
+> Execution note: ce01/pn01 sites are SSH-writable (scriptable). Hostinger sites (41) are **also full SSH** via `hostinger-wp` (corrected 2026-06-12) — scriptable with WP-CLI; WP-admin / phpMyAdmin / Playwright are fallbacks, not the only path.
 
 ---
 
-## Wave 2 — SEO scope of work (meta rewrites + content)
+## Stream 2 — SEO (title rewrites + content)
 
-> Focus: only ~7 sites have real organic traffic — prioritise them. Redirect/parked domains (9) are excluded (no SEO value).
+> Focus: only ~7 sites have real organic traffic — prioritise them. Redirect/parked domains (8) are excluded (no SEO value). nusapenida.org is an **earner** despite its root 301 — it stays in scope. Full tier/timeline scope: `docs/seo/seo-work-scope-20-sites.md`.
 
 **Priority — the earners (real organic footprint):**
 
@@ -422,6 +430,13 @@
 - [ ] GBP: Optimize Google Business Profile with up-to-date information, high-quality photos, services, and regular posts. Encourage and respond to guest reviews.
 - [ ] Ads: Propose a Google Ads strategy targeting branded, competitor, and high-intent transactional keywords, including remarketing.
 - [ ] Social: Develop a social media content strategy (e.g., Instagram, Facebook) to showcase luxury, experiences, and cultural immersion, driving brand awareness and direct traffic.
+
+### nusapenida.org  _(live — earner; root 301s to /nusa-penida-blog-guide/)_
+- [ ] Blog: Develop new content targeting long-tail keywords around existing P1/P2 attractions (e.g., "best time to visit Diamond Beach", "how to get to Guyangan Waterfall") and less-covered activities/travel tips. Strong existing authority (1,866 keywords, ~48k organic traffic).
+- [ ] Meta: Implement the 5 proposed meta-rewrites (Homepage, Diamond Beach, Broken Beach, Angel Billabong, Toya Pakeh Harbour) — priority is lifting core term "nusa penida" off P4 (Vol 74,000) and pushing P2 attractions to P1. See `docs/seo/nusapenida.org.md`.
+- [ ] GBP: Could not verify from signals.
+- [ ] Ads: No current ad activity (0 Adwords keywords). Consider Google Ads for high-value tour/package keywords.
+- [ ] Social: Could not verify from signals.
 
 **Secondary — the rest (48 live/low-presence sites):**
 
@@ -763,7 +778,7 @@
 
 ---
 
-## Wave 3 — GBP / Ads / Social ⛔ BLOCKED
+## Stream 3 — Local / Paid / Social ⛔ BLOCKED (on one Google permission)
 - [ ] 18 × Google Business Profile setup (priority hyperlocal: hairsalonubud, nailsalonubud, motagarage, cascadessuites, reflexologyubud).
 - [ ] 6 × paid-ad campaigns (aperitif, nusapenida, pinstripebar, blossomsteakhouse, reflexologyubud/hairsalonubud/motagarage LSAs, cascadessuites hotel ads).
 - [ ] Social posting (IG hospitality/salon, FB pinstripebar events, LinkedIn gaiada).
@@ -773,4 +788,4 @@
 
 ## Access methods (WP-level changes)
 - **ce01 / pn01:** full SSH — wp-cli, file edits, scriptable + reversible.
-- **hostinger (41 sites):** no file SSH. Use Hostinger API MCP, WP-admin via Playwright, or phpMyAdmin (wp_options).
+- **hostinger (41 sites):** full SSH via `hostinger-wp` (user `u521276830`, port 65002) — **corrected 2026-06-12** (the earlier "no file SSH" note was stale). Sites live under `~/domains/<domain>/public_html`; WP-CLI at `/usr/local/bin/wp`. All changes scriptable + reversible (back up `wp-config.php`/`robots.txt`/`.htaccess` first). Hostinger API MCP / WP-admin via Playwright / phpMyAdmin remain available as fallbacks.
