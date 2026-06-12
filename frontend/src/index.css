@@ -64,6 +64,8 @@ body {
 .kpi-value { font-size: 28px; font-weight: 600; }
 .kpi-value.success { color: var(--success); }
 .kpi-value.warning { color: var(--warning); }
+.kpi-pending { border-style: dashed; border-color: rgba(255,255,255,0.10); }
+.kpi-pending-pill { display: inline-block; margin-top: 8px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); background: var(--darker); padding: 3px 8px; border-radius: 999px; }
 
 /* Split panels */
 .split-panels { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }

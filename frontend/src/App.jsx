@@ -746,6 +746,15 @@ function App() {
   const totalTraffic = sites.reduce((s, x) => s + (x.traffic_7d || 0), 0);
   const avgRoas = sites.length ? (sites.reduce((s, x) => s + Number(x.roas || 0), 0) / sites.length).toFixed(2) : '0.00';
 
+  // Real DB-backed metrics (vs the mock arrays used elsewhere). seo_score is the
+  // live Semrush organic-visibility index, populated for the active sites.
+  const sitesScored = sites.filter(x => Number(x.seo_score) > 0);
+  const realAvgSeoScore = sitesScored.length
+    ? Math.round(sitesScored.reduce((s, x) => s + Number(x.seo_score), 0) / sitesScored.length)
+    : null;
+  const hasTraffic = sites.some(x => Number(x.traffic_7d) > 0);
+  const hasRoas = sites.some(x => Number(x.roas) > 0);
+
   // Seed standard sites if array is empty (fallback for UI presentation)
   const displaySites = sites.length ? sites : DIRECTORY_SITES.map((s, idx) => {
     let hash = 0;
@@ -870,11 +879,11 @@ function App() {
           <>
             {/* KPI Cards */}
             <section className="kpis" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))' }}>
-              <Kpi label="Organic Sessions (GA4)" value={totalTraffic ? totalTraffic.toLocaleString() : "45,200"} tooltip="Sum of organic web traffic sessions across all GDA sites" />
-              <Kpi label="Ad ROAS (Google Ads)" value={avgRoas ? avgRoas + 'x' : "4.30x"} accent="success" tooltip="Average Return on Ad Spend for active campaigns" />
-              <Kpi label="Avg Domain Authority (Semrush)" value={semrushAvgDA} accent="success" tooltip="Average Domain Authority across all managed properties — live via Semrush" />
-              <Kpi label="Total Clicks 7d (GSC)" value={gscTotalClicks.toLocaleString()} accent="success" tooltip="Aggregate clicks across all GSC properties — live via seo@gaiada.com OAuth" />
-              <Kpi label="Tag Containers (GTM)" value={GTM_CONTAINERS.length + ' Active'} accent="success" tooltip="GTM containers across Gaia Digital Agency account — live via OAuth" />
+              <Kpi label="Organic Sessions (GA4)" value={totalTraffic.toLocaleString()} pending={!hasTraffic} pendingNote="Pending GA4 OAuth" tooltip="Sum of organic sessions across all sites. Populates once GA4 is connected via seo@gaiada.com OAuth." />
+              <Kpi label="Ad ROAS (Google Ads)" value={avgRoas + 'x'} accent="success" pending={!hasRoas} pendingNote="Ads not connected" tooltip="Average Return on Ad Spend. Populates once the Google Ads MCP is installed (needs OAuth + developer token)." />
+              <Kpi label="Avg SEO Score (Semrush)" value={realAvgSeoScore ?? '—'} accent="success" pending={realAvgSeoScore == null} pendingNote="Loading…" tooltip={`Live — Semrush organic-visibility index, averaged across ${sitesScored.length} active sites.`} />
+              <Kpi label="Total Clicks 7d (GSC)" value="—" pending pendingNote="Pending GSC OAuth" tooltip="Aggregate Search Console clicks. Populates once GSC is connected via seo@gaiada.com OAuth." />
+              <Kpi label="Tag Containers (GTM)" value="—" pending pendingNote="GTM not connected" tooltip="GTM containers under management. Populates once the GTM MCP is installed (needs OAuth)." />
               <Kpi label="Pending Proposals" value={proposals.filter(p => p.status === 'pending').length} accent="warning" tooltip="Count of staged content optimization suggestions" />
               <Kpi label="GCP SSH Fleet" value="4 Active" tooltip="gda-ce01 · gda-pn01 · gda-s01 · gda-ai01 — all passwordless-sudo as azlan" />
             </section>
@@ -2627,7 +2636,16 @@ function App() {
   );
 }
 
-function Kpi({ label, value, accent, tooltip, small }) {
+function Kpi({ label, value, accent, tooltip, small, pending, pendingNote }) {
+  if (pending) {
+    return (
+      <div className="kpi kpi-pending" data-tooltip={tooltip} style={{ cursor: tooltip ? 'help' : 'default' }}>
+        <div className="kpi-label muted">{label}</div>
+        <div className="kpi-value" style={{ color: 'var(--muted)' }}>—</div>
+        <span className="kpi-pending-pill">{pendingNote || 'Not connected'}</span>
+      </div>
+    );
+  }
   return (
     <div className="kpi" data-tooltip={tooltip} style={{ cursor: tooltip ? 'help' : 'default' }}>
       <div className="kpi-label muted">{label}</div>
