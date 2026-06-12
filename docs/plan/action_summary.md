@@ -32,11 +32,11 @@
 
 *Worst-first.*
 
-- **🔴 Two sister sites can be broken into through each other.** goldenmonkeysanur and goldenmonkeyubud share the same secret login keys (identical WP auth keys & salts → cross-site cookie forgery), plus weak database passwords. The single most serious thing we found — fix first.
-- **🔴 One site has a guessable admin login.** balihiddenvillas still uses the username `admin` — half of a break-in is already done for an attacker. Rename + add 2-factor.
-- **🔴 One site leaks its inner workings through the address bar.** viceroybali turns on debug mode if you add `?WP_DEBUG=` to the URL, and its file-editor lockdown is switched off (`DISALLOW_FILE_EDIT` commented out). balirca has debug left on too.
-- **🟠 Almost no site has the standard "always use HTTPS" lock.** The header that tells browsers to refuse insecure connections (HSTS / `Strict-Transport-Security`) is missing nearly everywhere (only dreamcatchervillas has it). Cheap to add across the whole portfolio.
-- **🟠 We're accidentally telling Google to go away on some sites.** A few block pages that should rank (e.g. aquatir blocks its own `/shop/`) or challenge Google's crawler like it's a bot (intermittent 403 on 7originfilm, balihiddenvillas, bruinsma-ac, dacaviar, enzosushitrain, tacconsultancy, horizonviewsproperties). Lost ranking we can simply switch back on.
+- **🔴 Two sister sites can be broken into through each other.** goldenmonkeysanur and goldenmonkeyubud share the same secret login keys (identical WP auth keys & salts), so an attacker who gets into one can fake a logged-in session on the other. They also have weak database passwords. The single most serious thing we found — fix first.
+- **🔴 One site has a guessable admin login.** balihiddenvillas still uses the username `admin` — half of a break-in is already done for an attacker. Rename it + add 2-factor login.
+- **🔴 One site leaks its inner workings through the web address.** viceroybali switches into debug mode (which shows internal error details) if you add `?WP_DEBUG=` to the address, and the setting that stops people editing site files from the dashboard is turned off (`DISALLOW_FILE_EDIT`). balirca has debug left on too.
+- **🟠 Almost no site forces the secure version of itself.** The setting that makes browsers always use the secure (HTTPS) address — the "HSTS" header — is missing nearly everywhere (only dreamcatchervillas has it). Cheap to add across the whole portfolio.
+- **🟠 We're accidentally telling Google to go away on some sites.** A few block pages that should rank (e.g. aquatir blocks its own `/shop/`) or turn Google's crawler away with an "access denied" (HTTP 403) as if it were a bad bot (happens on and off for 7originfilm, balihiddenvillas, bruinsma-ac, dacaviar, enzosushitrain, tacconsultancy, horizonviewsproperties). Lost ranking we can simply switch back on.
 - **🟠 A staging/test site is publicly visible to Google.** bimc-cosmedic-01 looks like a test subdomain but is indexable — confirm and hide it (`noindex`) so it doesn't compete with the real site.
 - **🟠 Default database naming makes attacks easier.** A handful still use the out-of-the-box table prefix (`wp_`): ayrwater, goldenmonkeybali, motagarage, caviar.
 - **🟡 Plugins fighting each other / piling up.** Two caching plugins on one site (viceroybali, goldenmonkeyubud, reflexologyubud) can corrupt pages; duplicate/unused plugins and themes (ayrwater has ACF Pro twice + 6 leftover themes; viceroybali has stray dev themes and a stray spreadsheet) are dead weight and extra attack surface.
@@ -155,9 +155,11 @@ Google Business Profiles (18 sites), Google Ads (6 campaigns), and social postin
 | viceroybali.com | ce01 | live | Remove the `$_GET['WP_DEBUG']` branch from wp-config; force debug off. | Blog: Develop content clusters for informational keywords (e.g., 'bali culture', 'nyepi  |
 | ypi-asia.com | ce01 | live | Change default WordPress database table prefix `wp_` to a unique, random string to enhan | Blog: Develop a content strategy to target relevant industry keywords beyond current bra |
 
-## Caveats — what we could not verify this round
+## Caveats — what we couldn't fully confirm this round
 
-- **No file SSH on hostinger (41 sites):** plugin lists/versions inferred from HTTP + prior audits + Hostinger API (which confirms WP-install validity but not plugins). True plugin-level depth needs phpMyAdmin / WP-admin (Playwright).
-- **GSC live data:** not pulled this run — reconnect GSC (verify properties) for CTR/position/impressions.
-- **Staging vs production:** `bimc-cosmedic-01.gaiada.com` appears to be a staging subdomain that is currently indexable — confirm intent.
-- **CWV field data:** not captured this run.
+*A few things we want the team to know we have NOT nailed down yet, so nothing here is over-stated:*
+
+- **The 41 Hostinger sites:** we don't have deep file access to them, so their exact plugin lists are our best read from the outside, not a confirmed inventory. Confirming each needs a login to the site's admin.
+- **Live Google Search Console numbers:** not connected this round, so the click-through figures are from Semrush, not Google's own data. Reconnecting Search Console will sharpen them.
+- **The test site:** `bimc-cosmedic-01.gaiada.com` looks like a staging/test site that's currently visible to Google — we need someone to confirm whether that's intended.
+- **Page-speed scores:** real-world speed data (Core Web Vitals) wasn't captured this round.
