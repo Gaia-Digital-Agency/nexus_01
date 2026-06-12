@@ -1,4 +1,7 @@
 # Technical Audit — schoolcatering.gaiada2.online
+
+> **In plain terms (for the team):** Your site is generally secure with good caching, but Google can't effectively discover all your pages because the sitemap (a map for search engines) is broken and points to a non-existent page. The single biggest risk is that this broken sitemap prevents Google from fully understanding and ranking your content, directly impacting your search visibility and organic traffic.
+
 **Server:** pn01 · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

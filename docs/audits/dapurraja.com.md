@@ -1,4 +1,7 @@
 # Technical Audit — dapurraja.com
+
+> **In plain terms (for the team):** Your site is secure and Google can crawl it, with all search authority (link equity) correctly passing to your new brand, enzosushitrain.com. The biggest risk is that you're still running a full WordPress site (WP install) for dapurraja.com, which is unnecessary and creates a redundant security risk; you should switch this to a simple static redirect.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** redirect → enzosushitrain.com
 
 ## Verified signals

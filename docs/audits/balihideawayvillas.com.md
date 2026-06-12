@@ -1,4 +1,7 @@
 # Technical Audit — balihideawayvillas.com
+
+> **In plain terms (for the team):** Your site's security and speed are good because it correctly redirects (301) to balihiddenvillas.com, allowing Google to crawl the correct content without issue. However, the biggest risk is maintaining a full, unnecessary WordPress installation behind the redirect, which creates an extra target for potential attacks (attack surface) and requires ongoing maintenance.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** redirect → balihiddenvillas.com
 
 ## Verified signals

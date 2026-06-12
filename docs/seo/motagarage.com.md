@@ -1,4 +1,7 @@
 # SEO Analysis — motagarage.com
+
+> **In plain terms (for the team):** This site has no organic search presence (no keywords, traffic, or rank data in Semrush), indicating it's a parked domain or very new and not yet indexed. The highest-ROI move is foundational: implement basic meta titles/descriptions for the homepage and key service pages, claim and optimize a Google Business Profile, and then build content targeting core services and local search terms to establish any presence at all.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

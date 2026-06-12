@@ -1,4 +1,7 @@
 # SEO Analysis — sepedamotor.com
+
+> **In plain terms (for the team):** This site gets real traffic (14,495 organic traffic) and ranks well for many specific model years, but the highest-ROI move is to rewrite weak titles and build content (on-page optimization) for high-volume commercial keywords like "harga scoopy 2021" where it currently ranks poorly (positions 14 and 20 for 74,000 search volume). This will significantly increase organic traffic and potential sales by capturing users actively looking to buy.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** live
 
 ## Search profile (Semrush)

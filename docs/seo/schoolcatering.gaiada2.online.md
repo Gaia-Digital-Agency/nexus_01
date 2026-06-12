@@ -1,4 +1,7 @@
 # SEO Analysis — schoolcatering.gaiada2.online
+
+> **In plain terms (for the team):** This site has no measurable organic traffic or keywords, indicating a complete lack of search presence and no current search opportunity. The highest-ROI move is to build foundational content and implement basic, keyword-focused meta titles and descriptions (meta-rewrite) for the homepage and any service pages to establish initial visibility.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

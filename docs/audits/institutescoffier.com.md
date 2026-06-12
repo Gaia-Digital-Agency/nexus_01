@@ -1,4 +1,7 @@
 # Technical Audit — institutescoffier.com
+
+> **In plain terms (for the team):** Your site is secure (HTTPS is enforced) and Google can generally crawl it, but the biggest risk is that Google might not discover all your content because the main `sitemap.xml` file is missing (returns a 404 error) and your homepage lacks a crucial `<h1>` heading. While a CDN is in use, the site's server response times are relatively slow (1.481s - 2.534s), which could impact user experience and search rankings.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

@@ -1,4 +1,7 @@
 # Technical Audit — ayrwater.com
+
+> **In plain terms (for the team):** Your site is generally crawlable and secure, with Google able to find your content and users protected by HTTPS. However, the single biggest risk is the **duplicate Advanced Custom Fields Pro plugin**, which could cause site errors or break functionality, directly impacting your content and potentially search visibility.
+
 **Server:** ce01 · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

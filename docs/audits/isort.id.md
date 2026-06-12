@@ -1,4 +1,7 @@
 # Technical Audit — isort.id
+
+> **In plain terms (for the team):** Your site is secure and Google can crawl it, but search performance is at high risk because Google and other search engines are likely confused about your site structure and content due to conflicting sitemaps and a misconfigured `robots.txt` file that points to an internal IP address instead of your public domain. The single biggest risk is that search engines are not seeing your most current content, as your `robots.txt` directs them to an unreachable sitemap, and your primary sitemap's last modification dates are stale.
+
 **Server:** ce01 · **Platform:** wp · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

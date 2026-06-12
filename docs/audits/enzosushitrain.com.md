@@ -1,4 +1,7 @@
 # Technical Audit — enzosushitrain.com
+
+> **In plain terms (for the team):** Your site is moderately secure, but Google's ability to consistently crawl it (intermittent 403 challenge) and its speed (CDN BYPASS) are at risk, which could hurt your search rankings. The single biggest risk is the lack of HSTS, making your site vulnerable to security attacks (no HSTS) that could compromise user data and trust.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** live (the successor brand of dapurraja.com)
 
 ## Verified signals

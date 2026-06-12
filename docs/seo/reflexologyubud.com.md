@@ -1,4 +1,7 @@
 # SEO Analysis — reflexologyubud.com
+
+> **In plain terms (for the team):** This site gets real, albeit low, traffic (60 organic traffic) and has a strong local anchor with a #1 ranking for "reflexology ubud" (Search Volume: 480). The highest-ROI move is to immediately rewrite weak titles (meta-data optimization) for key service pages to capture higher-volume, relevant terms like "foot massage near me" (Position: 15) and "bali reflexology" (Position: 10), while also building out content (blog) to address existing keyword gaps and leverage long-tail queries.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

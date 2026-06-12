@@ -1,4 +1,7 @@
 # SEO Analysis — enzosushitrain.com
+
+> **In plain terms (for the team):** This site has virtually no organic search presence (0 keywords, 0 traffic), meaning it's a blank slate for attracting customers through search. The highest-ROI move is to immediately create and optimize a Google Business Profile (GBP) and implement optimized title tags and meta descriptions for key pages, especially the homepage, to capture local "sushi train [location]" searches.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** us · **Status:** low-presence
 
 ## Search profile (Semrush)

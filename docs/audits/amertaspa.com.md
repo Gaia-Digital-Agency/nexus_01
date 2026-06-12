@@ -1,4 +1,7 @@
 # Technical Audit — amertaspa.com
+
+> **In plain terms (for the team):** Your site is generally secure and Google can crawl it, but inconsistent server response times (upstream response times) could be slowing down page loading for users, potentially impacting your search rankings. The single biggest risk is the `sitemap.xml` file returning a 404 error, which means Google might miss some of your pages, hindering their ability to appear in search results.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

@@ -1,4 +1,7 @@
 # SEO Analysis — beanexchange.net
+
+> **In plain terms (for the team):** This site has no organic search presence, meaning it gets no real traffic from search engines. The highest-ROI move is to immediately build foundational content and implement clear meta titles/descriptions, starting with the homepage, to establish basic search visibility and communicate its purpose.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

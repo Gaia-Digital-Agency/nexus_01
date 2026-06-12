@@ -1,4 +1,7 @@
 # Technical Audit — kalugaqueen.id
+
+> **In plain terms (for the team):** Good news: your site is secure (HTTPS, Content Security Policy) and Google can fully crawl it (robots.txt, sitemap, 301 redirects). Performance is also well-optimized with HTTP/2 and HTTP/3 support and active LiteSpeed caching. The single biggest risk is that the Hostinger CDN is currently bypassing caching (`x-hcdn-cache-status: BYPASS`), which means you're not getting the full speed and resource benefits from your CDN.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

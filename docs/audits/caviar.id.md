@@ -1,4 +1,7 @@
 # Technical Audit — caviar.id
+
+> **In plain terms (for the team):** Your site is secure (HTTPS) and Google can crawl it effectively (robots.txt, sitemap), with good speed performance thanks to LiteSpeed Cache. The single biggest risk is the exposed WordPress REST API endpoints (`wp-json`), which could potentially be exploited if not properly secured, impacting your site's security.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

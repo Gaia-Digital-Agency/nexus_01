@@ -1,4 +1,7 @@
 # Technical Audit — nailsalonubud.com
+
+> **In plain terms (for the team):** Your site is generally secure and Google can crawl it effectively, but there's a significant risk to your business: your database might be shared with another site (shares `4bXazL_` table prefix with hairsalonubud), which is a major security vulnerability. While the site is reasonably fast due to active caching (LiteSpeed cache hit), you should also remove inactive plugins and upgrade PHP for better performance and security.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

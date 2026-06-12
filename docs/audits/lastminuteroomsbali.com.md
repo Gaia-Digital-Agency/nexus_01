@@ -1,4 +1,7 @@
 # Technical Audit — lastminuteroomsbali.com
+
+> **In plain terms (for the team):** Your site is currently completely inaccessible to Google and users because the server is unresponsive (server timed out, sitemap.xml HTTP 000 status), meaning it can't be crawled or indexed at all. This is the single biggest risk, as it prevents any search visibility or traffic; we also couldn't verify security or speed due to this fundamental issue.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** parked
 
 ## Verified signals

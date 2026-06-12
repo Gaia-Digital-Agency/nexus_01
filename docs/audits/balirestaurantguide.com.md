@@ -1,4 +1,7 @@
 # Technical Audit — balirestaurantguide.com
+
+> **In plain terms (for the team):** Your site is currently almost entirely invisible to Google and users because it's severely unresponsive (server unresponsiveness) and lacks basic communication (no HTTP response headers), meaning search engines can't crawl it or even tell if it's secure. The single biggest risk is that Google cannot access or understand your site at all, preventing any search visibility.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

@@ -1,4 +1,7 @@
 # SEO Analysis — ubudbeautycentre.com
+
+> **In plain terms (for the team):** This site gets real traffic for high-volume local beauty terms (e.g., "facial ubud" 590 searches/month, "nail salon ubud" 1300 searches/month) but is currently underperforming with only 101 organic visitors. The highest-ROI move is to immediately rewrite weak titles (meta-optimization) for key service pages like "Facial Services" and "Nail Services" to leverage existing strong positions and capture more clicks (CTR), while also optimizing the Google Business Profile (GBP) to dominate local "near me" searches.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

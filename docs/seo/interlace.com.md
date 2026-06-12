@@ -1,4 +1,7 @@
 # SEO Analysis — interlace.com
+
+> **In plain terms (for the team):** This site has virtually no organic search presence, meaning it gets no real traffic from search engines and is essentially invisible to potential customers. The highest-ROI move is to immediately create and optimize unique title tags and meta descriptions for all key pages, starting with the homepage, to establish basic relevance and allow search engines to understand what the site is about.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** us · **Status:** low-presence
 
 ## Search profile (Semrush)

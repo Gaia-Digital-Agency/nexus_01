@@ -1,4 +1,7 @@
 # Technical Audit — uniqueweightloss.com.au
+
+> **In plain terms (for the team):** Your site is generally secure and Google can crawl it effectively, with all non-canonical URLs redirecting correctly and a functional sitemap. However, the single biggest risk is that your site's WordPress and Elementor versions are publicly exposed (via the `generator` meta tag), making it easier for attackers to find and exploit known vulnerabilities.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

@@ -1,4 +1,7 @@
 # Technical Audit — balipropertybargains.com.au
+
+> **In plain terms (for the team):** Your site is secure with HTTPS enforced (Strict-Transport-Security), but Google can't fully crawl it because your main sitemap index (sitemap_index.xml) is broken, which is the single biggest risk as it prevents Google from efficiently discovering your content. Additionally, the homepage lacks a proper title, meta description, and H1, and the site's caching (Cache-Control) is set too low, potentially impacting speed.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

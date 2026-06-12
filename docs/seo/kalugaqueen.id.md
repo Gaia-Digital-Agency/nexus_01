@@ -1,4 +1,7 @@
 # SEO Analysis — kalugaqueen.id
+
+> **In plain terms (for the team):** This site has no organic search presence (0 organic keywords, 0 organic traffic), meaning it's a blank slate with significant opportunity. The highest-ROI move is to immediately implement foundational meta titles and descriptions for key pages and develop a content strategy (blog) to build topical authority around "Kaluga caviar Indonesia" and related luxury food terms.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

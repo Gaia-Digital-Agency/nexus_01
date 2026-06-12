@@ -1,4 +1,7 @@
 # Technical Audit — interlace.com
+
+> **In plain terms (for the team):** Your site is completely inaccessible to Google and users because the domain is parked (DNS A records point to a GoDaddy/AWS parking page, not your WordPress server), meaning no real content can be crawled or indexed. This also means the site is not secure, as the parking page provides no security headers (no HSTS, X-Content-Type-Options, X-Frame-Options, CSP), and its speed is irrelevant since your actual WordPress site isn't being served. The single biggest risk is that your website effectively does not exist for search engines or visitors, preventing any search performance or business impact.
+
 **Server:** ce01 · **Platform:** wp · **Audited:** 2026-06-11 · **Status:** parked (GoDaddy/AWS domain-parking lander; DNS not pointed at ce01)
 
 ## Verified signals

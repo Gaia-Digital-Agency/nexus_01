@@ -1,4 +1,7 @@
 # Technical Audit — orison.io
+
+> **In plain terms (for the team):** Your site is generally secure and Google can crawl it effectively, with strong infrastructure for speed thanks to CDN and caching. The biggest risk is that your `robots.txt` file declares a non-standard `sitemap.rss` which could confuse search engines and prevent proper indexing of some content.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

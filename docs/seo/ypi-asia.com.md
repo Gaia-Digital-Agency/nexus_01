@@ -1,4 +1,7 @@
 # SEO Analysis — ypi-asia.com
+
+> **In plain terms (for the team):** This site gets very little traffic and ranks poorly for its own brand name, so the highest-ROI move is to rewrite the homepage title and description to clearly state what YPI Asia does, which will improve click-through rates for existing brand searches and provide context for potential non-brand traffic. Beyond that, building new content to target relevant industry keywords is essential to generate real traffic.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** us · **Status:** low-presence
 
 ## Search profile (Semrush)

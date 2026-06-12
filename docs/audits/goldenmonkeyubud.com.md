@@ -1,4 +1,7 @@
 # Technical Audit — goldenmonkeyubud.com
+
+> **In plain terms (for the team):** Your site is currently redirecting to a contact page on another domain, which means Google can't crawl any content on goldenmonkeyubud.com itself, and it's not secure due to identical authentication keys (AUTH keys/salts) with your Sanur site, creating a major cross-site forgery risk. The biggest risk is the security vulnerability, as it leaves your site open to serious attacks.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** redirect → goldenmonkeybali.com/contact/
 
 ## Verified signals

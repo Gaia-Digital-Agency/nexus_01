@@ -1,4 +1,7 @@
 # Technical Audit — hairsalonubud.com
+
+> **In plain terms (for the team):** Your site is generally in good shape for search performance: it's secure (HTTPS), Google can crawl it effectively (robots.txt, sitemap), and it's fast thanks to caching and modern protocols. The single biggest risk is the unusual WordPress 7.0 version reported, which needs investigation to ensure your platform is current and secure, preventing potential vulnerabilities or performance issues.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

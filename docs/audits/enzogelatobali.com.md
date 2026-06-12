@@ -1,4 +1,7 @@
 # Technical Audit — enzogelatobali.com
+
+> **In plain terms (for the team):** Your site is currently experiencing severe technical issues that prevent Google from properly finding and understanding your content, meaning it's unlikely to rank well in search results. Specifically, Google cannot crawl your site effectively because the server is unresponsive (site responsiveness issues) and your sitemap is inaccessible (sitemap accessibility), making it very difficult for new pages to be discovered. The single biggest risk is that Google cannot reliably access your site at all, effectively making it invisible to search engines.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

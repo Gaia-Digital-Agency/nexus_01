@@ -1,4 +1,7 @@
 # Technical Audit — pinstripebar.com
+
+> **In plain terms (for the team):** Your site is at high risk of being hacked because there's no active firewall or malware protection (Wordfence is installed but inactive), which could lead to downtime or Google delisting your site. While Google can crawl your site, a very conservative (Crawl-Delay: 20) setting in your robots.txt might be slowing down how quickly new content is discovered. The biggest risk is the inactive security plugin, leaving your site vulnerable to attacks that could severely impact your search performance and business operations.
+
 **Server:** ce01 · **Platform:** wp · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

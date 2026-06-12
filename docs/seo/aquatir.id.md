@@ -1,4 +1,7 @@
 # SEO Analysis — aquatir.id
+
+> **In plain terms (for the team):** This site gets virtually no organic traffic (0 visits) despite ranking for 11 keywords, indicating a low-presence domain that isn't currently a real traffic driver. The highest-ROI move is to rewrite weak titles and descriptions (meta rewrites) on the homepage and key product pages to improve visibility for existing low-ranking terms like "jual caviar" (position 22), then build content around product types and local intent to capture more relevant search volume.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

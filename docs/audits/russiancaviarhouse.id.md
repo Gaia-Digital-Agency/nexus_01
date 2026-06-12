@@ -1,4 +1,7 @@
 # Technical Audit — russiancaviarhouse.id
+
+> **In plain terms (for the team):** Your site is secure (HTTPS is active) and Google can generally crawl it, but conflicting instructions in your `robots.txt` could cause some pages to be missed by search engines (inconsistent crawling behavior). The biggest risk is that your site is likely much slower than it should be because the Hostinger CDN is bypassing its cache, meaning content isn't being delivered efficiently.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** redirect:https://www.russiancaviarhouse.id/
 
 ## Verified signals

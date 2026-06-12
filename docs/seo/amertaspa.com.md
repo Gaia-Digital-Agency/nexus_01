@@ -1,4 +1,7 @@
 # SEO Analysis — amertaspa.com
+
+> **In plain terms (for the team):** This domain gets virtually no organic traffic (18 visits/month) and ranks poorly for even its own brand name, indicating it's a low-presence site (thin organic footprint). The highest-ROI move is to immediately implement proposed meta title rewrites for the homepage and service pages to improve click-through rates (CTR) and relevance, then build out content around Balinese wellness and Ubud attractions to capture long-tail keywords.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

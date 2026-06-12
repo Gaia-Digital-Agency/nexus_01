@@ -1,4 +1,7 @@
 # Technical Audit — pegasus.com.au
+
+> **In plain terms (for the team):** Your site is secure (HTTPS with HSTS) and Google can generally crawl it, but a critical error with your main sitemap index (sitemap_index.xml returns 400 error and has a `noindex` tag) means Google might not fully discover all your pages, directly impacting your search visibility. The single biggest risk is the sitemap index issue, compounded by a missing homepage title tag, which severely hinders how your site appears and ranks in search results.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

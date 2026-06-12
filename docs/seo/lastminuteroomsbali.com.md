@@ -1,4 +1,7 @@
 # SEO Analysis — lastminuteroomsbali.com
+
+> **In plain terms (for the team):** This site currently gets no real traffic (Semrush returned "NOTHING FOUND"), indicating it's a new or extremely low-presence domain. The highest-ROI move is to immediately build foundational content and implement a clear homepage title/description ("Last Minute Rooms Bali: Your Instant Getaway Deals") to establish basic relevance and begin attracting any search visibility.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

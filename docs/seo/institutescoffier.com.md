@@ -1,4 +1,7 @@
 # SEO Analysis — institutescoffier.com
+
+> **In plain terms (for the team):** This site gets real traffic for high-intent terms like "biaya sekolah chef" (cost of chef school) and "auguste escoffier" (historical figure), currently ranking 2-7, indicating a strong opportunity to capture more leads. The highest-ROI move is to immediately rewrite weak titles and descriptions (meta-rewrites) for these existing pages to push them to #1, followed by building out new content (content program) to fill obvious keyword gaps around course offerings and career paths.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

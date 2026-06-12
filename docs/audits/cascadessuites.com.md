@@ -1,4 +1,7 @@
 # Technical Audit — cascadessuites.com
+
+> **In plain terms (for the team):** Your site is generally secure and Google can crawl it well, but the missing main heading (H1 tag) on your homepage is a significant risk that could hurt your search rankings for key terms. While your site uses a CDN for speed, the origin server response times are sometimes slow, which could impact user experience and Google's perception of site speed. The single biggest risk is the **missing H1 tag on the homepage**, which directly affects how well Google understands and ranks your most important page.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

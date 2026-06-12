@@ -1,4 +1,7 @@
 # Technical Audit — 7originfilm.com
+
+> **In plain terms (for the team):** Your site is mostly secure and Google can crawl it, but intermittent security challenges (403 errors) could occasionally block Googlebot, potentially hurting your search visibility. The biggest risk is that your site lacks HSTS (HTTP Strict Transport Security), which means browsers might still try to connect insecurely, leaving your visitors vulnerable and potentially impacting your search ranking.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** live (intermittent 403 security challenge — accessible on retry)
 
 ## Verified signals

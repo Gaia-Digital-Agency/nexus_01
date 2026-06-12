@@ -1,4 +1,7 @@
 # SEO Analysis — caviar.id
+
+> **In plain terms (for the team):** This site gets real traffic for "caviar indonesia" (880 search volume, position 2), but overall organic traffic is very low (81 visits/month) due to a thin content footprint and weak rankings for other relevant terms. The highest-ROI move is to immediately rewrite weak titles (meta-optimization) for existing pages to capture more traffic from currently low-ranking keywords, followed by building content (blog programme) to expand visibility for broader caviar-related terms.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

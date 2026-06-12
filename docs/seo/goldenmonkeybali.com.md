@@ -1,4 +1,7 @@
 # SEO Analysis — goldenmonkeybali.com
+
+> **In plain terms (for the team):** This site gets real traffic for its brand name and related local Chinese food searches, but its current low presence (54 keywords, 131 traffic) means there's a significant opportunity to grow. The highest-ROI move is to immediately rewrite weak titles (meta-optimization) to consolidate brand terms and target high-intent local keywords like "Best Chinese Food in Ubud" and "Authentic Dim Sum in Bali," which are currently cannibalized or underperforming.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

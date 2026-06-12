@@ -1,4 +1,7 @@
 # Technical Audit — scamcheck-global.com
+
+> **In plain terms (for the team):** Your site is secure (HTTPS) and Google can fully crawl it (robots.txt, sitemap), but its speed could be significantly improved by optimizing how your content is cached (CDN cache status is DYNAMIC). The single biggest risk is the exposed WordPress REST API endpoints, which could be exploited without proper security measures.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

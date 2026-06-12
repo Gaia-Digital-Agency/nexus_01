@@ -1,4 +1,7 @@
 # SEO Analysis — blossomcatering.online
+
+> **In plain terms (for the team):** This site currently gets no real traffic and ranks weakly for its own brand name, indicating a low-presence domain that needs foundational work. The highest-ROI move is to immediately implement the proposed meta-rewrite for the homepage to establish basic brand and service relevance, followed by creating a Google Business Profile (GBP) to capture local search visibility.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** us · **Status:** low-presence
 
 ## Search profile (Semrush)

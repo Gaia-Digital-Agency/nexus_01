@@ -1,4 +1,7 @@
 # Technical Audit — luxurydefined.com.au
+
+> **In plain terms (for the team):** Your site is secure (HTTPS) and Google can crawl it, but the missing sitemap (sitemap.xml and sitemap_index.xml return 404) is the single biggest risk, severely hindering Google's ability to discover and index your content, which directly impacts your search performance. Additionally, a `Crawl-Delay: 20` in your robots.txt is unnecessarily slowing down how Google interacts with your site, and the default WordPress database prefix (`wp_`) presents a moderate security vulnerability.
+
 **Server:** ce01 · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

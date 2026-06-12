@@ -1,4 +1,7 @@
 # SEO Analysis — viceroybali.com
+
+> **In plain terms (for the team):** This site gets real traffic (7,188 organic visits/month) and dominates branded searches, but the highest-ROI move is to optimize existing content for high-volume informational keywords like 'nyepi day' and 'best time to visit bali' where it's already ranking well (positions 2-3) but not #1, which would significantly increase organic traffic. Additionally, expanding content around these topics and others like 'bali culture' will capture more long-tail traffic and establish authority.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** live
 
 ## Search profile (Semrush)

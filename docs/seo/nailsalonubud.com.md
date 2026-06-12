@@ -1,4 +1,7 @@
 # SEO Analysis — nailsalonubud.com
+
+> **In plain terms (for the team):** The site already dominates its core money keyword ("nail salon ubud" is #1), so the highest-ROI move is to defend this position and capture more long-tail traffic by building supporting content (blog articles) around related topics like "nail art trends" and "gel vs acrylic guide." This will protect against competitors and expand reach, as the site currently has very thin content depth.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** live
 
 ## Search profile (Semrush)

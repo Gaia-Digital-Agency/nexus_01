@@ -1,4 +1,7 @@
 # SEO Analysis — balihideawayvillas.com
+
+> **In plain terms (for the team):** This site gets no real traffic (0 organic traffic) despite some relevant keywords having high search volume (e.g., "hideaway villas bali" at 2900 searches), indicating a significant missed opportunity. The highest-ROI move is to immediately rewrite weak titles and descriptions (meta-optimization) for core pages to improve relevance and click-through rates, followed by building content (blog posts) around Bali travel and villa experiences to capture broader search interest.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

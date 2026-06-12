@@ -1,4 +1,7 @@
 # Technical Audit — blossomsteakhouse.com
+
+> **In plain terms (for the team):** Your site is at high risk of being hacked because its entire custom theme code is publicly downloadable, exposing how it works to attackers. While Google can crawl your site and it's generally fast, the lack of a critical security header (HSTS) also leaves it vulnerable to certain attacks, and several important plugins are significantly out of date, which could lead to security holes or performance issues.
+
 **Server:** ce01 · **Platform:** wp · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

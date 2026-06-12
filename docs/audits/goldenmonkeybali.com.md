@@ -1,4 +1,7 @@
 # Technical Audit — goldenmonkeybali.com
+
+> **In plain terms (for the team):** Your site is generally secure and Google can crawl it effectively, but its speed and security could be significantly improved by upgrading the server's PHP version (PHP 8.1.34) and implementing HSTS. The single biggest risk is the default WordPress database prefix (`wp_`), which makes your site more vulnerable to common security attacks.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** live (canonical Golden Monkey site)
 
 ## Verified signals

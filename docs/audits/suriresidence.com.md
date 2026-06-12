@@ -1,4 +1,7 @@
 # Technical Audit — suriresidence.com
+
+> **In plain terms (for the team):** Your site is largely invisible to Google because the server is unresponsive (server timed out) and critical files like your sitemap and robots.txt are missing or inaccessible, meaning Google can't easily find or understand your content. The single biggest risk is that your site is practically unindexable, preventing it from appearing in search results at all.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

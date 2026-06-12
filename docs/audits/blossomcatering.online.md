@@ -1,4 +1,7 @@
 # Technical Audit — blossomcatering.online
+
+> **In plain terms (for the team):** Your site is secure (HTTPS) and Google can crawl it (robots.txt allows all), but the biggest risk is that Google can't effectively discover all your pages because your sitemap is broken and points to an incorrect, non-secure IP address. Additionally, sensitive server configuration details are exposed, which is a security vulnerability. We cannot assess site speed (Core Web Vitals) from this audit, but caching headers are set.
+
 **Server:** ce01 · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

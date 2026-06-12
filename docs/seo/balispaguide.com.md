@@ -1,4 +1,7 @@
 # SEO Analysis — balispaguide.com
+
+> **In plain terms (for the team):** This site gets some real traffic (904 organic traffic) but has a weak overall presence (low number of organic keywords and traffic), with its highest-ROI move being to rewrite weak titles (meta title/description rewrites) for pages ranking 4-9 to capture more clicks from existing high-volume keywords like "river view spa & lounge" (Position 4, 8100 Search Volume). Additionally, building content (content clusters) around Bali spa types and experiences would significantly expand its keyword footprint and establish authority, moving beyond its current narrow content strategy.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

@@ -1,4 +1,7 @@
 # SEO Analysis — hubblebali.com
+
+> **In plain terms (for the team):** This site gets virtually no organic traffic (0) despite ranking for a few relevant terms (3 organic keywords), indicating a low-presence domain that isn't currently a business asset. The highest-ROI move is to clarify the site's purpose and relationship to "The Hub Bali" with meta-rewrites (title, description) on existing pages, then build out content around its actual offerings to establish relevance and attract traffic.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

@@ -1,4 +1,7 @@
 # SEO Analysis — dreamcatchervillas.com
+
+> **In plain terms (for the team):** This site has virtually no search presence (organic keywords or traffic), meaning it's currently invisible to potential customers searching online. The highest-ROI move is to immediately build foundational content (blog) and optimize all meta titles and descriptions (meta) to establish relevance and attract initial broad search interest for luxury vacation rentals.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** us · **Status:** low-presence
 
 ## Search profile (Semrush)

@@ -1,4 +1,7 @@
 # Technical Audit — balicatering.com
+
+> **In plain terms (for the team):** Your site is mostly healthy: Google can fully crawl it (robots.txt, sitemap), it redirects securely to HTTPS (HTTP/redirects), and it's built on a secure WordPress setup (non-default table prefix, WP_DEBUG off). However, the single biggest risk is the lack of an HSTS header (No HSTS header), which means browsers won't automatically enforce secure connections, potentially leaving your site vulnerable to certain attacks and impacting user trust.
+
 **Server:** ce01 · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

@@ -1,4 +1,7 @@
 # Technical Audit — ubudbeautycentre.com
+
+> **In plain terms (for the team):** Your site's search performance is severely hampered because Google can barely crawl it due to an extremely high "crawl delay" setting in your `robots.txt` file, and it's also missing a crucial homepage title (`<h1>` tag) that tells Google what your site is about. While your site is secure (HTTPS is enforced, `content-security-policy` is active), it's also slow for repeat visitors because browser caching is completely disabled, hurting user experience and search rankings. The single biggest risk is the `Crawl-Delay: 20` in `robots.txt`, which is actively preventing Google from properly indexing your content.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

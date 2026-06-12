@@ -1,4 +1,7 @@
 # Technical Audit — viceroybali.com
+
+> **In plain terms (for the team):** Your site has a significant security vulnerability because anyone can potentially expose sensitive information by adding `?WP_DEBUG=` to your URL (toggling `WP_DEBUG`), and you're also running two conflicting caching plugins (`WP Rocket` and `LiteSpeed Cache`) which is likely hurting your site speed. Google can crawl your site effectively, and it is secure via HTTPS, but the biggest risk is the `WP_DEBUG` vulnerability which could expose your site to attackers.
+
 **Server:** ce01 · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

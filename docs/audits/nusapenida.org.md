@@ -1,4 +1,7 @@
 # Technical Audit — nusapenida.org
+
+> **In plain terms (for the team):** Your site is secure with HTTPS enforced and Google can crawl it effectively thanks to a clear `robots.txt` and sitemap, but the biggest risk is that your main domain `nusapenida.org` redirects directly to a specific blog post, which could confuse users and search engines about your primary content and dilute your main domain's authority. Additionally, the exposed `xmlrpc.php` endpoint presents a security vulnerability that should be addressed. While performance is good with CDN and caching, the lack of an `<h1>` heading on your primary landing page also hurts on-page SEO.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** redirect:https://nusapenida.org/nusa-penida-blog-guide/
 
 ## Verified signals

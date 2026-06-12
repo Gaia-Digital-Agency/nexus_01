@@ -1,4 +1,7 @@
 # SEO Analysis — tacconsultancy.com
+
+> **In plain terms (for the team):** This site has no organic search presence or traffic, meaning the immediate search opportunity is to **build content** from scratch to attract any traffic at all. The highest-ROI move is to develop a foundational content strategy (blog) and optimize the homepage's meta title to establish initial relevance (topical authority) and clearly communicate its purpose.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** us · **Status:** low-presence
 
 ## Search profile (Semrush)

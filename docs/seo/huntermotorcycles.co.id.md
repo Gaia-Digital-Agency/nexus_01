@@ -1,4 +1,7 @@
 # SEO Analysis — huntermotorcycles.co.id
+
+> **In plain terms (for the team):** This site gets some real traffic (708 organic traffic) but is heavily reliant on branded terms ("hunter indonesia") and has a significant opportunity to capture more generic, high-volume motorcycle searches. The highest-ROI move is to immediately rewrite weak titles (meta-rewrites) for key product pages and the homepage to target broader terms like "scrambler" and "motorcycle," while also building out new content (blog) to address these gaps and improve overall search visibility.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

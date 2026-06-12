@@ -1,4 +1,7 @@
 # SEO Analysis — balirestaurantguide.com
+
+> **In plain terms (for the team):** This site gets virtually no organic traffic (0) despite ranking for a few keywords, indicating it's a low-presence domain not currently worth significant effort. The highest-ROI move would be to implement the proposed meta title rewrites (meta) for key pages to test if basic optimisation can capture any existing search volume before considering content builds or redirects.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

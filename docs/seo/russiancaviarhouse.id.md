@@ -1,4 +1,7 @@
 # SEO Analysis — russiancaviarhouse.id
+
+> **In plain terms (for the team):** This site gets virtually no organic traffic (1 visit/month) but has a clear opportunity to capture significant search volume (880 searches/month) for its primary keyword, `caviar indonesia`, currently ranking weakly at position 25. The highest-ROI move is to immediately rewrite the homepage's meta title and description to target "caviar indonesia" and then build out content (blog) around related topics to address major keyword gaps.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

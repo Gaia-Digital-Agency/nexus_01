@@ -1,4 +1,7 @@
 # Technical Audit — balirca.id
+
+> **In plain terms (for the team):** Your site is generally secure (HTTPS is active, `content-security-policy` is present) and fast (Hostinger CDN is in use), but Google's ability to fully crawl and index your content is significantly hampered. The single biggest risk is that your `robots.txt` file is telling Google *not* to crawl several important sections of your site, including resources and partner pages, while simultaneously listing them in your sitemap, creating a direct conflict that prevents these pages from appearing in search results. Additionally, a `Crawl-Delay` directive in your `robots.txt` is slowing down how quickly Google can discover and update your content.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

@@ -1,4 +1,7 @@
 # Technical Audit — baligirls.gaiada2.online
+
+> **In plain terms (for the team):** Your site's biggest risk is that Google can't properly understand your content because the sitemap is broken (returns HTML instead of valid XML), which severely hurts your ability to rank. While your site is generally secure with good headers (HTTPS/headers) and Google can crawl it (robots.txt allows general crawling), it's also slower than it could be for repeat visitors because caching is disabled (cache-control: no-cache).
+
 **Server:** pn01 · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

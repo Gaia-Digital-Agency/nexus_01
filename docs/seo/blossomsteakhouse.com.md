@@ -1,4 +1,7 @@
 # SEO Analysis — blossomsteakhouse.com
+
+> **In plain terms (for the team):** This site gets real traffic (18,040 organic traffic) from a huge number of keywords (10,001 organic keywords), particularly for informational queries like "steak sides" and "what is a brazilian steakhouse." The highest-ROI move is to rewrite weak titles and build content around existing strong informational rankings (e.g., "what is a brazilian steakhouse" at #1) to better funnel users to Blossom Steakhouse, while also creating new content for high-intent local and branded terms.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** us · **Status:** live
 
 ## Search profile (Semrush)

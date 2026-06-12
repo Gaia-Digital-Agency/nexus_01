@@ -1,4 +1,7 @@
 # Technical Audit — bimc-cosmedic-01.gaiada.com
+
+> **In plain terms (for the team):** Your site is currently crawlable by Google, but because it appears to be a staging site (a test version), this could lead to duplicate content issues if a live version exists and confuse search engines. The biggest risk is that Google might index this test site instead of your actual production site, diluting your search performance and potentially exposing unfinished content. Additionally, the site is not fully secure without HSTS (HTTP Strict Transport Security) and is slower than it could be because content isn't being cached by the CDN.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** live (staging/subdomain on gaiada.com)
 
 ## Verified signals

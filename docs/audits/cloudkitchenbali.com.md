@@ -1,4 +1,7 @@
 # Technical Audit — cloudkitchenbali.com
+
+> **In plain terms (for the team):** Your site is generally fast and Google can crawl it, but the biggest risk is that it's not fully secure because it lacks HSTS (HTTP Strict Transport Security), which could leave visitors vulnerable to certain attacks. Additionally, your homepage title is just "Cloud Kitchen," which is a missed opportunity for search performance as it doesn't include important keywords or your location.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

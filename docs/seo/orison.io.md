@@ -1,4 +1,7 @@
 # SEO Analysis — orison.io
+
+> **In plain terms (for the team):** This site gets virtually no real traffic (5 organic visits/month) and primarily ranks for its own brand name, "orison solutions llc," but even those branded terms are in weak positions (e.g., #13, #28). The highest-ROI move is to immediately optimize the homepage and careers page titles and descriptions (meta-rewrites) to secure #1 positions for branded searches, then build foundational content (blog) around industry topics to attract non-branded traffic, as the current content footprint is extremely thin.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** us · **Status:** low-presence
 
 ## Search profile (Semrush)

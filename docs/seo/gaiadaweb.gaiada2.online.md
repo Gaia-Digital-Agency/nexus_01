@@ -1,4 +1,7 @@
 # SEO Analysis — gaiadaweb.gaiada2.online
+
+> **In plain terms (for the team):** This site currently gets no real traffic and has no organic presence, meaning the highest-ROI move is to define its core service with clear meta titles and descriptions (meta-rewrite) to establish foundational relevance. Without this, it's a parked domain (thin organic footprint) not worth further content or SEO effort.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

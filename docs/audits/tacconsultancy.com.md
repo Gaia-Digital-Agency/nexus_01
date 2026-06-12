@@ -1,4 +1,7 @@
 # Technical Audit — tacconsultancy.com
+
+> **In plain terms (for the team):** Your site's search performance is at risk because Google might struggle to consistently access your pages due to an intermittent security challenge (403 challenge), which also means your site isn't fully secure without HTTP Strict Transport Security (HSTS). While your site is generally fast thanks to good caching, the biggest risk is Google's ability to reliably crawl your content, potentially impacting your rankings and visibility.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** live (intermittent 403 challenge — accessible on retry)
 
 ## Verified signals

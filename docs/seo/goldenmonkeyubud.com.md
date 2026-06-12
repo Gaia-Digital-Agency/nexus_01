@@ -1,4 +1,7 @@
 # SEO Analysis — goldenmonkeyubud.com
+
+> **In plain terms (for the team):** The site gets real traffic, but it's almost entirely branded (98% from "golden monkey ubud"), meaning there's a huge opportunity to capture non-branded local searchers. The highest-ROI move is to immediately rewrite the homepage title and description to target "chinese food ubud" and "chinese restaurant ubud" (currently P2, P8, P9) to quickly convert existing high-volume, relevant impressions into traffic.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

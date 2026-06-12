@@ -1,4 +1,7 @@
 # SEO Analysis — cascadessuites.com
+
+> **In plain terms (for the team):** This site gets virtually no real traffic (2 visits/month) despite ranking for a few relevant terms like "cascade bali" (position 6) and "cascade ubud" (position 10), indicating a very low search presence (low-presence status). The highest-ROI move is to immediately implement the proposed homepage meta-rewrite and create/optimise a Google Business Profile (GBP) to capture local search traffic, as the domain is currently underperforming for its core offerings.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

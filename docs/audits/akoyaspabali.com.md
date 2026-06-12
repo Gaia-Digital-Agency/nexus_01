@@ -1,4 +1,7 @@
 # Technical Audit — akoyaspabali.com
+
+> **In plain terms (for the team):** Your site is at high risk of a security breach because a backup of your critical configuration file (wp-config) is publicly accessible, potentially exposing sensitive database credentials and allowing attackers to take over your site. While Google can crawl your site and it uses HTTPS, it's not as fast as it could be because no full-page caching is active, which impacts user experience and search performance. The biggest risk is the exposed `wp-config` backup file, which needs immediate removal and a credential rotation.
+
 **Server:** ce01 · **Platform:** wp · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

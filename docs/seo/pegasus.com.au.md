@@ -1,4 +1,7 @@
 # SEO Analysis — pegasus.com.au
+
+> **In plain terms (for the team):** This site gets real traffic, but almost exclusively for its brand name (branded keywords), indicating a strong existing customer base but very limited organic reach beyond that. The highest-ROI move is to rewrite the homepage title and description (meta-rewrites) to better capture the high-volume "pegasus" term (currently at position 8) and clearly communicate core services, which will immediately improve click-through rates (CTR) and organic visibility.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** au · **Status:** low-presence
 
 ## Search profile (Semrush)

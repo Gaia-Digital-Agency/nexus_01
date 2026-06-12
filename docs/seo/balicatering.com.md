@@ -1,4 +1,7 @@
 # SEO Analysis — balicatering.com
+
+> **In plain terms (for the team):** This site gets very little organic traffic (27 visits/month) despite ranking #7 for "bali catering company" (880 search volume), indicating a significant opportunity to improve click-through rates (CTR) and build content. The highest-ROI move is to immediately rewrite the homepage's weak title and description to attract more clicks for its primary keyword, then build dedicated content pages for high-volume, low-ranking terms like "Indonesian catering" and "private chef Bali" to capture new traffic.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

@@ -1,4 +1,7 @@
 # Technical Audit — jackaroodigital.com.au
+
+> **In plain terms (for the team):** Your site is not helping Google understand what to crawl, which will hurt your visibility in search results, because both your `robots.txt` file (which tells Google what to index) and your sitemap (which lists all your pages) are missing. The biggest risk is that Google might struggle to find and rank your content effectively, as it's currently secure (HTTPS) but we can't assess its speed or other security details without more information.
+
 **Server:** pn01 · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

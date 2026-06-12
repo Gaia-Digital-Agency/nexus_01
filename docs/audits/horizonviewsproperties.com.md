@@ -1,4 +1,7 @@
 # Technical Audit — horizonviewsproperties.com
+
+> **In plain terms (for the team):** Your site is not as fast or secure as it could be, which means Google might not crawl it efficiently and visitors could have a poor experience. The biggest risk is the lack of page caching (CDN DYNAMIC), making every page load slow because the server has to build it from scratch every time.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** live (intermittent 403 challenge — accessible on retry)
 
 ## Verified signals

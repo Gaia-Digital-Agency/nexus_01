@@ -1,4 +1,7 @@
 # SEO Analysis — dapurraja.com
+
+> **In plain terms (for the team):** This site gets almost no real traffic (2 organic visitors per month) and the highest-ROI move is to build content (addressing significant content gaps) and optimize existing weak titles (meta-title rewrites) to capture traffic for terms like "balinese rijsttafel" and "dapur king" where it already has some visibility. It is not a parked domain, but its low presence (thin organic footprint) means it's far from defending a #1 position.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

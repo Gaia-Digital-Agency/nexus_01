@@ -1,4 +1,7 @@
 # SEO Analysis — 7originfilm.com
+
+> **In plain terms (for the team):** This site gets virtually no organic traffic and only ranks for its brand name at position 50, indicating a parked domain or extremely new site with no search presence. The highest-ROI move is to implement the proposed homepage meta-rewrites to establish basic brand relevance, then build foundational content (blog) to attract any real traffic.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** us · **Status:** low-presence
 
 ## Search profile (Semrush)

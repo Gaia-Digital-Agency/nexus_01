@@ -1,4 +1,7 @@
 # SEO Analysis — nusapenida.org
+
+> **In plain terms (for the team):** This site gets significant real traffic (48,310 organic visits/month) and has strong authority for specific Nusa Penida attractions, but the highest-ROI move is to rewrite weak titles (meta-title and description rewrites) for top pages, especially the homepage, to capture more traffic for high-volume keywords where it's currently ranking P2-P4. Additionally, building out new content (blog content) for long-tail keywords will expand its reach and capture niche queries.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** live
 
 ## Search profile (Semrush)

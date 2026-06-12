@@ -1,4 +1,7 @@
 # SEO Analysis — hairsalonubud.com
+
+> **In plain terms (for the team):** This site gets real traffic, with a strong #1 ranking for "hair salon ubud" (1600 search volume), but it's losing out on significant volume from related terms like "ixi hair beauty" (49500 search volume, P20) and "hair salon near me" (18100 search volume, P15). The highest-ROI move is to immediately rewrite weak page titles (meta rewrites) to capture more clicks for existing strong local rankings and improve visibility for high-volume "near me" searches, while also addressing potential keyword cannibalization.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

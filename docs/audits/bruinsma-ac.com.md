@@ -1,4 +1,7 @@
 # Technical Audit — bruinsma-ac.com
+
+> **In plain terms (for the team):** Your site faces an intermittent security challenge that could prevent Google from reliably crawling your content, directly impacting your search visibility. While your site uses HTTPS, the lack of HSTS (HTTP Strict Transport Security) means some users might still access an unsecure version, and your admin login uses a personal Gmail, which is a security risk. The biggest risk is the intermittent 403 challenge, as it directly hinders Google's ability to see and rank your pages.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** live (intermittent 403 challenge — accessible on retry)
 
 ## Verified signals

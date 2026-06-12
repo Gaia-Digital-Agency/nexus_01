@@ -1,4 +1,7 @@
 # Technical Audit — ypi-asia.com
+
+> **In plain terms (for the team):** Your site is generally crawlable and secure, with Google able to access your content (sitemap is declared, redirects are good) and strong security headers in place (HTTPS enforced, X-Frame-Options, X-Content-Type-Options, X-XSS-Protection). However, the single biggest risk is a significant security vulnerability: your WordPress database uses the default table prefix (`wp_`), making it much easier for attackers to target your database.
+
 **Server:** ce01 · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

@@ -1,4 +1,7 @@
 # Technical Audit — sepedamotor.com
+
+> **In plain terms (for the team):** Your site is not secure due to an exposed `readme.html` file and missing browser-level security (HSTS header), and Google cannot fully crawl or understand it because the content sitemaps are two years old and the site isn't verified in Google Search Console. The single biggest risk is that Google Search Console is connected to the wrong domain, meaning you have no visibility into how Google sees your site or its performance.
+
 **Server:** hostinger · **Platform:** wp · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

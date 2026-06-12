@@ -1,4 +1,7 @@
 # Technical Audit — gaiadaweb.gaiada2.online
+
+> **In plain terms (for the team):** Your site is secure with strong security headers (HTTPS/headers) and very fast due to aggressive caching and prerendering (Speed/CWV signals), which is great for user experience and search rankings. However, Google's ability to fully understand and index your content is at risk because a sitemap-like URL (`sitemap_index.xml`) returns a 404 page with a "noindex" tag, which could confuse crawlers and prevent important pages from being discovered. The single biggest risk is the `sitemap_index.xml` issue, which could directly impact your visibility in search results.
+
 **Server:** pn01 · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

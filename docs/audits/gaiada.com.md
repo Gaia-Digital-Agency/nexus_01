@@ -1,4 +1,7 @@
 # Technical Audit — gaiada.com
+
+> **In plain terms (for the team):** Your site is secure with HTTPS and a Content Security Policy, and Google can crawl it, but the excessively high `Crawl-Delay: 20` in your `robots.txt` is the single biggest risk, severely limiting how often Google can visit and index your content. This delay, combined with the homepage not being fully cached by your CDN, means your site might not be as fast as it could be, potentially hurting your search performance and user experience.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

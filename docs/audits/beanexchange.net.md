@@ -1,4 +1,7 @@
 # Technical Audit — beanexchange.net
+
+> **In plain terms (for the team):** Your site is significantly slower than it should be because the page cache (LiteSpeed cache) is disabled, meaning Google and users experience delays, which can hurt your search rankings and user experience. While Google can crawl your site and it's mostly secure, the lack of HSTS (HTTP Strict Transport Security) is the single biggest risk, as it leaves your site vulnerable to certain security attacks.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

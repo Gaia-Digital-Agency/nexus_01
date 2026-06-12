@@ -1,4 +1,7 @@
 # Technical Audit — goldenmonkeysanur.com
+
+> **In plain terms (for the team):** Your site is not secure because it shares critical security keys (AUTH keys/salts) with another site, making it vulnerable to hackers (cross-site session forgery), and it's unnecessarily slow due to a full WordPress installation running just to redirect. The biggest risk is that a hacker could potentially compromise user sessions across both your sites.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** redirect → goldenmonkeybali.com/contact/#sanur
 
 ## Verified signals

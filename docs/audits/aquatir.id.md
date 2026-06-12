@@ -1,4 +1,7 @@
 # Technical Audit — aquatir.id
+
+> **In plain terms (for the team):** Your site is currently preventing Google from seeing your products, as the `/shop/` directory is blocked in your `robots.txt` file, which means your products and categories won't appear in search results. While your site is generally secure with HTTPS and an upgrade-insecure-requests (Content Security Policy), it lacks HSTS (HTTP Strict Transport Security), which could make it slightly more vulnerable to certain attacks. The single biggest risk is the `Disallow: /shop/` rule, directly impacting your ability to rank for product-related searches.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

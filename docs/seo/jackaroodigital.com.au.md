@@ -1,4 +1,7 @@
 # SEO Analysis — jackaroodigital.com.au
+
+> **In plain terms (for the team):** This site currently gets no real traffic (zero organic keywords or traffic reported by Semrush), meaning it's effectively a parked domain from a search perspective. The highest-ROI move is to build foundational content and implement basic meta titles to establish a search footprint, as there's no existing performance to defend or optimize.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** au · **Status:** low-presence
 
 ## Search profile (Semrush)

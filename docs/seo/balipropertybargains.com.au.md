@@ -1,4 +1,7 @@
 # SEO Analysis — balipropertybargains.com.au
+
+> **In plain terms (for the team):** This site has no real traffic (0 organic keywords or traffic reported by Semrush), meaning it's effectively a parked domain or a brand new site with no search presence. The highest-ROI move is to build foundational content (blog) and implement keyword-focused meta titles, starting with the homepage, to establish any relevance for search engines.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

@@ -1,4 +1,7 @@
 # SEO Analysis — aperitif.com
+
+> **In plain terms (for the team):** This site gets real traffic (4,390 organic traffic/month) but much of it is for high-volume informational queries about Michelin stars, not directly related to a restaurant. The highest-ROI move is to rewrite weak titles and build content around existing strong positions (e.g., "fine dining attire" at P2) to capture more relevant traffic, while also optimizing the homepage and Google Business Profile to clearly define the restaurant's offering for direct searchers.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** us · **Status:** live
 
 ## Search profile (Semrush)

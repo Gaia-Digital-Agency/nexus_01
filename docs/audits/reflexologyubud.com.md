@@ -1,4 +1,7 @@
 # Technical Audit — reflexologyubud.com
+
+> **In plain terms (for the team):** Your site is mostly secure and Google can crawl it, but the biggest risk is that duplicate SEO plugins (RankMath and Yoast) are likely conflicting, which could confuse Google and hurt your search rankings. Additionally, your site's speed might be impacted by having two caching plugins active, and your sitemap points to the wrong version of your site, potentially hindering how Google discovers your pages.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

@@ -1,4 +1,7 @@
 # SEO Analysis — enzogelatobali.com
+
+> **In plain terms (for the team):** This site has virtually no organic search presence (0 traffic, 1 keyword at position 41), so the highest-ROI move is to immediately build foundational content around "gelato flavors" and local Bali terms to capture existing demand. Focus on creating a Google Business Profile (GBP) and optimizing the homepage's title and description (meta-rewrite) to establish local authority and attract initial traffic.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

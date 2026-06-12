@@ -1,4 +1,7 @@
 # SEO Analysis — balirca.id
+
+> **In plain terms (for the team):** This site gets very little traffic (45 organic visits/month) but ranks for several high-volume local terms like "mason canggu" (position 25, 9900 volume), indicating a significant opportunity to capture real traffic. The highest-ROI move is to rewrite weak titles (meta-rewrites) for pages targeting these high-volume, low-position keywords to quickly improve visibility and click-through rates, followed by building focused content (content clusters) around these themes.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

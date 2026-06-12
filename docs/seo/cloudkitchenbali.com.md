@@ -1,4 +1,7 @@
 # SEO Analysis — cloudkitchenbali.com
+
+> **In plain terms (for the team):** This site gets minimal real traffic (26 visits/month) but has potential, especially with "burger buzz" at position 10 driving all current organic traffic. The highest-ROI move is to immediately rewrite weak titles (meta-rewrites) for the homepage and key service pages to clearly define the business and location, directly targeting high-value terms like "food delivery Ubud" and "best burgers in Ubud" to quickly improve visibility and click-through rates.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

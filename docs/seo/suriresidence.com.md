@@ -1,4 +1,7 @@
 # SEO Analysis — suriresidence.com
+
+> **In plain terms (for the team):** This site gets virtually no organic traffic (0 visits) and ranks for only one keyword ("maya house") at position 48, indicating it's a low-presence domain with no real search opportunity currently. The highest-ROI move is to build foundational content (blog) and rewrite all meta titles (meta-tag audit) to establish any search footprint, as it's currently a parked domain not worth significant effort beyond these basics.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** us · **Status:** low-presence
 
 ## Search profile (Semrush)

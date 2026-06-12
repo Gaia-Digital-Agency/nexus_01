@@ -1,4 +1,7 @@
 # Technical Audit — balispaguide.com
+
+> **In plain terms (for the team):** Your site is secure and Google can crawl it, but the biggest risk is that Google might not find all your pages because your sitemaps are missing (return 404 errors), which directly impacts your ability to rank for all your content. Additionally, implementing structured data (schema markup) would help Google better understand your content and potentially show richer results.
+
 **Server:** ce01 · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

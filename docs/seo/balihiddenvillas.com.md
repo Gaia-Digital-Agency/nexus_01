@@ -1,4 +1,7 @@
 # SEO Analysis — balihiddenvillas.com
+
+> **In plain terms (for the team):** This site gets almost no real traffic (16 organic traffic) and has a very thin presence (30 organic keywords), making it a low-priority domain unless there's a strong business reason to invest. The highest-ROI move would be to build new content (blog posts) around informational keywords like "bali ceremony" and "best hikes in bali" to capture existing search volume and establish authority, while also optimizing the homepage and key villa pages (meta-rewrites) to improve weak rankings for relevant terms.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

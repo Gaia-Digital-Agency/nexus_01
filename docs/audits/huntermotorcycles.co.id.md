@@ -1,4 +1,7 @@
 # Technical Audit — huntermotorcycles.co.id
+
+> **In plain terms (for the team):** Your site's ability to be found by Google is severely hampered because the `robots.txt` file, which tells Google where to find your content, points to a broken internal address for your sitemap, meaning Google can't easily discover your product pages. Additionally, the site is at high risk of security vulnerabilities and performance issues due to 20 active plugins, including critical security and e-commerce ones, being significantly out of date. The single biggest risk is the broken sitemap directive in `robots.txt`, which directly prevents Google from efficiently crawling and indexing your site.
+
 **Server:** ce01 · **Platform:** wp · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

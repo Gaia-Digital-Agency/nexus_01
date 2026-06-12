@@ -1,4 +1,7 @@
 # Technical Audit — cascadesbali.com
+
+> **In plain terms (for the team):** Your site is vulnerable to attack because the main security plugin (Wordfence) is inactive, and critical plugins like Rank Math are outdated, which could lead to a hacked site or data breach impacting your search rankings and customer trust. While Google can crawl your site, the `robots.txt` file is malformed, potentially causing some crawlers to misinterpret instructions, and the two-step redirect chain adds minor latency. The single biggest risk is the **inactive security plugin and outdated core plugins**, leaving your site exposed to significant security threats.
+
 **Server:** ce01 · **Platform:** wp · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

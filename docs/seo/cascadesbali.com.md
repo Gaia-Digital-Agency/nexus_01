@@ -1,4 +1,7 @@
 # SEO Analysis — cascadesbali.com
+
+> **In plain terms (for the team):** This site gets real traffic (1,669 organic visits/month) and has significant potential to capture more, especially for high-value terms like "restaurant ubud" (6,600 Vol) where it's currently in a weak position (Pos 3). The highest-ROI move is immediately rewriting weak titles (meta-title optimization) for the homepage and specific service pages to target these high-volume, high-intent keywords and improve click-through rates (CTR) from existing good rankings.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** live
 
 ## Search profile (Semrush)

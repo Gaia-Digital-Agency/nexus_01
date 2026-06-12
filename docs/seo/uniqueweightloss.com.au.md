@@ -1,4 +1,7 @@
 # SEO Analysis — uniqueweightloss.com.au
+
+> **In plain terms (for the team):** This site currently gets no real traffic from organic search (Semrush found no data), meaning the highest-ROI move is to build foundational content and implement basic meta titles to establish an initial search presence and aid indexing. Focus on developing content around core weight loss topics relevant to the Australian market and creating a Google Business Profile to capture local search traffic.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** au · **Status:** low-presence
 
 ## Search profile (Semrush)

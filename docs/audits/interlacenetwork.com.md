@@ -1,4 +1,7 @@
 # Technical Audit — interlacenetwork.com
+
+> **In plain terms (for the team):** Your site faces significant security risks due to exposed backup files containing sensitive information (wp-config-backup-*.php) and a lack of essential security headers (HSTS, X-Frame-Options), making it vulnerable to attacks. While Google can crawl your site, the absence of automated backups (UpdraftPlus inactive) and outdated plugins (Gravity Forms, Elementor) further increase your risk of data loss or compromise. The single biggest risk is the **exposed wp-config backup files**, which could lead to a full site compromise if credentials are leaked.
+
 **Server:** ce01 · **Platform:** wp · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

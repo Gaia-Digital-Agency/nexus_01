@@ -1,4 +1,7 @@
 # Technical Audit — essentialbali.com
+
+> **In plain terms (for the team):** Your site is secure and Google can crawl most of it, but a broken sitemap index (`sitemap_index.xml`) means Google might miss some of your content, hurting your visibility. While the site serves over HTTPS, it might not be as fast as it could be for users because caching is not fully optimized. The single biggest risk is the broken sitemap index, as it directly impacts how much of your site Google can discover and rank.
+
 **Server:** pn01 · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

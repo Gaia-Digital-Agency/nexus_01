@@ -1,4 +1,7 @@
 # SEO Analysis — ayrwater.com
+
+> **In plain terms (for the team):** This site gets virtually no organic traffic (0) and ranks poorly for its only detected keyword ("water of ayr" at position 30), indicating it's a low-presence domain not currently generating business value from search. The highest-ROI move is to immediately rewrite the homepage's weak title and description (meta-rewrites) to clearly define "Ayr Water" as a local service/product provider, followed by building foundational content (content gaps) to establish topical authority.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** us · **Status:** low-presence
 
 ## Search profile (Semrush)

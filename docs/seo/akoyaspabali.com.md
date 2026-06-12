@@ -1,4 +1,7 @@
 # SEO Analysis — akoyaspabali.com
+
+> **In plain terms (for the team):** This site gets real traffic, especially for branded terms ("akoya spa") and specific local services ("lymphatic drainage massage ubud"), but it's missing out on significant volume from high-intent local searches like "best spa in ubud" (2400 vol) and "ubud wellness spa" (1900 vol). The highest-ROI move is to immediately implement the proposed meta title rewrites (on-page SEO) to improve click-through rates (CTR) and rankings for these valuable, weakly-positioned keywords, followed by building out more content (content marketing) to capture long-tail traffic.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

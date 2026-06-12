@@ -1,4 +1,7 @@
 # SEO Analysis — isort.id
+
+> **In plain terms (for the team):** This site gets real traffic for "isort" but has a very thin search footprint (only 15 organic keywords), indicating a significant opportunity to expand. The highest-ROI move is to immediately optimize the homepage's meta title and description to clearly communicate its purpose and then build out content (blog) targeting related keywords and use cases to capture more relevant search volume.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

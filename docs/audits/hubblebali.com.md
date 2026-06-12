@@ -1,4 +1,7 @@
 # Technical Audit — hubblebali.com
+
+> **In plain terms (for the team):** Your site is vulnerable to hackers because a publicly accessible error log (/error_log) exposes sensitive server information, and 16 of 19 active plugins, including your security plugin (Wordfence), are outdated. While Google can crawl your site and it uses HTTPS, the biggest risk is this critical security flaw, which could lead to a full site compromise.
+
 **Server:** ce01 · **Platform:** wp · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

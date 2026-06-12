@@ -1,4 +1,7 @@
 # Technical Audit — dacaviar.com
+
+> **In plain terms (for the team):** Your site is currently facing intermittent access issues for Google (intermittent 403 challenge), which means Google can't consistently crawl your content, potentially hurting your search visibility. Additionally, the lack of HSTS (HTTP Strict Transport Security) makes your site less secure and could expose users to risks. The single biggest risk is the intermittent 403 challenge, as it directly prevents Google from seeing and ranking your products.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** live (intermittent 403 challenge — accessible on retry; verified via Hostinger API)
 
 ## Verified signals

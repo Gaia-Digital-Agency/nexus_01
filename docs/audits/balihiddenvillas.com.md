@@ -1,4 +1,7 @@
 # Technical Audit — balihiddenvillas.com
+
+> **In plain terms (for the team):** Your site is at high risk of being hacked because the main login is a generic "admin" username, making it an easy target for attackers. While Google can generally crawl your site, it's intermittently blocked by a security challenge (403 challenge), and pages are loading slowly because they aren't being cached (CDN serving DYNAMIC). The biggest risk is the insecure "admin" login, which could lead to your site being compromised.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** live (intermittent 403 challenge — accessible on retry)
 
 ## Verified signals

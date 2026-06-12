@@ -1,4 +1,7 @@
 # Technical Audit — aperitif.com
+
+> **In plain terms (for the team):** Your site is generally secure and Google can crawl it well, but the biggest risk is that critical security updates for plugins like `wp-schema-pro` are overdue, leaving your site vulnerable to potential attacks (security vulnerabilities). While your site has good caching, we couldn't assess its speed (Core Web Vitals) in this audit.
+
 **Server:** ce01 · **Platform:** wp · **Audited:** 2026-06-11 · **Status:** live
 
 ## Verified signals

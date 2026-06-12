@@ -1,4 +1,7 @@
 # Technical Audit — dreamcatchervillas.com
+
+> **In plain terms (for the team):** Your website isn't actually a website; it temporarily redirects (302) to Instagram, meaning Google can't crawl your content or index anything for search, effectively making your domain invisible to search engines. The single biggest risk is that you have no organic search presence because your domain isn't serving any website content, forfeiting all potential SEO value.
+
 **Server:** hostinger · **Audited:** 2026-06-11 · **Status:** redirect → instagram.com/dreamcatchervillas (302)
 
 ## Verified signals

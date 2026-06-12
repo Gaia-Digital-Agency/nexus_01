@@ -1,4 +1,7 @@
 # SEO Analysis — horizonviewsproperties.com
+
+> **In plain terms (for the team):** This site currently gets no real search traffic, so the highest-ROI move is to build foundational content (blog posts targeting long-tail keywords) and optimize the homepage's meta title to establish what the business does and begin attracting relevant searchers. Without these basics, it's essentially a parked domain in terms of search performance, requiring significant effort to establish any organic presence.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** us · **Status:** low-presence
 
 ## Search profile (Semrush)

@@ -1,4 +1,7 @@
 # SEO Analysis — essentialbali.com
+
+> **In plain terms (for the team):** This site has virtually no organic search presence, meaning it's not getting real traffic from Google. The highest-ROI move is to immediately implement strong, keyword-rich meta titles and descriptions (meta-rewrite) for the homepage and any existing pages to establish basic relevance, then build foundational content (build content) around core Bali topics to attract initial traffic.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

@@ -1,4 +1,7 @@
 # SEO Analysis — dacaviar.com
+
+> **In plain terms (for the team):** This site has no organic traffic or keywords (zero search presence), meaning the highest-ROI move is to build foundational content and optimise meta tags for core product terms to establish initial relevance. There's no existing traffic to defend or weak titles to rewrite, so the focus should be on creating a content strategy and optimising the homepage to attract any search interest.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

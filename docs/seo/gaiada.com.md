@@ -1,4 +1,7 @@
 # SEO Analysis — gaiada.com
+
+> **In plain terms (for the team):** This site gets real, albeit low, traffic primarily from branded searches ("gaia digital agency"), but has a strong opportunity to capture more local service traffic. The highest-ROI move is to rewrite weak titles and descriptions (meta-rewrites) for the homepage to immediately improve click-through rates (CTR) and rankings for terms like "marketing agency bali" and "digital marketing agency bali," which are already ranking well.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)

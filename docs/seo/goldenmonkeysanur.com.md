@@ -1,4 +1,7 @@
 # SEO Analysis — goldenmonkeysanur.com
+
+> **In plain terms (for the team):** This site gets very little traffic (4 visitors/month) and ranks poorly for most relevant terms, but its #4 position for "chinese restaurant sanur" (volume 90) is a high-ROI opportunity to capture local customers. The highest-ROI move is to immediately rewrite the homepage title and description (meta-rewrite) to clearly state "Golden Monkey Sanur: Authentic Chinese Restaurant & Dim Sum in Bali" to improve click-through rates and capture more of that existing search volume, while also optimizing the Google Business Profile (GBP) to dominate local search.
+
 **Analysed:** 2026-06-11 · **Semrush DB:** id · **Status:** low-presence
 
 ## Search profile (Semrush)
