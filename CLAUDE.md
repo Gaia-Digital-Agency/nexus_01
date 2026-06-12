@@ -54,7 +54,11 @@ scopes; the VMs' own service accounts do **not** (can't resize/detach disks from
   Q&A over app/DB data, ≤1550-char question / ≤150-char answer; `GEMINI_API_KEY` in `backend/.env`) with a
   **Chat History** page (auto-purges >30 days), and an **Audit** page whose button compiles
   `docs/{audits,seo,plan}` into a versioned `audit_runs` report (1×/24h), downloadable as Markdown + PDF
-  (`pdfkit`, no headless browser). Frontend lives in the single-file `frontend/src/App.jsx` (tab-state routing).
+  (`pdfkit`, no headless browser). Frontend lives in the single-file `frontend/src/App.jsx` — **react-router-dom**
+  (real URLs per page, e.g. `/proposals`, `/data/gsc`); `activeTab` is derived from the path and `setActiveTab` is
+  a `navigate()` wrapper, so the conditional render blocks are unchanged. Sidebar is grouped into workflow stages
+  (Monitor/Decide/Act/Data/System) via `NAV_GROUPS`; route map is `TAB_ROUTES`. Nginx already serves the SPA
+  `index.html` fallback so deep links survive refresh.
 - Other apps on this host use ports 3006/3007/3010/3080/8081 — pick free ports only; nginx config is
   the dedicated `sites-available/nexus.gaiada.online` block.
 
