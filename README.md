@@ -4,7 +4,7 @@ Master control panel and developer reference for the **Gaia Nexus Platform** (`/
 
 > **Live Production URL:** https://nexus.gaiada.online
 > **Secrets/Credentials:** `docs/keys/` + `docs/key.txt` (chmod 600) — local only, NEVER commit.
-> **Last updated:** 11 June 2026
+> **Last updated:** 12 June 2026
 
 ---
 
@@ -39,7 +39,7 @@ Browser ──HTTPS (SSL)──▶ Nginx (nexus.gaiada.online)
    Orchestration Host (gda-ai01) ──[SSH/MCP]──▶ Hermes Agent
 ```
 
-- **P**ostgreSQL 18 — relational master DB (`gaia_nexus`, user `nexus_user`, table `sites`).
+- **P**ostgreSQL 18 — relational master DB (`gaia_nexus`, user `nexus_user`; tables `sites`, `chat_history`, `audit_runs` — the latter two auto-created on backend boot via `backend/init-db.js`).
 - **R**eact 19 — single-page dashboard client (SPA, not SSR).
 - **V**ite 6 — production bundler (`frontend/dist`, served by Nginx).
 - **T**oolchain (Node/Express) — backend API on `127.0.0.1:3100` via pm2 (`gaia-nexus-backend`, entry `backend/server.js`).
@@ -54,7 +54,7 @@ nexus/
 ├── README.md                 # This master guide
 ├── CLAUDE.md                 # Workspace playbook + operational guardrails
 ├── HERMES.md                 # How the Hermes agent controls the platform
-├── backend/                  # Node.js + Express API (server.js, .env [chmod 600])
+├── backend/                  # Node.js + Express API (server.js + chat.js, audit.js, pdf.js, init-db.js; .env [chmod 600])
 ├── frontend/                 # React 19 + Vite 6 SPA client
 │   ├── src/ (main.jsx, App.jsx, index.css)
 │   └── dist/                 # Vite production build (served by Nginx)
@@ -87,7 +87,21 @@ nexus/
 3. **🎯 Focus Inspector** — per-site deep dive: GSC keywords, GTM container IDs, AEO (ChatGPT/Gemini/Perplexity referrals).
 4. **📝 Staging Proposals + Hermes Chat** — 4-stage recommendations board (Pending → Accepted → Rejected → Archived) + a slide-over chat to consult Hermes on rewrites.
 5. **🚨 Lighthouse (PABS)** — circular gauges for Performance / Accessibility / Best Practices / SEO; red-score (<50) alerting.
-6. **📖 Interactive Guide** — operator playbook for daily workflows.
+6. **🧾 Audit** — compile the portfolio report (Technical Audit + SEO + Plan) from `docs/audits`, `docs/seo`, `docs/plan`. The **Run Audit** button is rate-limited to once per 24h (a full live pass takes ~2h); each run is versioned in `audit_runs`, and only the latest is downloadable as **Markdown + PDF** (server-side PDF via `pdfkit`).
+7. **💬 Chat History** — log of every AI Assistant question + answer; **auto-clears after 30 days**.
+8. **📖 Interactive Guide** — operator playbook for daily workflows.
+
+### Floating AI Assistant (all pages)
+A "✦ AI Chat" button (bottom-right, on every tab) opens **Nexus Assistant** — a **read-only, info-only** Q&A over the app/DB data (sites, SEO scores, portfolio aggregates), powered by **Gemini** (`gemini-2.5-flash`). Questions are capped at **1550 characters**, answers at **150 characters**; it refuses any request to take an action (deploy/change/run). Key in `backend/.env` as `GEMINI_API_KEY` (+ optional `GEMINI_MODEL`).
+
+### Feature API endpoints
+```
+POST   /api/chat                       -- Ask the assistant (info-only; <=1550 in / <=150 out)
+GET    /api/chat/history               -- Chat log (purges rows older than 30 days)
+GET    /api/audit/status               -- Last run, cooldown, whether a report is available
+POST   /api/audit/run                  -- Compile a new report (429 if run within last 24h)
+GET    /api/audit/download/:kind.:fmt  -- kind = audit|seo|plan, fmt = md|pdf (latest run)
+```
 
 ---
 

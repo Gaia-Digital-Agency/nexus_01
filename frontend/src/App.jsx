@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-const MAIN_NAV = ['Dashboard', 'Directory', 'Focus', 'Analytics', 'Proposals', 'Deployments', 'Reports', 'Lighthouse', 'Settings', 'Guide'];
+const MAIN_NAV = ['Dashboard', 'Directory', 'Focus', 'Analytics', 'Proposals', 'Deployments', 'Reports', 'Audit', 'Lighthouse', 'Chat History', 'Settings', 'Guide'];
 const SOURCES_NAV = ['Semrush', 'GSC', 'GA4', 'GTM', 'Ads'];
 const GROUPS = ['All', 'Emana Hotels', 'Tejas Spas', 'Mondo Surf', 'Independent'];
 
@@ -12,7 +12,9 @@ const NAV_TOOLTIPS = {
   'Proposals': 'Staged copywriter & structural recommendations',
   'Deployments': 'Real-time Nginx/WP-CLI execution tracker',
   'Reports': 'AI-driven period performance briefings',
+  'Audit': 'Compile the portfolio Technical Audit, SEO & Plan report (runs once daily)',
   'Lighthouse': 'Lighthouse Core Web Vitals & page performance diagnostics',
+  'Chat History': 'Past AI Assistant questions & answers (auto-clears after 30 days)',
   'Settings': 'Platform config, credentials, and schedules',
   'Guide': 'Interactive operator playbook & workflow walkthrough',
   'Semrush': 'Portfolio-wide SEO intelligence — keywords, DA, backlinks',
@@ -421,6 +423,62 @@ export default function App() {
   const [settingsMonthlyComp, setSettingsMonthlyComp] = useState(true);
   const [settingsPersona, setSettingsPersona] = useState('maya');
   const [analyticsAccount, setAnalyticsAccount] = useState('238259');
+
+  // ── AI Assistant (Gemini-backed, info-only) ──
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiInput, setAiInput] = useState('');
+  const [aiThread, setAiThread] = useState([]); // {role:'user'|'ai'|'error', text}
+  const [aiLoading, setAiLoading] = useState(false);
+  const Q_MAX = 1550;
+
+  const sendAiQuestion = async () => {
+    const q = aiInput.trim();
+    if (!q || aiLoading || q.length > Q_MAX) return;
+    setAiThread(prev => [...prev, { role: 'user', text: q }]);
+    setAiInput('');
+    setAiLoading(true);
+    try {
+      const r = await fetch('/api/chat', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: q }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Request failed');
+      setAiThread(prev => [...prev, { role: 'ai', text: d.answer }]);
+    } catch (e) {
+      setAiThread(prev => [...prev, { role: 'error', text: e.message }]);
+    } finally { setAiLoading(false); }
+  };
+
+  // ── Audit page ──
+  const [auditStatus, setAuditStatus] = useState(null);
+  const [auditRunning, setAuditRunning] = useState(false);
+  const [auditMsg, setAuditMsg] = useState(null);
+
+  const loadAuditStatus = () => {
+    fetch('/api/audit/status').then(r => r.json()).then(setAuditStatus).catch(() => {});
+  };
+  useEffect(() => { if (activeTab === 'Audit') loadAuditStatus(); }, [activeTab]);
+
+  const runAudit = async () => {
+    if (auditRunning) return;
+    setAuditRunning(true); setAuditMsg(null);
+    try {
+      const r = await fetch('/api/audit/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+      const d = await r.json();
+      if (!r.ok) setAuditMsg({ type: 'warn', text: d.error || 'Could not start audit.' });
+      else setAuditMsg({ type: 'ok', text: `Report compiled from ${d.siteCount} sites. Downloads are ready below.` });
+    } catch (e) {
+      setAuditMsg({ type: 'warn', text: e.message });
+    } finally { setAuditRunning(false); loadAuditStatus(); }
+  };
+
+  // ── Chat History page ──
+  const [chatHistory, setChatHistory] = useState([]);
+  const loadChatHistory = () => {
+    fetch('/api/chat/history').then(r => r.json()).then(d => setChatHistory(Array.isArray(d) ? d : [])).catch(() => {});
+  };
+  useEffect(() => { if (activeTab === 'Chat History') loadChatHistory(); }, [activeTab]);
 
   const handleSiteFocus = (siteName) => {
     const idx = DIRECTORY_SITES.findIndex(s => s.name.toLowerCase() === siteName.toLowerCase() || s.name.toLowerCase().includes(siteName.toLowerCase()) || siteName.toLowerCase().includes(s.name.toLowerCase()));
@@ -2383,12 +2441,154 @@ export default function App() {
           </>
         )}
 
+        {/* ==================== VIEW: AUDIT ==================== */}
+        {activeTab === 'Audit' && (() => {
+          const s = auditStatus;
+          const fmt = (t) => t ? new Date(t).toLocaleString() : '—';
+          const canRun = s ? s.canRun : true;
+          return (
+            <>
+              <section className="kpis" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))' }}>
+                <Kpi label="Last Audit Run" value={s?.lastRun ? fmt(s.lastRun.startedAt) : 'Never'} tooltip="Timestamp of the most recent audit compilation" small />
+                <Kpi label="Report Status" value={s?.lastRun ? (s.lastRun.status === 'completed' ? 'Ready' : 'Running') : '—'} accent={s?.lastRun?.status === 'completed' ? 'success' : 'warning'} tooltip="State of the latest run" />
+                <Kpi label="Sites In Report" value={s?.reportSiteCount ?? '—'} tooltip="Number of sites included in the latest compiled report" />
+                <Kpi label="Next Run Available" value={s && !s.canRun ? fmt(s.nextAvailable) : 'Now'} accent={canRun ? 'success' : 'warning'} tooltip="Audit can be run once per 24 hours" small />
+              </section>
+
+              <div className="panel" style={{ marginBottom: '20px' }}>
+                <div className="panel-head">
+                  <h2>Run Portfolio Audit</h2>
+                  <span className="badge-source font-11">Technical Audit · SEO · Plan</span>
+                </div>
+                <div style={{ padding: '20px' }}>
+                  <p className="muted" style={{ marginTop: 0, fontSize: '13px', lineHeight: 1.6 }}>
+                    {s?.note || 'A full live audit + SEO pass takes ~2 hours to complete. Review the available report before generating a new one. The button unlocks again the next day.'}
+                  </p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', marginTop: '8px' }}>
+                    <button className="btn-primary" disabled={!canRun || auditRunning} onClick={runAudit}
+                      style={{ opacity: (!canRun || auditRunning) ? 0.5 : 1, cursor: (!canRun || auditRunning) ? 'not-allowed' : 'pointer' }}>
+                      {auditRunning ? 'Compiling…' : (canRun ? '▶ Run Audit' : '🔒 Available ' + fmt(s?.nextAvailable))}
+                    </button>
+                    <button className="btn-secondary" onClick={loadAuditStatus}>↻ Refresh status</button>
+                    {!canRun && <span className="muted small">Already run in the last 24h — refer to the report below.</span>}
+                  </div>
+                  {auditMsg && (
+                    <div style={{ marginTop: '14px', padding: '10px 14px', borderRadius: '8px', fontSize: '13px',
+                      background: 'var(--darker)', borderLeft: '3px solid ' + (auditMsg.type === 'ok' ? 'var(--success)' : 'var(--warning)'),
+                      color: auditMsg.type === 'ok' ? 'var(--success)' : 'var(--warning)' }}>{auditMsg.text}</div>
+                  )}
+                </div>
+              </div>
+
+              <div className="panel">
+                <div className="panel-head">
+                  <h2>Latest Report — Downloads</h2>
+                  <span className="muted font-11">{s?.reportDate ? 'Compiled ' + fmt(s.reportDate) : 'No report yet'}</span>
+                </div>
+                <div style={{ padding: '20px' }}>
+                  {s?.reportAvailable ? (
+                    <div className="audit-dl-grid">
+                      {[{ k: 'audit', label: 'Technical Audit' }, { k: 'seo', label: 'SEO Analysis' }, { k: 'plan', label: 'Execution Plan' }].map(({ k, label }) => (
+                        <div key={k} className="audit-dl-card">
+                          <div className="audit-dl-title">{label}</div>
+                          <div className="action-buttons" style={{ marginTop: '10px' }}>
+                            <a className="btn-secondary" href={`/api/audit/download/${k}.md`}>⬇ Markdown</a>
+                            <a className="btn-primary" href={`/api/audit/download/${k}.pdf`}>⬇ PDF</a>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="muted" style={{ margin: 0, fontSize: '13px' }}>No report has been compiled yet. Run an audit to generate the downloadable Technical Audit, SEO and Plan reports. History is retained in the database; only the latest is downloadable here.</p>
+                  )}
+                </div>
+              </div>
+            </>
+          );
+        })()}
+
+        {/* ==================== VIEW: CHAT HISTORY ==================== */}
+        {activeTab === 'Chat History' && (
+          <>
+            <div className="panel">
+              <div className="panel-head">
+                <h2>AI Assistant — Chat History</h2>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                  <span className="muted font-11">Auto-clears after 30 days</span>
+                  <button className="btn-secondary" onClick={loadChatHistory}>↻ Refresh</button>
+                </div>
+              </div>
+              <div className="table-wrapper">
+                <table className="compact-table">
+                  <thead><tr><th style={{ width: '160px' }}>When</th><th>Question</th><th>Answer</th></tr></thead>
+                  <tbody>
+                    {chatHistory.length === 0 && (
+                      <tr><td colSpan="3" className="muted" style={{ padding: '24px', textAlign: 'center' }}>No chat history yet. Use the AI Assistant button (bottom-right) to ask a question.</td></tr>
+                    )}
+                    {chatHistory.map(row => (
+                      <tr key={row.id}>
+                        <td className="muted small" style={{ whiteSpace: 'nowrap' }}>{new Date(row.created_at).toLocaleString()}</td>
+                        <td style={{ maxWidth: '420px' }}>{row.question}</td>
+                        <td style={{ color: 'var(--accent)' }}>{row.answer}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        )}
+
         <footer className="foot muted">
           Gaia Nexus Platform • Built for SEO • Stack: Hermes · PostgreSQL · Python · React · Vite · Tailwind · Node
           {visitorInfo.location && <span style={{ marginLeft: '16px', opacity: 0.6 }}>📍 {visitorInfo.location}</span>}
           {visitorInfo.time && <span style={{ marginLeft: '10px', opacity: 0.6 }}>🕒 {visitorInfo.time}</span>}
         </footer>
       </main>
+
+      {/* ==================== AI ASSISTANT (floating, all pages) ==================== */}
+      {aiOpen && (
+        <div className="ai-panel">
+          <div className="ai-panel-head">
+            <div>
+              <div className="ai-panel-title">Nexus Assistant</div>
+              <div className="muted font-11">Ask about your portfolio data · info only</div>
+            </div>
+            <button className="ai-close" onClick={() => setAiOpen(false)} aria-label="Close">×</button>
+          </div>
+          <div className="ai-thread">
+            {aiThread.length === 0 && (
+              <div className="ai-hint muted">
+                Ask a question about your sites, SEO scores, audits or platform data — e.g. <em>"Which site has the highest SEO score?"</em> or <em>"How many WordPress sites are active?"</em>
+              </div>
+            )}
+            {aiThread.map((m, i) => (
+              <div key={i} className={'ai-msg ai-msg-' + m.role}>{m.text}</div>
+            ))}
+            {aiLoading && <div className="ai-msg ai-msg-ai ai-typing">…</div>}
+          </div>
+          <div className="ai-input-row">
+            <textarea
+              className="ai-input"
+              rows="2"
+              maxLength={Q_MAX}
+              placeholder="Ask a question (max 1550 chars)…"
+              value={aiInput}
+              onChange={(e) => setAiInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAiQuestion(); } }}
+            />
+            <div className="ai-input-foot">
+              <span className="muted font-11">{aiInput.length}/{Q_MAX} · answers capped at 150 chars</span>
+              <button className="btn-primary" disabled={aiLoading || !aiInput.trim()} onClick={sendAiQuestion}
+                style={{ padding: '6px 16px', opacity: (aiLoading || !aiInput.trim()) ? 0.5 : 1 }}>Send</button>
+            </div>
+          </div>
+        </div>
+      )}
+      <button className={'ai-fab' + (aiOpen ? ' ai-fab-open' : '')} onClick={() => setAiOpen(o => !o)}
+        data-tooltip="AI Assistant" aria-label="AI Assistant">
+        {aiOpen ? '×' : '✦ AI Chat'}
+      </button>
     </div>
   );
 }

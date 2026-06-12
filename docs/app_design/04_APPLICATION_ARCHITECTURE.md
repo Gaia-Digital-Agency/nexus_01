@@ -112,6 +112,30 @@ details       JSONB
 created_at    TIMESTAMP
 ```
 
+### `chat_history` ✅ implemented
+```sql
+id            UUID PRIMARY KEY
+question      TEXT          -- <= 1550 chars
+answer        TEXT          -- <= 150 chars
+created_at    TIMESTAMPTZ   -- rows older than 30 days are auto-purged
+```
+
+### `audit_runs` ✅ implemented
+```sql
+id            UUID PRIMARY KEY
+started_at    TIMESTAMPTZ
+completed_at  TIMESTAMPTZ
+status        VARCHAR(20)   -- 'running' | 'completed'
+site_count    INTEGER
+audit_md      TEXT          -- compiled Technical Audit report (docs/audits/*)
+seo_md        TEXT          -- compiled SEO report (docs/seo/*)
+plan_md       TEXT          -- compiled Execution Plan (docs/plan/*)
+triggered_by  VARCHAR(120)
+```
+
+> Both tables are auto-created on backend boot by `backend/init-db.js`. The rest of the schema above
+> remains the aspirational design target (only `sites` + these two are live today).
+
 ---
 
 ## Backend API Endpoints (Node.js)
@@ -160,6 +184,19 @@ POST   /api/deployments/:id/rollback -- Trigger rollback
 GET    /api/reports/portfolio        -- Portfolio summary report
 GET    /api/reports/site/:id         -- Per-site report
 POST   /api/reports/generate         -- Trigger AI report generation
+```
+
+### AI Assistant ✅ implemented
+```
+POST   /api/chat                     -- Read-only Q&A over app/DB data (Gemini); <=1550 in / <=150 out
+GET    /api/chat/history             -- Chat log; purges rows older than 30 days
+```
+
+### Audit ✅ implemented
+```
+GET    /api/audit/status             -- Last run, 24h cooldown, report availability
+POST   /api/audit/run                -- Compile docs/{audits,seo,plan} into audit_runs (429 within 24h)
+GET    /api/audit/download/:kind.:fmt -- kind = audit|seo|plan, fmt = md|pdf (latest completed run)
 ```
 
 ---

@@ -2,6 +2,9 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import pg from 'pg';
+import { initDb } from './init-db.js';
+import { registerChatRoutes } from './chat.js';
+import { registerAuditRoutes } from './audit.js';
 
 const { Pool } = pg;
 const pool = new Pool({
@@ -14,7 +17,7 @@ const pool = new Pool({
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '256kb' }));
 
 // Health — confirms DB connectivity
 app.get('/api/health', async (_req, res) => {
@@ -47,5 +50,11 @@ app.get('/api/sites/:id', async (req, res) => {
   }
 });
 
+// Feature routes: AI Chat (Gemini) + Audit report compiler
+registerChatRoutes(app, pool);
+registerAuditRoutes(app, pool);
+
 const port = process.env.PORT || 3100;
-app.listen(port, '127.0.0.1', () => console.log(`Gaia Nexus backend listening on 127.0.0.1:${port}`));
+initDb(pool)
+  .then(() => app.listen(port, '127.0.0.1', () => console.log(`Gaia Nexus backend listening on 127.0.0.1:${port}`)))
+  .catch((e) => { console.error('DB init failed:', e.message); process.exit(1); });

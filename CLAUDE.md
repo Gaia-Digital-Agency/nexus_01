@@ -13,7 +13,9 @@ Stack = **PRVTN**: **P**ostgreSQL 18 · **R**eact 19 · **V**ite 6 (SPA) · **T*
 ## Repo layout (`/var/www/nexus`)
 - `README.md` — master operator guide (architecture, dashboard tabs, CLI playbook).
 - `HERMES.md` — how the Hermes agent controls the platform.
-- `backend/` — Express API (`server.js`, `.env` chmod 600); pm2 app `gaia-nexus-backend` on `127.0.0.1:3100`.
+- `backend/` — Express API (`server.js` + `chat.js`, `audit.js`, `pdf.js`, `init-db.js`; `.env` chmod 600);
+  pm2 app `gaia-nexus-backend` on `127.0.0.1:3100`. Feature routes: AI chat (`/api/chat*`, Gemini) + Audit
+  report compiler (`/api/audit*`).
 - `frontend/` — React 19 + Vite 6 SPA; build → `dist/` (served by Nginx).
 - `pipeline/` — Python metrics collector (`collect.py` — **stub**; GSC/GA4 sync not yet live).
 - `docs/app_design/` — the spec (docs 01–08): concept → system/app architecture → UI brief.
@@ -22,7 +24,8 @@ Stack = **PRVTN**: **P**ostgreSQL 18 · **R**eact 19 · **V**ite 6 (SPA) · **T*
   **4-wave model:** 0 audit ✅ · 1 technical ⏳ · 2 SEO ⏳ · 3 GBP/Ads/social ⛔ (Google 2SV + GBP API).
 - `docs/capabilities/` — `capabilities.md` + the `SKILLS-*.md` agent specs.
 - `docs/key.txt` + `docs/keys/` — **SENSITIVE (chmod 600)**: Semrush/Discord/Anthropic keys, Google
-  login, DB creds, OAuth setup checklist, infra map. Do NOT commit (gitignored).
+  login, DB creds, OAuth setup checklist, infra map. Do NOT commit (gitignored). The app's own runtime
+  secrets (Postgres + `GEMINI_API_KEY`) live in `backend/.env` (chmod 600, gitignored).
 
 ## Infrastructure (GCP project `gda-viceroy`, region asia-southeast1)
 SSH hosts (all passwordless-sudo as user **azlan**): `gda-ce01`, `gda-pn01`, `gda-s01`, `gda-ai01`,
@@ -42,10 +45,16 @@ scopes; the VMs' own service accounts do **not** (can't resize/detach disks from
   `pipeline/` (Python stub), `docs/`.
 - **Live: https://nexus.gaiada.online** (certbot cert → 2026-09-01, HTTP→HTTPS redirect).
 - Backend on `127.0.0.1:3100` via **pm2** app `gaia-nexus-backend` (`pm2 restart gaia-nexus-backend`).
-- DB: **PostgreSQL 18** @ `127.0.0.1:5432`, database `gaia_nexus`, user `nexus_user`, table `sites`.
-  Holds all **63 live sites** (seeded 2026-06-11); `seo_score` populated for the 54 active sites
+- DB: **PostgreSQL 18** @ `127.0.0.1:5432`, database `gaia_nexus`, user `nexus_user`, tables `sites`,
+  `chat_history`, `audit_runs` (the latter two auto-created on boot by `backend/init-db.js`).
+  `sites` holds all **63 live sites** (seeded 2026-06-11); `seo_score` populated for the 54 active sites
   (Semrush organic-visibility index, `us` db). `traffic_7d`/`roas` **not yet populated** — await
   GSC/GA4 + Ads; `pipeline/collect.py` is still a stub. Creds in `backend/.env` and `key.txt`.
+- **In-app features (added 2026-06-12):** a floating **AI Assistant** (Gemini `gemini-2.5-flash`, read-only
+  Q&A over app/DB data, ≤1550-char question / ≤150-char answer; `GEMINI_API_KEY` in `backend/.env`) with a
+  **Chat History** page (auto-purges >30 days), and an **Audit** page whose button compiles
+  `docs/{audits,seo,plan}` into a versioned `audit_runs` report (1×/24h), downloadable as Markdown + PDF
+  (`pdfkit`, no headless browser). Frontend lives in the single-file `frontend/src/App.jsx` (tab-state routing).
 - Other apps on this host use ports 3006/3007/3010/3080/8081 — pick free ports only; nginx config is
   the dedicated `sites-available/nexus.gaiada.online` block.
 
