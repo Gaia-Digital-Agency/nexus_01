@@ -11,22 +11,21 @@ We looked at every live site, wrote down what we found, then turned it into a pl
 ```
         THE EVIDENCE                      THE PLAN  (docs/plan/)
    (one file per site)
- ┌──────────────────────────┐     ┌───────────┐   ┌────────────────┐   ┌────────────┐
- │ 1. AUDIT — site health   │     │ FINDINGS  │   │ ACTION SUMMARY │   │   TODO     │
- │    docs/audits/          │ ──▶ │ what we   │──▶│ what we'll do  │──▶│ the work,  │
- │ 2. SEO — search strategy │     │ found     │   │  and why       │   │ site by    │
- │    docs/seo/             │     │ (overall) │   │  (the pitch)   │   │ site       │
- └──────────────────────────┘     └───────────┘   └────────────────┘   └────────────┘
-   the detailed results            ── read these three in order, top to bottom ──
+ ┌──────────────────────────┐     ┌────────────────────────┐   ┌────────────┐
+ │ 1. AUDIT — site health   │     │   ACTION SUMMARY       │   │   TODO     │
+ │    docs/audits/          │ ──▶ │   what we found, and   │──▶│ the work,  │
+ │ 2. SEO — search strategy │     │   what we'll do        │   │ site by    │
+ │    docs/seo/             │     │   (findings + plan)    │   │ site       │
+ └──────────────────────────┘     └────────────────────────┘   └────────────┘
+   the detailed results            ── read these in order, top to bottom ──
 ```
 
 | Step | Folder / file | What it answers | Read it when |
 |---|---|---|---|
 | **1. Audit** | `audits/<site>.md` | Is the site healthy, secure, and crawlable by Google? | You want the technical results for one site |
 | **2. SEO** | `seo/<site>.md` | What are this site's keywords, rankings, and content opportunities? | You want the search results for one site |
-| **3a. Findings** | `plan/findings.md` | Across all 63 sites, what did we find? | **Start here** for the big picture |
-| **3b. Action Summary** | `plan/action_summary.md` | What are we going to do, in what order, and why? | You want the decision and the reasoning |
-| **3c. Todo** | `plan/todo.md` | The actual task list, grouped by site | You're doing or tracking the work |
+| **3. Action Summary** | `plan/action_summary.md` | What did we find across all 63 sites, and what are we going to do about it (in what order, and why)? | **Start here** for the big picture, the evidence, and the decision |
+| **4. Todo** | `plan/todo.md` | The actual task list, grouped by site | You're doing or tracking the work |
 
 > Every audit and SEO file opens with a plain-language **"What this means / Why it matters"** box, so you get the point before any technical detail.
 
@@ -34,14 +33,14 @@ We looked at every live site, wrote down what we found, then turned it into a pl
 
 ## How this maps to the Nexus app
 
-The app and these docs are two views of the same thing. **In the app you see the live numbers; in these docs you see the results and the plan behind them.** When you're in Nexus and think *"okay — so what's the story behind this?"*, the matching doc is here:
+The app and these docs are two views of the same thing. **In the app ([nexus.gaiada.online](https://nexus.gaiada.online)) you see the live numbers; in these docs you see the results and the plan behind them.** When you're in Nexus and think *"okay — so what's the story behind this?"*, the matching doc is here:
 
 | In the Nexus app… | …is backed by these docs |
 |---|---|
 | **Monitor** (Dashboard, Directory, Focus, Lighthouse) — site-by-site health & traffic | **Audit** files (`audits/`) |
 | **Data** (Semrush, GSC, GA4) — the search & analytics feeds | **SEO** files (`seo/`) |
-| **Decide → Reports** — the period briefing | **Findings** (`plan/findings.md`) |
-| **Decide → Proposals** — the changes staged for approval | **Action Summary** (`plan/action_summary.md`) |
+| **Decide → Reports** — the period briefing | **Action Summary**, findings half (`plan/action_summary.md`) |
+| **Decide → Proposals** — the changes staged for approval | **Action Summary**, plan half (`plan/action_summary.md`) |
 | **Act → Deployments** — changes being executed | **Todo** (`plan/todo.md`) |
 
 So the loop is the same in both places: **look at the results → decide what to change → approve it → ship it.**

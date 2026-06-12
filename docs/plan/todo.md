@@ -1,7 +1,7 @@
 # Todo — The Work, Site by Site
 
 **Compiled:** 11 June 2026 from the 63 audits (`docs/audits/`) + 63 SEO analyses (`docs/seo/`).
-**You are here:** Plan → Findings → Action Summary → **Todo** · **In the app:** this is the *Deployments / Act* layer — the actual tasks being executed.
+**You are here:** Plan → Action Summary → **Todo** · **In the app:** this is the *Deployments / Act* layer — the actual tasks being executed. Live app: **https://nexus.gaiada.online**
 
 > **What this is.** The detailed task list behind the plan. If `action_summary.md` is *what we'll do and why*, this is *every individual job, grouped by site.* You don't have to read it end to end — skim the **"Do first"** block below for the priorities; the per-site sections are the working checklist for whoever does each fix.
 
@@ -17,7 +17,7 @@
 ## Wave 0 — Audit production ✅ COMPLETE
 - [x] 63 technical audits (`docs/audits/<domain>.md`) — every live site on gda-ce01 (17), gda-pn01 (5), hostinger (41).
 - [x] 63 SEO analyses (`docs/seo/<domain>.md`).
-- [x] Consolidated `docs/plan/findings.md` (cross-site + 63-site index).
+- [x] Consolidated findings (now merged into `docs/plan/action_summary.md` — cross-site + 63-site index).
 - [x] Boundary split enforced: audits = technical; seo = search. Committed `571a48c`.
 
 ---
