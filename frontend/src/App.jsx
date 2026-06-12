@@ -1,7 +1,38 @@
 import { useEffect, useState } from 'react';
+import { BrowserRouter, useLocation, useNavigate } from 'react-router-dom';
 
-const MAIN_NAV = ['Dashboard', 'Directory', 'Focus', 'Analytics', 'Proposals', 'Deployments', 'Reports', 'Audit', 'Lighthouse', 'Chat History', 'Settings', 'Guide'];
-const SOURCES_NAV = ['Semrush', 'GSC', 'GA4', 'GTM', 'Ads'];
+// Sidebar arranged as the operating loop: Monitor → Decide → Act → Data → System.
+const NAV_GROUPS = [
+  { label: 'Monitor', items: ['Dashboard', 'Directory', 'Focus', 'Lighthouse'] },
+  { label: 'Decide',  items: ['Reports', 'Proposals'] },
+  { label: 'Act',     items: ['Deployments', 'Audit'] },
+  { label: 'Data',    items: ['Semrush', 'GSC', 'GA4', 'Analytics', 'GTM', 'Ads'] },
+  { label: 'System',  items: ['Settings', 'Guide', 'Chat History'] },
+];
+const SOURCE_ITEMS = new Set(['Semrush', 'GSC', 'GA4', 'GTM', 'Ads']);
+const COMING_SOON = new Set(['GTM', 'Ads']); // not yet installed — demoted to bottom of Data
+
+// Real, shareable URLs. activeTab is derived from the path (see App()).
+const TAB_ROUTES = {
+  'Dashboard': '/',
+  'Directory': '/directory',
+  'Focus': '/focus',
+  'Lighthouse': '/lighthouse',
+  'Reports': '/reports',
+  'Proposals': '/proposals',
+  'Deployments': '/deployments',
+  'Audit': '/audit',
+  'Semrush': '/data/semrush',
+  'GSC': '/data/gsc',
+  'GA4': '/data/ga4',
+  'Analytics': '/data/analytics',
+  'GTM': '/data/gtm',
+  'Ads': '/data/ads',
+  'Settings': '/settings',
+  'Guide': '/guide',
+  'Chat History': '/chat-history',
+};
+const ROUTE_TABS = Object.fromEntries(Object.entries(TAB_ROUTES).map(([t, r]) => [r, t]));
 const GROUPS = ['All', 'Emana Hotels', 'Tejas Spas', 'Mondo Surf', 'Independent'];
 
 const NAV_TOOLTIPS = {
@@ -392,11 +423,16 @@ const GTM_CONTAINERS = [
   { id: '188404908', name: 'beanexchange.net', publicId: 'GTM-WFX8GML4' },
 ];
 
-export default function App() {
+function App() {
   const [sites, setSites] = useState([]);
   const [status, setStatus] = useState('loading');
   const [health, setHealth] = useState(null);
-  const [activeTab, setActiveTab] = useState('Dashboard');
+  // activeTab is derived from the URL so deep links / refresh / back-forward all work.
+  // setActiveTab is a navigate() wrapper, so existing call sites need no changes.
+  const location = useLocation();
+  const navigate = useNavigate();
+  const activeTab = ROUTE_TABS[location.pathname] || 'Dashboard';
+  const setActiveTab = (tab) => navigate(TAB_ROUTES[tab] || '/');
   const [visitorInfo, setVisitorInfo] = useState({ location: null, time: null });
   const [selectedGroup, setSelectedGroup] = useState('All');
   const [activeAccordion, setActiveAccordion] = useState(null);
@@ -789,26 +825,24 @@ export default function App() {
       {/* Sidebar Section */}
       <aside className="sidebar">
         <div className="logo" data-tooltip="Nexus AI-Powered Control Plane" onClick={() => setActiveTab('Dashboard')} style={{ cursor: 'pointer' }}>Nexus</div>
-        {MAIN_NAV.map((n) => (
-          <div
-            key={n}
-            className={'nav-item' + (activeTab === n ? ' active' : '')}
-            onClick={() => setActiveTab(n)}
-            data-tooltip={NAV_TOOLTIPS[n]}
-          >
-            {n}
-          </div>
-        ))}
-        <div className="nav-section-label">Sources</div>
-        {SOURCES_NAV.map((n) => (
-          <div
-            key={n}
-            className={'nav-item nav-item-source' + (activeTab === n ? ' active' : '')}
-            onClick={() => setActiveTab(n)}
-            data-tooltip={NAV_TOOLTIPS[n]}
-          >
-            <span className={'source-dot source-dot-' + n.toLowerCase()} />
-            {n}
+        {NAV_GROUPS.map((group) => (
+          <div key={group.label} className="nav-group">
+            <div className="nav-section-label">{group.label}</div>
+            {group.items.map((n) => (
+              <div
+                key={n}
+                className={'nav-item'
+                  + (SOURCE_ITEMS.has(n) ? ' nav-item-source' : '')
+                  + (activeTab === n ? ' active' : '')
+                  + (COMING_SOON.has(n) ? ' nav-item-soon' : '')}
+                onClick={() => setActiveTab(n)}
+                data-tooltip={NAV_TOOLTIPS[n]}
+              >
+                {SOURCE_ITEMS.has(n) && <span className={'source-dot source-dot-' + n.toLowerCase()} />}
+                {n}
+                {COMING_SOON.has(n) && <span className="nav-soon-badge">soon</span>}
+              </div>
+            ))}
           </div>
         ))}
       </aside>
@@ -2599,5 +2633,13 @@ function Kpi({ label, value, accent, tooltip, small }) {
       <div className="kpi-label muted">{label}</div>
       <div className={'kpi-value ' + (accent || '')} style={small ? { fontSize: '14px', fontWeight: 500, lineHeight: 1.3 } : {}}>{value}</div>
     </div>
+  );
+}
+
+export default function AppRoot() {
+  return (
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
   );
 }
