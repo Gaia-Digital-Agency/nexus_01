@@ -775,6 +775,15 @@ function App() {
     finally { setCsExporting(null); }
   };
 
+  // Download the locked image used in this project (Markdown export doesn't embed it).
+  const downloadUsedImage = () => {
+    if (!csUsedImg?.url) return;
+    const a = document.createElement('a');
+    const ext = csUsedImg.url.slice(csUsedImg.url.lastIndexOf('.'));
+    a.href = csUsedImg.url; a.download = (csUsedImg.id || 'image') + ext;
+    document.body.appendChild(a); a.click(); a.remove();
+  };
+
   // ── Projects page ──
   const loadCsProjects = () => {
     fetch('/api/create/projects').then(r => r.json()).then(d => setCsProjects(Array.isArray(d) ? d : [])).catch(() => {});
@@ -1393,6 +1402,8 @@ function App() {
                     <div className="cs-btn-row">
                       <button className="btn-primary" onClick={() => exportCs('pdf')} disabled={csExporting || (csWithImage && !csImageLocked)}>{csExporting === 'pdf' ? 'Exporting…' : 'Save as PDF'}</button>
                       <button className="btn-primary" onClick={() => exportCs('html')} disabled={csExporting || (csWithImage && !csImageLocked)}>{csExporting === 'html' ? 'Exporting…' : 'Save as HTML'}</button>
+                      <button className="btn-primary" onClick={() => exportCs('md')} disabled={csExporting || (csWithImage && !csImageLocked)}>{csExporting === 'md' ? 'Exporting…' : 'Save as Markdown'}</button>
+                      {csWithImage && csUsedImg && <button className="btn-secondary" onClick={downloadUsedImage} disabled={csExporting}>⬇ Download image</button>}
                     </div>
                     <p className="muted small" style={{ marginTop: '10px' }}>Saved to your computer. This project stays in <strong>Studio Projects</strong>.</p>
                   </>
@@ -1445,7 +1456,7 @@ function App() {
                 <li><span className="cs-guide-num">1</span><div><strong>Write Article</strong> — give a title and a plain-language brief, then <em>paste/type</em>, <em>✨ Write with AI</em>, or both. Use <em>⇲ Format to Markdown</em> to tidy pasted text and <em>💬 Get AI Comments</em> for advisory feedback. When happy, <strong>Accept &amp; Lock</strong>.</div></li>
                 <li><span className="cs-guide-num">2</span><div><strong>Generate Image</strong> (image projects only) — <em>Generate</em> from a prompt or <em>⬆ Upload</em> your own. Each image gets an AI suitability check. <em>Use</em> the one you want, <em>Save locally</em> or <em>Delete</em>, then <strong>Accept &amp; Lock</strong>.</div></li>
                 <li><span className="cs-guide-num">3</span><div><strong>Stage Gate</strong> — the AI copywriting gate scores the writing and returns <strong>APPROVED</strong>, <strong>NEEDS WORK</strong>, or <strong>REJECT</strong>. Revise and re-run until it passes.</div></li>
-                <li><span className="cs-guide-num">4</span><div><strong>Export</strong> — download as <strong>PDF</strong> or <strong>HTML</strong>. Unlocks only once the gate is APPROVED (and the image is locked, for image projects).</div></li>
+                <li><span className="cs-guide-num">4</span><div><strong>Export</strong> — download as <strong>PDF</strong>, <strong>HTML</strong>, or <strong>Markdown</strong> (with Markdown you can also download the image to keep alongside it). Unlocks only once the gate is APPROVED (and the image is locked, for image projects).</div></li>
               </ol>
             </section>
 

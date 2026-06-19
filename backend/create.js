@@ -601,7 +601,7 @@ export function registerCreateRoutes(app, pool) {
     const submissionId = (req.body?.submissionId || '').toString().trim();
     const format = (req.body?.format || '').toString().trim().toLowerCase();
     if (!projectId && !submissionId) return res.status(400).json({ error: 'projectId (or submissionId) is required.' });
-    if (!['pdf', 'html'].includes(format)) return res.status(400).json({ error: 'format must be pdf or html.' });
+    if (!['pdf', 'html', 'md'].includes(format)) return res.status(400).json({ error: 'format must be pdf, html, or md.' });
     try {
       let sub;
       if (projectId) {
@@ -617,6 +617,13 @@ export function registerCreateRoutes(app, pool) {
       if (sub.verdict !== 'APPROVED') return res.status(403).json({ error: 'Export is locked until the stage gate returns APPROVED.' });
       if (projectId) await pool.query("UPDATE content_projects SET status='exported', updated_at=now() WHERE id=$1", [projectId]).catch(() => {});
       const safe = (sub.title || 'article').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'article';
+      if (format === 'md') {
+        // Plain Markdown: title as H1 + the article body. The image is downloaded separately by the creator.
+        const md = `# ${sub.title || 'Untitled'}\n\n${sub.body || ''}\n`;
+        res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="${safe}.md"`);
+        return res.send(md);
+      }
       if (format === 'html') {
         const origin = `${req.protocol}://${req.get('host')}`;
         const html = buildHtmlDoc({ title: sub.title, body: sub.body, imageUrl: sub.image_url, origin });
