@@ -68,7 +68,7 @@ function renderTable(doc, rows) {
   doc.fontSize(10);
 }
 
-export function markdownToPdfBuffer(markdown, title) {
+export function markdownToPdfBuffer(markdown, title, opts = {}) {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ size: 'A4', margin: 50, bufferPages: true });
     const chunks = [];
@@ -84,6 +84,18 @@ export function markdownToPdfBuffer(markdown, title) {
       doc.moveTo(doc.x, doc.y + 4).lineTo(doc.page.width - doc.page.margins.right, doc.y + 4)
         .strokeColor(COLORS.rule).lineWidth(1).stroke();
       doc.moveDown(1);
+    }
+
+    // Optional hero image embedded after the title.
+    if (opts.imageBuffer) {
+      try {
+        const fullW = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+        const imgH = 300;
+        const imgY = doc.y;
+        doc.image(opts.imageBuffer, doc.page.margins.left, imgY, { fit: [fullW, imgH], align: 'center' });
+        doc.x = doc.page.margins.left;
+        doc.y = imgY + imgH + 12; // fit + image() don't advance the cursor
+      } catch (_) { /* skip unrenderable image */ }
     }
 
     const lines = String(markdown || '').replace(/\r\n/g, '\n').split('\n');

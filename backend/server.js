@@ -5,6 +5,7 @@ import pg from 'pg';
 import { initDb } from './init-db.js';
 import { registerChatRoutes } from './chat.js';
 import { registerAuditRoutes } from './audit.js';
+import { registerCreateRoutes } from './create.js';
 
 const { Pool } = pg;
 const pool = new Pool({
@@ -50,9 +51,10 @@ app.get('/api/sites/:id', async (req, res) => {
   }
 });
 
-// Feature routes: AI Chat (Gemini) + Audit report compiler
+// Feature routes: AI Chat (Gemini) + Audit report compiler + Content Studio
 registerChatRoutes(app, pool);
 registerAuditRoutes(app, pool);
+registerCreateRoutes(app, pool);
 
 const port = process.env.PORT || 3100;
 initDb(pool)

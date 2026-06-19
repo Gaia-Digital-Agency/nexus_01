@@ -1,19 +1,22 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { BrowserRouter, useLocation, useNavigate } from 'react-router-dom';
 
-// Sidebar arranged as the operating loop: Monitor → Decide → Act → Data → System.
+// Sidebar arranged as the operating loop: Create → Monitor → Decide & Act → Data → System.
 const NAV_GROUPS = [
-  { label: 'Monitor', items: ['Dashboard', 'Directory', 'Focus', 'Lighthouse'] },
-  { label: 'Decide',  items: ['Reports', 'Proposals'] },
-  { label: 'Act',     items: ['Deployments', 'Audit'] },
-  { label: 'Data',    items: ['Semrush', 'GSC', 'GA4', 'Analytics', 'GTM', 'Ads'] },
-  { label: 'System',  items: ['Settings', 'Guide', 'Chat History'] },
+  { label: 'Create',       items: ['Content Studio', 'Studio Projects', 'Studio Guide'] },
+  { label: 'Monitor',      items: ['Dashboard', 'Directory', 'Focus', 'Lighthouse'] },
+  { label: 'Decide & Act', items: ['Reports', 'Proposals', 'Deployments', 'Audit'] },
+  { label: 'Data',         items: ['Semrush', 'GSC', 'GA4', 'Analytics', 'GTM', 'Ads'] },
+  { label: 'System',       items: ['Settings', 'Guide', 'Chat History', 'Info'] },
 ];
 const SOURCE_ITEMS = new Set(['Semrush', 'GSC', 'GA4', 'GTM', 'Ads']);
 const COMING_SOON = new Set(['GTM', 'Ads']); // not yet installed — demoted to bottom of Data
 
 // Real, shareable URLs. activeTab is derived from the path (see App()).
 const TAB_ROUTES = {
+  'Content Studio': '/create',
+  'Studio Projects': '/create/projects',
+  'Studio Guide': '/create/guide',
   'Dashboard': '/',
   'Directory': '/directory',
   'Focus': '/focus',
@@ -31,11 +34,32 @@ const TAB_ROUTES = {
   'Settings': '/settings',
   'Guide': '/guide',
   'Chat History': '/chat-history',
+  'Info': '/info',
 };
 const ROUTE_TABS = Object.fromEntries(Object.entries(TAB_ROUTES).map(([t, r]) => [r, t]));
+// Display labels that differ from the internal tab key (avoids name collisions, e.g. two "Guide"s).
+const NAV_LABELS = { 'Studio Guide': 'Guide' };
 const GROUPS = ['All', 'Emana Hotels', 'Tejas Spas', 'Mondo Surf', 'Independent'];
 
+// Content Studio voice presets (must mirror create.js VOICE_NOTE keys).
+const CS_VOICES = [
+  { value: 'Brand voice', label: 'Brand voice (neutral)' },
+  { value: 'maya', label: 'Maya — local foodie' },
+  { value: 'komang', label: 'Komang — activities & wellness' },
+  { value: 'putu', label: 'Putu — cultural insider' },
+  { value: 'sari', label: 'Sari — nightlife & events' },
+  { value: 'wayan', label: 'Wayan — luxury & resorts' },
+  { value: 'dewi', label: 'Dewi — family & kids travel' },
+  { value: 'ketut', label: 'Ketut — adventure & outdoors' },
+  { value: 'agung', label: 'Agung — business & conferences' },
+  { value: 'nyoman', label: 'Nyoman — budget & backpacker' },
+  { value: 'raka', label: 'Raka — sustainability & eco' },
+];
+
 const NAV_TOOLTIPS = {
+  'Content Studio': 'Guided flow: write the article, add an image, pass the AI copywriting gate, then export PDF/HTML',
+  'Studio Projects': 'Reopen any saved content creation project',
+  'Studio Guide': 'How to use Content Studio — a step-by-step user guide',
   'Dashboard': 'Portfolio-wide overall performance summary',
   'Directory': 'Managed server-mapped properties list',
   'Focus': 'Deep-dive stats, queries, and tracking metrics',
@@ -46,6 +70,7 @@ const NAV_TOOLTIPS = {
   'Audit': 'Compile the portfolio Technical Audit, SEO & Plan report (runs once daily)',
   'Lighthouse': 'Lighthouse Core Web Vitals & page performance diagnostics',
   'Chat History': 'Past AI Assistant questions & answers (auto-clears after 30 days)',
+  'Info': 'About Gaia Nexus — what this platform is and how it works',
   'Settings': 'Platform config, credentials, and schedules',
   'Guide': 'Interactive operator playbook & workflow walkthrough',
   'Semrush': 'Portfolio-wide SEO intelligence — keywords, DA, backlinks',
@@ -516,6 +541,274 @@ function App() {
   };
   useEffect(() => { if (activeTab === 'Chat History') loadChatHistory(); }, [activeTab]);
 
+  // ── Content Studio (CREATE) — guided wizard ──
+  // step: 0 scope · 1 article · 2 image · 3 gate · 4 export
+  const [csProjectId, setCsProjectId] = useState(null);
+  const [csWithImage, setCsWithImage] = useState(null); // null until scope chosen
+  const [csStep, setCsStep] = useState(0);
+  const [csTitle, setCsTitle] = useState('');
+  const [csBrief, setCsBrief] = useState('');
+  const [csVoice, setCsVoice] = useState('Brand voice');
+  const [csBody, setCsBody] = useState('');
+  const [csArticleLocked, setCsArticleLocked] = useState(false);
+  const [csComments, setCsComments] = useState(null);
+  const [csCommenting, setCsCommenting] = useState(false);
+  const [csDrafting, setCsDrafting] = useState(false);
+  const [csFormatting, setCsFormatting] = useState(false);
+  const [csPrompt, setCsPrompt] = useState('');
+  const [csImages, setCsImages] = useState([]);
+  const [csImgLoading, setCsImgLoading] = useState(false);
+  const [csUploading, setCsUploading] = useState(false);
+  const [csSelectedImg, setCsSelectedImg] = useState(null);
+  const [csUsedImg, setCsUsedImg] = useState(null); // {id, url}
+  const [csImageLocked, setCsImageLocked] = useState(false);
+  const [csVet, setCsVet] = useState(null);
+  const [csVetLoading, setCsVetLoading] = useState(false);
+  const [csExporting, setCsExporting] = useState(null);
+  const [csError, setCsError] = useState(null);
+  const [csProjects, setCsProjects] = useState([]);
+  const [csSaving, setCsSaving] = useState(false);
+  const [csSavedNote, setCsSavedNote] = useState(null);
+  const csFileRef = useRef(null);
+
+  const csApproved = csVet?.overall_verdict === 'APPROVED';
+
+  const saveProject = async (patch) => {
+    if (!csProjectId) return;
+    try {
+      await fetch('/api/create/projects/' + csProjectId, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) });
+    } catch { /* non-fatal autosave */ }
+  };
+
+  // Explicit "Save draft" — snapshots the full current state at ANY stage so the creator
+  // can reopen from Studio Projects and continue editing. Does not touch verdict/gate/status.
+  const saveDraft = async () => {
+    if (!csProjectId || csSaving) return;
+    setCsSaving(true); setCsError(null);
+    try {
+      await fetch('/api/create/projects/' + csProjectId, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: csTitle || 'Untitled project', brief: csBrief, voice: csVoice, body: csBody,
+          article_locked: csArticleLocked, image_id: csUsedImg?.id || null, image_url: csUsedImg?.url || null,
+          image_locked: csImageLocked, step: csStep,
+        }),
+      });
+      setCsSavedNote('Saved ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }));
+    } catch (e) { setCsError(e.message); }
+    finally { setCsSaving(false); }
+  };
+
+  // The "Saved" note is stale once anything changes — clear it on edits.
+  useEffect(() => { setCsSavedNote(null); /* eslint-disable-next-line */ }, [csTitle, csBrief, csBody, csVoice, csUsedImg]);
+
+  const loadCsImages = () => {
+    fetch('/api/create/images').then(r => r.json()).then(d => setCsImages(Array.isArray(d) ? d : [])).catch(() => {});
+  };
+  useEffect(() => { if (activeTab === 'Content Studio') loadCsImages(); }, [activeTab]);
+
+  const chooseScope = async (withImage) => {
+    setCsError(null);
+    try {
+      const r = await fetch('/api/create/projects', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: csTitle || 'Untitled project', with_image: withImage }) });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Could not start project');
+      setCsProjectId(d.id); setCsWithImage(withImage); setCsStep(1);
+    } catch (e) { setCsError(e.message); }
+  };
+
+  const newProject = () => {
+    setCsProjectId(null); setCsWithImage(null); setCsStep(0);
+    setCsTitle(''); setCsBrief(''); setCsVoice('Brand voice'); setCsBody('');
+    setCsArticleLocked(false); setCsComments(null);
+    setCsSelectedImg(null); setCsUsedImg(null); setCsImageLocked(false);
+    setCsVet(null); setCsError(null);
+    setActiveTab('Content Studio');
+  };
+
+  // ── Article actions ──
+  const csDraftAI = async () => {
+    if ((!csBrief.trim() && !csTitle.trim()) || csDrafting) return;
+    setCsDrafting(true); setCsError(null);
+    try {
+      const r = await fetch('/api/create/draft', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: csTitle, brief: csBrief, voice: csVoice }) });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Draft failed');
+      setCsBody(d.body || ''); setCsComments(null);
+    } catch (e) { setCsError(e.message); }
+    finally { setCsDrafting(false); }
+  };
+
+  const csFormatMd = async () => {
+    if (!csBody.trim() || csFormatting) return;
+    setCsFormatting(true); setCsError(null);
+    try {
+      const r = await fetch('/api/create/format', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: csBody }) });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Format failed');
+      setCsBody(d.body || csBody);
+    } catch (e) { setCsError(e.message); }
+    finally { setCsFormatting(false); }
+  };
+
+  const csGetComments = async () => {
+    if (!csBody.trim() || csCommenting) return;
+    setCsCommenting(true); setCsError(null);
+    try {
+      const r = await fetch('/api/create/comments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: csTitle, body: csBody, topic: csBrief, voice: csVoice }) });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Comments failed');
+      setCsComments(d);
+    } catch (e) { setCsError(e.message); }
+    finally { setCsCommenting(false); }
+  };
+
+  const acceptArticle = async () => {
+    if (!csTitle.trim() || !csBody.trim()) { setCsError('Add a title and body first.'); return; }
+    setCsArticleLocked(true);
+    const next = csWithImage ? 2 : 3;
+    await saveProject({ title: csTitle, brief: csBrief, voice: csVoice, body: csBody, article_locked: true, step: next, status: 'article-locked' });
+    setCsStep(next);
+  };
+
+  const unlockArticle = async () => {
+    setCsArticleLocked(false); setCsVet(null); setCsStep(1);
+    await saveProject({ article_locked: false, verdict: null, gate: null, status: 'draft', step: 1 });
+  };
+
+  const discardArticle = () => { setCsBody(''); setCsComments(null); };
+
+  // ── Image actions ──
+  const createImage = async () => {
+    const prompt = csPrompt.trim();
+    if (!prompt || csImgLoading) return;
+    setCsImgLoading(true); setCsError(null);
+    try {
+      const r = await fetch('/api/create/image', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt }) });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Image generation failed');
+      setCsImages(prev => [d, ...prev]); setCsSelectedImg(d.id); setCsPrompt('');
+    } catch (e) { setCsError(e.message); }
+    finally { setCsImgLoading(false); }
+  };
+
+  const onUploadImage = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async () => {
+      setCsUploading(true); setCsError(null);
+      try {
+        const r = await fetch('/api/create/image-upload', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dataUrl: reader.result }) });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error || 'Upload failed');
+        setCsImages(prev => [d, ...prev]); setCsSelectedImg(d.id);
+      } catch (err) { setCsError(err.message); }
+      finally { setCsUploading(false); if (csFileRef.current) csFileRef.current.value = ''; }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const useImage = () => {
+    const img = csImages.find(i => i.id === csSelectedImg);
+    if (img) setCsUsedImg({ id: img.id, url: img.url });
+  };
+
+  const deleteSelectedImage = async () => {
+    if (!csSelectedImg) return;
+    const id = csSelectedImg;
+    try {
+      await fetch('/api/create/images/' + id, { method: 'DELETE' });
+      setCsImages(prev => prev.filter(i => i.id !== id));
+      if (csUsedImg?.id === id) setCsUsedImg(null);
+      setCsSelectedImg(null);
+    } catch (e) { setCsError(e.message); }
+  };
+
+  const saveImageLocally = () => {
+    const img = csImages.find(i => i.id === csSelectedImg);
+    if (!img) return;
+    const a = document.createElement('a');
+    a.href = img.url; a.download = (img.id || 'image') + img.url.slice(img.url.lastIndexOf('.'));
+    document.body.appendChild(a); a.click(); a.remove();
+  };
+
+  const acceptImage = async () => {
+    if (!csUsedImg) { setCsError('Use an image first.'); return; }
+    setCsImageLocked(true);
+    await saveProject({ image_id: csUsedImg.id, image_url: csUsedImg.url, image_locked: true, step: 3, status: 'image-locked' });
+    setCsStep(3);
+  };
+
+  const unlockImage = async () => { setCsImageLocked(false); await saveProject({ image_locked: false }); setCsStep(2); };
+  const askNewImage = () => { setCsSelectedImg(null); setCsUsedImg(null); };
+
+  // ── Gate + export ──
+  const runCsVet = async () => {
+    if (!csArticleLocked) { setCsError('Lock the article first.'); return; }
+    if (csVetLoading) return;
+    setCsVetLoading(true); setCsError(null); setCsVet(null);
+    try {
+      const r = await fetch('/api/create/vet', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId: csProjectId, title: csTitle, body: csBody, topic: csBrief, voice: csVoice, imageUrl: csUsedImg?.url || null }) });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Gate failed');
+      setCsVet(d);
+      if (d.overall_verdict === 'APPROVED') setCsStep(4);
+    } catch (e) { setCsError(e.message); }
+    finally { setCsVetLoading(false); }
+  };
+
+  const exportCs = async (format) => {
+    if (!csApproved || !csProjectId || csExporting) return;
+    setCsExporting(format); setCsError(null);
+    try {
+      const r = await fetch('/api/create/export', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId: csProjectId, format }) });
+      if (!r.ok) { const d = await r.json().catch(() => ({})); throw new Error(d.error || 'Export failed'); }
+      const blob = await r.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const safe = (csTitle || 'article').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'article';
+      a.href = url; a.download = safe + '.' + format;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) { setCsError(e.message); }
+    finally { setCsExporting(null); }
+  };
+
+  // ── Projects page ──
+  const loadCsProjects = () => {
+    fetch('/api/create/projects').then(r => r.json()).then(d => setCsProjects(Array.isArray(d) ? d : [])).catch(() => {});
+  };
+  useEffect(() => { if (activeTab === 'Studio Projects') loadCsProjects(); }, [activeTab]);
+
+  const openProject = async (id) => {
+    setCsError(null);
+    try {
+      const r = await fetch('/api/create/projects/' + id);
+      const p = await r.json();
+      if (!r.ok) throw new Error(p.error || 'Could not open project');
+      setCsProjectId(p.id);
+      setCsWithImage(p.with_image);
+      setCsTitle(p.title === 'Untitled project' ? '' : (p.title || ''));
+      setCsBrief(p.brief || ''); setCsVoice(p.voice || 'Brand voice'); setCsBody(p.body || '');
+      setCsArticleLocked(!!p.article_locked);
+      setCsUsedImg(p.image_url ? { id: p.image_id, url: p.image_url } : null);
+      setCsImageLocked(!!p.image_locked);
+      setCsVet(p.gate || null); setCsComments(null);
+      setCsStep(p.step || (p.article_locked ? (p.with_image ? (p.image_locked ? 3 : 2) : 3) : 1));
+      setActiveTab('Content Studio');
+    } catch (e) { setCsError(e.message); }
+  };
+
+  const deleteProject = async (id) => {
+    try { await fetch('/api/create/projects/' + id, { method: 'DELETE' }); setCsProjects(prev => prev.filter(p => p.id !== id)); }
+    catch (e) { setCsError(e.message); }
+  };
+
+  const csSteps = csWithImage === false
+    ? [{ n: 0, label: 'Scope' }, { n: 1, label: 'Write Article' }, { n: 3, label: 'Stage Gate' }, { n: 4, label: 'Export' }]
+    : [{ n: 0, label: 'Scope' }, { n: 1, label: 'Write Article' }, { n: 2, label: 'Generate Image' }, { n: 3, label: 'Stage Gate' }, { n: 4, label: 'Export' }];
+
   const handleSiteFocus = (siteName) => {
     const idx = DIRECTORY_SITES.findIndex(s => s.name.toLowerCase() === siteName.toLowerCase() || s.name.toLowerCase().includes(siteName.toLowerCase()) || siteName.toLowerCase().includes(s.name.toLowerCase()));
     if (idx !== -1) {
@@ -848,7 +1141,7 @@ function App() {
                 data-tooltip={NAV_TOOLTIPS[n]}
               >
                 {SOURCE_ITEMS.has(n) && <span className={'source-dot source-dot-' + n.toLowerCase()} />}
-                {n}
+                {NAV_LABELS[n] || n}
                 {COMING_SOON.has(n) && <span className="nav-soon-badge">soon</span>}
               </div>
             ))}
@@ -873,6 +1166,318 @@ function App() {
             </div>
           </div>
         </header>
+
+        {/* ==================== VIEW 0: CONTENT STUDIO (CREATE) ==================== */}
+        {activeTab === 'Content Studio' && (
+          <>
+            {/* Stepper */}
+            <div className="cs-stepper">
+              {csSteps.map(s => (
+                <button key={s.n}
+                  className={'cs-stepper-pill' + (csStep === s.n ? ' active' : '') + (csStep > s.n ? ' done' : '')}
+                  onClick={() => { if (s.n <= csStep) setCsStep(s.n); }}
+                  disabled={s.n > csStep}>
+                  {csStep > s.n ? '✓ ' : ''}{s.label}
+                </button>
+              ))}
+              <div className="cs-stepper-right">
+                {csSavedNote && <span className="muted small">{csSavedNote}</span>}
+                {csStep > 0 && csProjectId && <button className="btn-ghost" onClick={saveDraft} disabled={csSaving}>{csSaving ? 'Saving…' : '💾 Save draft'}</button>}
+                <button className="btn-ghost" onClick={newProject}>+ New</button>
+              </div>
+            </div>
+            {csError && <div className="cs-banner cs-banner-err">{csError}</div>}
+
+            {/* STEP 0 — Scope */}
+            {csStep === 0 && (
+              <section className="panel cs-panel">
+                <div className="panel-head"><h2>Start a new piece</h2></div>
+                <p className="muted small">Will this article include an image?</p>
+                <div className="cs-scope-cards">
+                  <button className="cs-scope-card" onClick={() => chooseScope(true)}>
+                    <div className="cs-scope-emoji">🖼️</div>
+                    <strong>Article with image</strong>
+                    <span className="muted small">Write the article, generate or upload an image, gate, then export.</span>
+                  </button>
+                  <button className="cs-scope-card" onClick={() => chooseScope(false)}>
+                    <div className="cs-scope-emoji">📝</div>
+                    <strong>Text only</strong>
+                    <span className="muted small">Write the article, gate, then export — no image.</span>
+                  </button>
+                </div>
+              </section>
+            )}
+
+            {/* STEP 1 — Write Article (full width) */}
+            {csStep === 1 && (
+              <section className="panel cs-panel">
+                <div className="panel-head"><h2>1 · Write Article</h2>{csArticleLocked && <span className="cs-lock">🔒 Locked</span>}</div>
+                {!csArticleLocked ? (
+                  <>
+                    <input className="cs-input cs-title" placeholder="Article title" value={csTitle} onChange={e => setCsTitle(e.target.value)} />
+                    <textarea className="cs-input cs-brief" rows={2}
+                      placeholder="In simple words, what should this article be about? The AI uses this to draft a first version and to judge topic fit."
+                      value={csBrief} onChange={e => setCsBrief(e.target.value)} />
+                    <div className="cs-toolbar">
+                      <select className="cs-input cs-voice" value={csVoice} onChange={e => setCsVoice(e.target.value)}>
+                        {CS_VOICES.map(v => <option key={v.value} value={v.value}>{v.label}</option>)}
+                      </select>
+                      <div className="cs-toolbar-btns">
+                        <button className="btn-ghost" onClick={csDraftAI} disabled={csDrafting || (!csBrief.trim() && !csTitle.trim())}>{csDrafting ? 'Writing…' : '✨ Write with AI'}</button>
+                        <button className="btn-ghost" onClick={csFormatMd} disabled={csFormatting || !csBody.trim()}>{csFormatting ? 'Formatting…' : '⇲ Format to Markdown'}</button>
+                      </div>
+                    </div>
+                    <textarea className="cs-textarea cs-textarea-tall" placeholder="Paste or type your article here — plain text is fine, then hit “Format to Markdown”. Or click “Write with AI”. Edit freely." value={csBody} onChange={e => setCsBody(e.target.value)} rows={20} />
+                    <div className="muted small">{csBody.trim() ? csBody.trim().split(/\s+/).length : 0} words</div>
+                    <div className="cs-comments-row">
+                      <button className="btn-ghost" onClick={csGetComments} disabled={csCommenting || !csBody.trim()}>{csCommenting ? 'Reviewing…' : '💬 Get AI Comments'}</button>
+                    </div>
+                    {csComments && (
+                      <div className="cs-comments">
+                        <p className="small">{csComments.summary}</p>
+                        {csComments.strengths?.length > 0 && <><h4 className="cs-sub">Strengths</h4><ul className="cs-list">{csComments.strengths.map((s, i) => <li key={i}>✓ {s}</li>)}</ul></>}
+                        {csComments.suggestions?.length > 0 && <><h4 className="cs-sub">Suggestions</h4><ul className="cs-list">{csComments.suggestions.map((s, i) => <li key={i}>→ {s}</li>)}</ul></>}
+                      </div>
+                    )}
+                    <div className="cs-btn-row cs-step-actions">
+                      <button className="btn-primary" onClick={acceptArticle} disabled={!csTitle.trim() || !csBody.trim()}>Accept &amp; Lock Article</button>
+                      <button className="btn-ghost" onClick={csDraftAI} disabled={csDrafting}>Ask AI for a new draft</button>
+                      <button className="btn-danger" onClick={discardArticle}>Discard</button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="cs-locked-preview">
+                      <strong>{csTitle}</strong>
+                      <p className="muted small" style={{ whiteSpace: 'pre-wrap', marginTop: '6px' }}>{csBody.slice(0, 500)}{csBody.length > 500 ? '…' : ''}</p>
+                    </div>
+                    <div className="cs-btn-row cs-step-actions">
+                      <button className="btn-primary" onClick={() => setCsStep(csWithImage ? 2 : 3)}>Continue →</button>
+                      <button className="btn-ghost" onClick={unlockArticle}>Edit (unlock)</button>
+                    </div>
+                  </>
+                )}
+              </section>
+            )}
+
+            {/* STEP 2 — Generate Image (full width, below article) */}
+            {csStep === 2 && csWithImage && (
+              <section className="panel cs-panel">
+                <div className="panel-head"><h2>2 · Generate Image</h2>{csImageLocked && <span className="cs-lock">🔒 Locked</span>}</div>
+                {!csImageLocked ? (
+                  <>
+                    <div className="cs-prompt-row">
+                      <input className="cs-input" placeholder="Describe the image (e.g. 'sunrise over Ubud rice terraces, editorial')" value={csPrompt}
+                        onChange={e => setCsPrompt(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') createImage(); }} maxLength={1000} />
+                      <button className="btn-primary" onClick={createImage} disabled={csImgLoading || !csPrompt.trim()}>{csImgLoading ? 'Creating…' : 'Generate'}</button>
+                      <button className="btn-ghost" onClick={() => csFileRef.current?.click()} disabled={csUploading}>{csUploading ? 'Uploading…' : '⬆ Upload'}</button>
+                      <input ref={csFileRef} type="file" accept="image/png,image/jpeg,image/webp" style={{ display: 'none' }} onChange={onUploadImage} />
+                    </div>
+                    {csImages.length === 0 && <div className="cs-empty">No images yet — generate one above or upload your own.</div>}
+                    <div className="cs-thumbs">
+                      {csImages.map(img => (
+                        <div key={img.id} className={'cs-thumb' + (csSelectedImg === img.id ? ' selected' : '') + (csUsedImg?.id === img.id ? ' used' : '')}
+                          onClick={() => setCsSelectedImg(img.id)} title={img.prompt}>
+                          <img src={img.url} alt={img.prompt} />
+                          <span className={'cs-suit cs-suit-' + (img.suitability || 'review')}>{img.suitability || 'review'}</span>
+                          {csUsedImg?.id === img.id && <span className="cs-used-badge">In use</span>}
+                        </div>
+                      ))}
+                    </div>
+                    {csSelectedImg && (() => {
+                      const sel = csImages.find(i => i.id === csSelectedImg);
+                      return (
+                        <div className="cs-sel">
+                          {sel?.suggestion && <p className="muted small" style={{ marginBottom: '10px' }}><strong>AI comment ({sel.suitability}):</strong> {sel.suggestion}</p>}
+                          <div className="cs-btn-row">
+                            <button className="btn-primary" onClick={useImage}>Use Image</button>
+                            <button className="btn-ghost" onClick={saveImageLocally}>Save locally</button>
+                            <button className="btn-danger" onClick={deleteSelectedImage}>Delete Selected Image</button>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                    <div className="cs-btn-row cs-step-actions">
+                      <button className="btn-primary" onClick={acceptImage} disabled={!csUsedImg}>Accept &amp; Lock Image</button>
+                      <button className="btn-ghost" onClick={askNewImage}>Ask new</button>
+                      <button className="btn-ghost" onClick={() => setCsStep(1)}>← Back to article</button>
+                    </div>
+                    {csUsedImg && <p className="muted small" style={{ marginTop: '4px' }}>Image selected for the article ✓ — lock it to continue.</p>}
+                  </>
+                ) : (
+                  <>
+                    <div className="cs-locked-preview"><img src={csUsedImg?.url} alt="" style={{ maxWidth: '340px', borderRadius: '10px' }} /></div>
+                    <div className="cs-btn-row cs-step-actions">
+                      <button className="btn-primary" onClick={() => setCsStep(3)}>Continue →</button>
+                      <button className="btn-ghost" onClick={unlockImage}>Change (unlock)</button>
+                    </div>
+                  </>
+                )}
+              </section>
+            )}
+
+            {/* STEP 3 — Stage Gate */}
+            {csStep === 3 && (
+              <section className="panel cs-panel">
+                <div className="panel-head">
+                  <h2>3 · Stage Gate</h2>
+                  <button className="btn-primary" onClick={runCsVet} disabled={csVetLoading || !csArticleLocked}>{csVetLoading ? 'Vetting…' : 'Run Stage Gate'}</button>
+                </div>
+                {!csArticleLocked && <div className="cs-empty">Lock the article first (Step 1).</div>}
+                {csArticleLocked && !csVet && !csVetLoading && <div className="cs-empty">Run the gate to check topic suitability, SEO, grammar/spelling and clarity.</div>}
+                {csVet && (
+                  <div className="cs-vet">
+                    <div className={'cs-verdict cs-verdict-' + csVet.overall_verdict.replace(/\s+/g, '-').toLowerCase()}>{csVet.overall_verdict}</div>
+                    <p className="muted small" style={{ margin: '4px 0 14px' }}>{csVet.rationale}</p>
+                    <div className="cs-scores">
+                      {csVet.scores && Object.entries({ 'Topic': csVet.scores.topic_suitability, 'SEO': csVet.scores.seo, 'Grammar': csVet.scores.grammar_spelling, 'Clarity': csVet.scores.clarity_meaning }).map(([k, v]) => (
+                        <div key={k} className="cs-score">
+                          <div className="cs-score-head"><span>{k}</span><strong>{v ?? '–'}/10</strong></div>
+                          <div className="cs-bar"><div className="cs-bar-fill" style={{ width: ((v || 0) * 10) + '%', background: v >= 7 ? 'var(--success)' : v >= 4 ? 'var(--warning)' : 'var(--danger)' }} /></div>
+                        </div>
+                      ))}
+                    </div>
+                    {csVet.seo_checklist?.length > 0 && (
+                      <div style={{ marginTop: '16px' }}>
+                        <h4 className="cs-sub">On-page SEO checklist ({csVet.seo_checklist.filter(c => c.status === 'pass').length}/{csVet.seo_checklist.length} passed)</h4>
+                        <ul className="cs-checklist">
+                          {csVet.seo_checklist.map((c, i) => (
+                            <li key={i} className={'cs-check cs-check-' + c.status}>
+                              <span className="cs-check-icon">{c.status === 'pass' ? '✓' : c.status === 'warn' ? '!' : '✕'}</span>
+                              <span><strong>{c.item}</strong>{c.note ? ' — ' + c.note : ''}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {csVet.banned_phrases_found?.length > 0 && <p className="cs-banner cs-banner-warn" style={{ marginTop: '14px' }}>Banned phrases: {csVet.banned_phrases_found.join(', ')}</p>}
+                    {csVet.british_english_issues?.length > 0 && <p className="cs-banner cs-banner-warn" style={{ marginTop: '10px' }}>US spelling/vocabulary (use en-GB): {csVet.british_english_issues.join(', ')}</p>}
+                    {csVet.issues?.length > 0 && (
+                      <div style={{ marginTop: '14px' }}>
+                        <h4 className="cs-sub">Issues</h4>
+                        <ul className="cs-list">{csVet.issues.map((it, i) => <li key={i}><span className={'cs-sev cs-sev-' + (it.severity || 'Low').toLowerCase()}>{it.severity}</span> <strong>{it.area}:</strong> {it.detail}</li>)}</ul>
+                      </div>
+                    )}
+                    {csVet.fixes?.length > 0 && (
+                      <div style={{ marginTop: '12px' }}>
+                        <h4 className="cs-sub">Suggested fixes</h4>
+                        <ul className="cs-list">{csVet.fixes.map((f, i) => <li key={i}>{f}</li>)}</ul>
+                      </div>
+                    )}
+                    {(csVet.meta_title || csVet.primary_keyword) && (
+                      <div className="cs-meta-box">
+                        {csVet.meta_title && <div><span className="muted small">Meta title:</span> {csVet.meta_title}</div>}
+                        {csVet.meta_description && <div><span className="muted small">Meta description:</span> {csVet.meta_description}</div>}
+                        {csVet.primary_keyword && <div><span className="muted small">Primary keyword:</span> {csVet.primary_keyword}</div>}
+                        {csVet.long_tail_keywords?.length > 0 && <div><span className="muted small">Long-tail:</span> {csVet.long_tail_keywords.join(', ')}</div>}
+                      </div>
+                    )}
+                    <div className="cs-btn-row cs-step-actions">
+                      {csApproved ? <button className="btn-primary" onClick={() => setCsStep(4)}>Continue to Export →</button>
+                        : <button className="btn-ghost" onClick={unlockArticle}>Revise article</button>}
+                    </div>
+                  </div>
+                )}
+              </section>
+            )}
+
+            {/* STEP 4 — Export */}
+            {csStep === 4 && (
+              <section className="panel cs-panel">
+                <div className="panel-head"><h2>4 · Export</h2>
+                  <span className={'cs-lock ' + (csApproved ? 'cs-lock-open' : '')}>{csApproved ? '🔓 Unlocked' : '🔒 Locked until APPROVED'}</span>
+                </div>
+                {!csApproved ? <div className="cs-empty">Pass the Stage Gate (verdict APPROVED) to enable export.</div> : (
+                  <>
+                    {csWithImage && !csImageLocked && <p className="cs-banner cs-banner-warn">Lock the image (Step 2) to enable export.</p>}
+                    <div className="cs-btn-row">
+                      <button className="btn-primary" onClick={() => exportCs('pdf')} disabled={csExporting || (csWithImage && !csImageLocked)}>{csExporting === 'pdf' ? 'Exporting…' : 'Save as PDF'}</button>
+                      <button className="btn-primary" onClick={() => exportCs('html')} disabled={csExporting || (csWithImage && !csImageLocked)}>{csExporting === 'html' ? 'Exporting…' : 'Save as HTML'}</button>
+                    </div>
+                    <p className="muted small" style={{ marginTop: '10px' }}>Saved to your computer. This project stays in <strong>Studio Projects</strong>.</p>
+                  </>
+                )}
+              </section>
+            )}
+          </>
+        )}
+
+        {/* ==================== VIEW: STUDIO PROJECTS ==================== */}
+        {activeTab === 'Studio Projects' && (
+          <>
+            {csError && <div className="cs-banner cs-banner-err">{csError}</div>}
+            <div className="cs-btn-row" style={{ marginBottom: '16px' }}>
+              <button className="btn-primary" onClick={newProject}>+ New project</button>
+            </div>
+            {csProjects.length === 0 && <div className="cs-empty">No projects yet — start one in Content Studio.</div>}
+            <div className="cs-proj-grid">
+              {csProjects.map(p => (
+                <div key={p.id} className="cs-proj-card">
+                  <div className="cs-proj-head">
+                    <strong>{p.title}</strong>
+                    {p.verdict && <span className={'cs-verdict cs-verdict-' + p.verdict.replace(/\s+/g, '-').toLowerCase()} style={{ fontSize: '10px', padding: '2px 8px' }}>{p.verdict}</span>}
+                  </div>
+                  <div className="muted small" style={{ marginTop: '6px' }}>
+                    {p.with_image ? '🖼️ With image' : '📝 Text only'} · {p.status}
+                  </div>
+                  <div className="muted small">Updated {new Date(p.updated_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
+                  <div className="cs-btn-row" style={{ marginTop: '12px' }}>
+                    <button className="btn-primary" onClick={() => openProject(p.id)}>Open</button>
+                    <button className="btn-danger" onClick={() => deleteProject(p.id)}>Delete</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* ==================== VIEW: STUDIO GUIDE ==================== */}
+        {activeTab === 'Studio Guide' && (
+          <>
+            <p className="muted small" style={{ marginTop: '-4px', marginBottom: '16px', maxWidth: '720px' }}>
+              Content Studio takes a piece from blank page to publish-ready file through four guided stages. You can save a draft at any point and pick it back up from <strong>Studio Projects</strong>.
+            </p>
+
+            <section className="panel cs-panel">
+              <div className="panel-head"><h2>The four stages</h2></div>
+              <ol className="cs-list cs-guide-steps">
+                <li><span className="cs-guide-num">0</span><div><strong>Scope</strong> — choose <em>Article with image</em> or <em>Text only</em>. This decides whether the image stage appears.</div></li>
+                <li><span className="cs-guide-num">1</span><div><strong>Write Article</strong> — give a title and a plain-language brief, then <em>paste/type</em>, <em>✨ Write with AI</em>, or both. Use <em>⇲ Format to Markdown</em> to tidy pasted text and <em>💬 Get AI Comments</em> for advisory feedback. When happy, <strong>Accept &amp; Lock</strong>.</div></li>
+                <li><span className="cs-guide-num">2</span><div><strong>Generate Image</strong> (image projects only) — <em>Generate</em> from a prompt or <em>⬆ Upload</em> your own. Each image gets an AI suitability check. <em>Use</em> the one you want, <em>Save locally</em> or <em>Delete</em>, then <strong>Accept &amp; Lock</strong>.</div></li>
+                <li><span className="cs-guide-num">3</span><div><strong>Stage Gate</strong> — the AI copywriting gate scores the writing and returns <strong>APPROVED</strong>, <strong>NEEDS WORK</strong>, or <strong>REJECT</strong>. Revise and re-run until it passes.</div></li>
+                <li><span className="cs-guide-num">4</span><div><strong>Export</strong> — download as <strong>PDF</strong> or <strong>HTML</strong>. Unlocks only once the gate is APPROVED (and the image is locked, for image projects).</div></li>
+              </ol>
+            </section>
+
+            <section className="panel cs-panel" style={{ marginTop: '20px' }}>
+              <div className="panel-head"><h2>What the Stage Gate checks</h2></div>
+              <p className="muted small">It applies the Gaiada Copywriter standards — it vets the writing only (images are checked in Stage 2).</p>
+              <ul className="cs-list">
+                <li><strong>Four scores (0–10):</strong> topic suitability, SEO, grammar &amp; spelling, clarity &amp; meaning. All must be ≥ 7 to pass.</li>
+                <li><strong>18-point on-page SEO checklist:</strong> title tag, URL slug, meta description, keyword placement, heading hierarchy, strong CTA, intro/conclusion, featured-snippet block, E-E-A-T, internal &amp; external links, image alt text, readability, structured data and more.</li>
+                <li><strong>British English (en-GB)</strong> — flags US spellings and vocabulary.</li>
+                <li><strong>Banned phrases</strong> — marketing clichés (e.g. “delve”, “hidden gem”, “game-changer”) plus per-voice word bans.</li>
+              </ul>
+            </section>
+
+            <section className="panel cs-panel" style={{ marginTop: '20px' }}>
+              <div className="panel-head"><h2>Brand voices</h2></div>
+              <p className="muted small">Pick a voice in Stage 1 — it shapes the AI draft and how the gate judges tone.</p>
+              <ul className="cs-list">
+                {CS_VOICES.map(v => <li key={v.value}>{v.label}</li>)}
+              </ul>
+            </section>
+
+            <section className="panel cs-panel" style={{ marginTop: '20px' }}>
+              <div className="panel-head"><h2>Saving &amp; reopening</h2></div>
+              <ul className="cs-list">
+                <li><strong>💾 Save draft</strong> (top bar) snapshots everything at any stage.</li>
+                <li><strong>Studio Projects</strong> lists every project with its status and verdict — click <em>Open</em> to resume at the stage you left.</li>
+                <li>Editing a locked article or image re-opens it and clears the downstream gate result, so the verdict always matches the final text.</li>
+              </ul>
+            </section>
+          </>
+        )}
 
         {/* ==================== VIEW 1: DASHBOARD ==================== */}
         {activeTab === 'Dashboard' && (
@@ -2579,6 +3184,124 @@ function App() {
                 </table>
               </div>
             </div>
+          </>
+        )}
+
+        {/* ==================== VIEW: INFO / ABOUT ==================== */}
+        {activeTab === 'Info' && (
+          <>
+            {/* Hero — AI front and centre */}
+            <section className="panel">
+              <div className="panel-head">
+                <h2>Meet Hermes — the AI that runs the portfolio</h2>
+                <span className="badge-source" style={{ background: '#059669', color: '#fff', border: 'none' }}>About this platform</span>
+              </div>
+              <div className="pad" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <p style={{ lineHeight: '1.6', fontSize: '14px', margin: 0 }}>
+                  <strong style={{ color: 'var(--accent)' }}>Gaia Nexus</strong> is an
+                  <strong> AI-operated control plane</strong> for Gaia Digital Agency's ~50 managed domains. The operator
+                  is <strong>Hermes</strong>, a Claude Opus agent running on a dedicated command-centre VM
+                  (<code style={{ background: 'var(--darker)', padding: '1px 6px', borderRadius: '4px' }}>gda-ai01</code>).
+                </p>
+                <p className="muted" style={{ lineHeight: '1.6', fontSize: '13.5px', margin: 0 }}>
+                  Hermes audits every site, turns the data into ranked plain-English proposals, and deploys the approved
+                  ones over SSH / WP-CLI — autonomously. This dashboard is the cockpit a human uses to watch, steer, and
+                  approve what the AI does across the whole fleet.
+                </p>
+              </div>
+            </section>
+
+            {/* Gap vs solution */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
+              <div className="panel">
+                <div className="pad">
+                  <h3 style={{ margin: '0 0 8px', fontSize: '14px', color: 'var(--warning)' }}>⚠ The gap</h3>
+                  <p className="muted small" style={{ lineHeight: '1.6', margin: 0 }}>
+                    A 50-site portfolio spreads SEO data across Semrush, Search Console, GA4, GTM and Google Ads — per
+                    site, per login. No human team can diagnose, decide, and act on all of it fast enough. Wins get
+                    missed; regressions go unnoticed.
+                  </p>
+                </div>
+              </div>
+              <div className="panel">
+                <div className="pad">
+                  <h3 style={{ margin: '0 0 8px', fontSize: '14px', color: 'var(--success)' }}>✓ The AI answer</h3>
+                  <p className="muted small" style={{ lineHeight: '1.6', margin: 0 }}>
+                    Hermes ingests every source, reasons over the whole portfolio, and proposes ranked fixes — then
+                    deploys the ones you approve straight to the servers. The agent does the monitoring, analysis, and
+                    execution; you stay in command.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* AI scope */}
+            <section className="kpis" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}>
+              <div className="kpi"><div className="kpi-label muted">AI Operator</div><div className="kpi-value" style={{ fontSize: '16px' }}>Hermes</div></div>
+              <div className="kpi"><div className="kpi-label muted">Model</div><div className="kpi-value" style={{ fontSize: '16px' }}>Claude Opus</div></div>
+              <div className="kpi"><div className="kpi-label muted">Managed Domains</div><div className="kpi-value">~50</div></div>
+              <div className="kpi"><div className="kpi-label muted">Sites Audited</div><div className="kpi-value success">63</div></div>
+              <div className="kpi"><div className="kpi-label muted">SSH Fleet</div><div className="kpi-value">4</div></div>
+            </section>
+
+            {/* How Hermes works — the loop */}
+            <section className="panel">
+              <div className="panel-head"><h2>How Hermes works — the operating loop</h2></div>
+              <div className="pad" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px' }}>
+                {[
+                  { n: '1', t: 'Monitor', d: 'The agent reads portfolio-wide health, per-site deep dives, and Core Web Vitals.' },
+                  { n: '2', t: 'Decide', d: 'It drafts AI period briefings and ranked, staged optimisation proposals for you to approve or refine by chat.' },
+                  { n: '3', t: 'Act', d: 'On approval it deploys via Nginx / WP-CLI and tracks execution in real time.' },
+                  { n: '4', t: 'Data', d: 'Semrush, GSC, GA4, GTM & Ads — the intelligence Hermes reasons over.' },
+                  { n: '5', t: 'Assist', d: 'An in-app AI assistant answers questions about the portfolio on demand.' },
+                ].map((s) => (
+                  <div key={s.t} style={{ background: 'var(--darker)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                      <span style={{ background: 'var(--accent)', color: '#fff', width: '24px', height: '24px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '12px' }}>{s.n}</span>
+                      <h3 style={{ fontSize: '13.5px', margin: 0, fontWeight: 600 }}>{s.t}</h3>
+                    </div>
+                    <p className="muted small" style={{ lineHeight: '1.5', margin: 0 }}>{s.d}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Capabilities */}
+            <section className="panel">
+              <div className="panel-head"><h2>What the AI delivers</h2></div>
+              <div className="table-wrapper">
+                <table className="compact-table">
+                  <thead><tr><th>Capability</th><th>What it delivers</th><th>Powered by</th></tr></thead>
+                  <tbody>
+                    {[
+                      ['Autonomous audits', 'Hermes diagnoses every site — technical, SEO, performance — without a human', 'Hermes (Claude Opus)'],
+                      ['Ranked proposals', 'Plain-English, prioritised fixes you approve or refine by chat', 'Hermes reasoning'],
+                      ['One-click deploys', 'Approved changes pushed to servers and tracked live', 'SSH / WP-CLI'],
+                      ['In-app AI assistant', 'Ask the platform anything about the portfolio', 'Gemini-backed chat'],
+                      ['Market & search intel', 'Keywords, backlinks, clicks, CTR, quick-wins, indexing', 'Semrush + GSC'],
+                      ['Behaviour & conversion', 'Sessions, funnels, tag health, paid-search audits', 'GA4 · GTM · Ads'],
+                      ['Answer-engine optimisation', 'Schema + direct answers; tracks ChatGPT / Perplexity referrals', 'AEO playbook'],
+                    ].map((r) => (
+                      <tr key={r[0]}><td style={{ color: 'var(--accent)' }}>{r[0]}</td><td>{r[1]}</td><td className="muted">{r[2]}</td></tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            {/* Stack + CTA */}
+            <section className="panel">
+              <div className="pad" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+                <div>
+                  <h3 style={{ margin: '0 0 6px', fontSize: '14px' }}>The AI stack</h3>
+                  <p className="muted small" style={{ margin: 0 }}>Hermes (Claude Opus) on gda-ai01 · Gemini-backed in-app assistant · PostgreSQL 18 · React 19 · Vite 6 · Node/Express · Nginx.</p>
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button className="btn-primary" onClick={() => setActiveTab('Dashboard')} style={{ padding: '8px 16px' }}>Open Dashboard</button>
+                  <button className="btn-secondary" onClick={() => setActiveTab('Guide')} style={{ padding: '8px 16px' }}>Operator Guide</button>
+                </div>
+              </div>
+            </section>
           </>
         )}
 

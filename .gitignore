@@ -22,3 +22,6 @@ docs/key.txt
 docs/keys/
 *.bak
 *.bak.*
+
+# Content Studio runtime-generated images
+backend/media/
