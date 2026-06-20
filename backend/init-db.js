@@ -70,6 +70,8 @@ export async function initDb(pool) {
       updated_at     timestamptz NOT NULL DEFAULT now()
     );
     CREATE INDEX IF NOT EXISTS content_projects_updated_idx ON content_projects (updated_at DESC);
+    ALTER TABLE content_projects ADD COLUMN IF NOT EXISTS fix_count  integer NOT NULL DEFAULT 0;
+    ALTER TABLE content_projects ADD COLUMN IF NOT EXISTS gate_count integer NOT NULL DEFAULT 0;
   `);
 }
 

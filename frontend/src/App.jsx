@@ -567,6 +567,8 @@ function App() {
   const [csFindingsOpen, setCsFindingsOpen] = useState(true);
   const [csFixing, setCsFixing] = useState(false);
   const [csRevised, setCsRevised] = useState(false); // AI just revised the article — prompt review
+  const [csFixCount, setCsFixCount] = useState(0); // AI fixes applied to this article
+  const [csGateCount, setCsGateCount] = useState(0); // times the stage gate has been run
   const [csVetLoading, setCsVetLoading] = useState(false);
   const [csExporting, setCsExporting] = useState(null);
   const [csError, setCsError] = useState(null);
@@ -628,7 +630,7 @@ function App() {
     setCsTitle(''); setCsBrief(''); setCsVoice('Brand voice'); setCsBody('');
     setCsArticleLocked(false); setCsComments(null);
     setCsSelectedImg(null); setCsUsedImg(null); setCsImageLocked(false);
-    setCsVet(null); setCsVetRef(null); setCsRevised(false); setCsError(null);
+    setCsVet(null); setCsVetRef(null); setCsRevised(false); setCsFixCount(0); setCsGateCount(0); setCsError(null);
     setActiveTab('Content Studio');
   };
 
@@ -750,32 +752,42 @@ function App() {
   const askNewImage = () => { setCsSelectedImg(null); setCsUsedImg(null); };
 
   // ── Gate + export ──
-  const runCsVet = async () => {
+  const runCsVet = async (bodyOverride) => {
     if (!csArticleLocked) { setCsError('Lock the article first.'); return; }
     if (csVetLoading) return;
+    const vbody = typeof bodyOverride === 'string' ? bodyOverride : csBody;
     setCsVetLoading(true); setCsError(null); setCsVet(null);
     try {
-      const r = await fetch('/api/create/vet', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId: csProjectId, title: csTitle, body: csBody, topic: csBrief, voice: csVoice, imageUrl: csUsedImg?.url || null }) });
+      const r = await fetch('/api/create/vet', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId: csProjectId, title: csTitle, body: vbody, topic: csBrief, voice: csVoice, imageUrl: csUsedImg?.url || null }) });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || 'Gate failed');
       setCsVet(d); setCsVetRef(d); setCsRevised(false);
+      const g = (csGateCount || 0) + 1; setCsGateCount(g); saveProject({ gate_count: g });
       if (d.overall_verdict === 'APPROVED') setCsStep(4);
     } catch (e) { setCsError(e.message); }
     finally { setCsVetLoading(false); }
   };
 
   // AI fix: send article + findings to the model, load the revision back into the editor for review.
-  const csFixWithAI = async (focus = 'all') => {
-    if (csFixing) return;
+  const csFixWithAI = async (focus = 'all', { rerun = false } = {}) => {
+    if (csFixing || csVetLoading) return;
     const findings = csVet || csVetRef;
     setCsFixing(focus); setCsError(null);
     try {
       const r = await fetch('/api/create/revise', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: csTitle, body: csBody, topic: csBrief, voice: csVoice, findings, focus }) });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || 'Fix failed');
-      setCsBody(d.body || csBody);
-      setCsArticleLocked(false); setCsVet(null); setCsRevised(true); setCsFindingsOpen(true); setCsStep(1);
-      await saveProject({ body: d.body || csBody, article_locked: false, verdict: null, gate: null, status: 'draft', step: 1 });
+      const newBody = d.body || csBody;
+      setCsBody(newBody);
+      const fc = (csFixCount || 0) + 1; setCsFixCount(fc);
+      if (rerun) {
+        // Applied in place — article stays locked; re-run the gate so the new scores show immediately.
+        await saveProject({ body: newBody, fix_count: fc });
+        await runCsVet(newBody);
+      } else {
+        setCsArticleLocked(false); setCsVet(null); setCsRevised(true); setCsFindingsOpen(true); setCsStep(1);
+        await saveProject({ body: newBody, fix_count: fc, article_locked: false, verdict: null, gate: null, status: 'draft', step: 1 });
+      }
     } catch (e) { setCsError(e.message); }
     finally { setCsFixing(null); }
   };
@@ -825,7 +837,7 @@ function App() {
       setCsArticleLocked(!!p.article_locked);
       setCsUsedImg(p.image_url ? { id: p.image_id, url: p.image_url } : null);
       setCsImageLocked(!!p.image_locked);
-      setCsVet(p.gate || null); setCsVetRef(p.gate || null); setCsRevised(false); setCsComments(null);
+      setCsVet(p.gate || null); setCsVetRef(p.gate || null); setCsRevised(false); setCsFixCount(p.fix_count || 0); setCsGateCount(p.gate_count || 0); setCsComments(null);
       setCsStep(p.step || (p.article_locked ? (p.with_image ? (p.image_locked ? 3 : 2) : 3) : 1));
       setActiveTab('Content Studio');
     } catch (e) { setCsError(e.message); }
@@ -1381,7 +1393,10 @@ function App() {
               <section className="panel cs-panel">
                 <div className="panel-head">
                   <h2>3 · Stage Gate</h2>
-                  <button className="btn-primary" onClick={runCsVet} disabled={csVetLoading || !csArticleLocked}>{csVetLoading ? 'Vetting…' : 'Run Stage Gate'}</button>
+                  <div className="cs-head-right">
+                    {(csGateCount > 0 || csFixCount > 0) && <span className="cs-iter" title="Gate runs · AI fixes applied to this article">↻ {csGateCount} run{csGateCount === 1 ? '' : 's'} · ✨ {csFixCount} fix{csFixCount === 1 ? '' : 'es'}</span>}
+                    <button className="btn-primary" onClick={runCsVet} disabled={csVetLoading || !csArticleLocked}>{csVetLoading ? 'Vetting…' : 'Run Stage Gate'}</button>
+                  </div>
                 </div>
                 {!csArticleLocked && <div className="cs-empty">Lock the article first (Step 1).</div>}
                 {csArticleLocked && csVetLoading && (
@@ -1397,7 +1412,7 @@ function App() {
                         <div key={k} className="cs-score">
                           <div className="cs-score-head"><span>{k}</span><strong>{v ?? '–'}/10</strong></div>
                           <div className="cs-bar"><div className="cs-bar-fill" style={{ width: ((v || 0) * 10) + '%', background: v >= 7 ? 'var(--success)' : v >= 4 ? 'var(--warning)' : 'var(--danger)' }} /></div>
-                          {v < 7 && <button className="cs-fix-mini" onClick={() => csFixWithAI(f)} disabled={!!csFixing}>{csFixing === f ? 'Fixing…' : '✨ Fix ' + k}</button>}
+                          {v < 7 && <button className="cs-fix-mini" onClick={() => csFixWithAI(f, { rerun: true })} disabled={!!csFixing || csVetLoading}>{csFixing === f ? 'Fixing…' : '✨ Fix ' + k}</button>}
                         </div>
                       ))}
                     </div>
@@ -1450,7 +1465,7 @@ function App() {
                     )}
                     <div className="cs-btn-row cs-step-actions">
                       {csApproved ? <button className="btn-primary" onClick={() => setCsStep(4)}>Continue to Export →</button>
-                        : <><button className="btn-primary" onClick={() => csFixWithAI('all')} disabled={!!csFixing}>{csFixing === 'all' ? 'Fixing…' : '✨ Fix everything with AI'}</button><button className="btn-ghost" onClick={unlockArticle} disabled={!!csFixing}>Revise myself</button></>}
+                        : <><button className="btn-primary" onClick={() => csFixWithAI('all', { rerun: true })} disabled={!!csFixing || csVetLoading}>{csFixing === 'all' ? 'Fixing…' : '✨ Fix everything with AI'}</button><button className="btn-ghost" onClick={unlockArticle} disabled={!!csFixing || csVetLoading}>Revise myself</button></>}
                     </div>
                   </div>
                 )}

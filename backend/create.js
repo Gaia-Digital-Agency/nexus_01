@@ -289,7 +289,7 @@ Return ONLY the Markdown (no code fences, no commentary).`;
 const REVISE_SYSTEM = `You are a senior travel/hospitality copywriter revising an existing article to satisfy a copywriting stage-gate.
 Apply the task and findings below COMPLETELY and THOROUGHLY: resolve every flagged issue, act on every suggested fix, remove all banned phrases, and use British English (en-GB) throughout. The revision must be good enough to pass a strict re-check — do not leave problems half-fixed.
 Preserve the article's intent, facts, structure and voice — improve it, do not rewrite from scratch or change the topic.
-Keep clean GitHub-flavoured Markdown (## subheadings, short paragraphs, "- " bullets). Never use these banned phrases: ${BANNED_PHRASES.join(', ')}.
+Keep clean GitHub-flavoured Markdown: the title is supplied separately (it is the H1), so in the body use "## " as the top-level heading and "### " only beneath a "## " — do NOT add an H1 or repeat the title. Short paragraphs, "- " bullets where helpful. Never use these banned phrases: ${BANNED_PHRASES.join(', ')}.
 Return ONLY the revised article body in Markdown (no title line, no code fences, no commentary).`;
 
 // ── Advisory article comments (Step 1, not a pass/fail gate) ──
@@ -308,7 +308,7 @@ const COMMENTS_SCHEMA = {
 };
 
 // ── Project field whitelist for safe partial updates ──
-const PROJECT_FIELDS = ['title', 'with_image', 'brief', 'voice', 'body', 'article_locked', 'image_id', 'image_url', 'image_locked', 'verdict', 'gate', 'step', 'status'];
+const PROJECT_FIELDS = ['title', 'with_image', 'brief', 'voice', 'body', 'article_locked', 'image_id', 'image_url', 'image_locked', 'verdict', 'gate', 'step', 'status', 'fix_count', 'gate_count'];
 
 // ── HTML export ──
 function escapeHtml(s) {
