@@ -278,6 +278,13 @@ You may add: "## " subheadings where the text clearly shifts topic, **bold** for
 Do NOT write new sentences, do NOT remove content, do NOT paraphrase.
 Return ONLY the Markdown (no code fences, no commentary).`;
 
+// ── Revise to address stage-gate findings (AI fix) ──
+const REVISE_SYSTEM = `You are a senior travel/hospitality copywriter revising an existing article to satisfy a copywriting stage-gate.
+Apply the gate's findings: fix the flagged issues, act on the suggested fixes, remove any banned phrases, and correct US spellings to British English (en-GB).
+Preserve the article's intent, facts, structure and voice — improve it, do not rewrite from scratch or change the topic.
+Keep clean GitHub-flavoured Markdown (## subheadings, short paragraphs, "- " bullets). Never use these banned phrases: ${BANNED_PHRASES.join(', ')}.
+Return ONLY the revised article body in Markdown (no title line, no code fences, no commentary).`;
+
 // ── Advisory article comments (Step 1, not a pass/fail gate) ──
 const COMMENTS_SYSTEM = `You are a friendly senior editor giving quick, advisory feedback on a draft web article (not a pass/fail gate).
 Be concise and constructive: note what works, then give specific, actionable suggestions (clarity, structure, SEO, voice, grammar). British English.
@@ -479,6 +486,36 @@ export function registerCreateRoutes(app, pool) {
       res.json(firstJson(data));
     } catch (e) {
       res.status(502).json({ error: 'Comments unavailable: ' + e.message });
+    }
+  });
+
+  // AI fix: revise the article to address the stage-gate findings.
+  app.post('/api/create/revise', async (req, res) => {
+    const title = (req.body?.title || '').toString().trim();
+    const body = (req.body?.body || '').toString().trim();
+    const topic = (req.body?.topic || '').toString().trim();
+    const voice = (req.body?.voice || '').toString().trim();
+    const findings = req.body?.findings || {};
+    if (!body) return res.status(400).json({ error: 'Write or paste the article first.' });
+    if (body.length > 40000) return res.status(400).json({ error: 'Article too long (max 40k chars).' });
+    try {
+      const lines = [];
+      if (findings.rationale) lines.push('Overall: ' + findings.rationale);
+      if (Array.isArray(findings.issues)) findings.issues.forEach(i => lines.push(`Issue (${i.severity || ''} ${i.area || ''}): ${i.detail || ''}`));
+      if (Array.isArray(findings.fixes)) findings.fixes.forEach(x => lines.push('Fix: ' + x));
+      if (Array.isArray(findings.seo_checklist)) findings.seo_checklist.filter(c => c.status !== 'pass').forEach(c => lines.push(`SEO ${c.status}: ${c.item}${c.note ? ' — ' + c.note : ''}`));
+      if (Array.isArray(findings.banned_phrases_found) && findings.banned_phrases_found.length) lines.push('Remove banned phrases: ' + findings.banned_phrases_found.join(', '));
+      if (Array.isArray(findings.british_english_issues) && findings.british_english_issues.length) lines.push('Fix US spellings (use en-GB): ' + findings.british_english_issues.join(', '));
+      const vnote = VOICE_NOTE[voice] || 'Voice: neutral, professional brand voice.';
+      const userText = `${vnote}\nTITLE: ${title || '(none)'}\nINTENDED TOPIC: ${topic || '(unspecified)'}\n\nSTAGE-GATE FINDINGS TO ADDRESS:\n${lines.length ? lines.join('\n') : '(no specific findings supplied — improve clarity, SEO and grammar)'}\n\nARTICLE TO REVISE (markdown):\n${body}\n\nReturn the revised article now.`;
+      const data = await callGemini(TEXT_MODEL, {
+        system: REVISE_SYSTEM,
+        parts: [{ text: userText }],
+        generationConfig: { temperature: 0.4, maxOutputTokens: 8192 },
+      });
+      res.json({ body: firstText(data) });
+    } catch (e) {
+      res.status(502).json({ error: 'Revise failed: ' + e.message });
     }
   });
 

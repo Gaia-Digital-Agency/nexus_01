@@ -563,6 +563,10 @@ function App() {
   const [csUsedImg, setCsUsedImg] = useState(null); // {id, url}
   const [csImageLocked, setCsImageLocked] = useState(false);
   const [csVet, setCsVet] = useState(null);
+  const [csVetRef, setCsVetRef] = useState(null); // last gate findings, kept visible while editing
+  const [csFindingsOpen, setCsFindingsOpen] = useState(true);
+  const [csFixing, setCsFixing] = useState(false);
+  const [csRevised, setCsRevised] = useState(false); // AI just revised the article — prompt review
   const [csVetLoading, setCsVetLoading] = useState(false);
   const [csExporting, setCsExporting] = useState(null);
   const [csError, setCsError] = useState(null);
@@ -622,7 +626,7 @@ function App() {
     setCsTitle(''); setCsBrief(''); setCsVoice('Brand voice'); setCsBody('');
     setCsArticleLocked(false); setCsComments(null);
     setCsSelectedImg(null); setCsUsedImg(null); setCsImageLocked(false);
-    setCsVet(null); setCsError(null);
+    setCsVet(null); setCsVetRef(null); setCsRevised(false); setCsError(null);
     setActiveTab('Content Studio');
   };
 
@@ -672,7 +676,7 @@ function App() {
   };
 
   const unlockArticle = async () => {
-    setCsArticleLocked(false); setCsVet(null); setCsStep(1);
+    setCsArticleLocked(false); setCsVet(null); setCsFindingsOpen(true); setCsStep(1);
     await saveProject({ article_locked: false, verdict: null, gate: null, status: 'draft', step: 1 });
   };
 
@@ -752,10 +756,26 @@ function App() {
       const r = await fetch('/api/create/vet', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId: csProjectId, title: csTitle, body: csBody, topic: csBrief, voice: csVoice, imageUrl: csUsedImg?.url || null }) });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || 'Gate failed');
-      setCsVet(d);
+      setCsVet(d); setCsVetRef(d); setCsRevised(false);
       if (d.overall_verdict === 'APPROVED') setCsStep(4);
     } catch (e) { setCsError(e.message); }
     finally { setCsVetLoading(false); }
+  };
+
+  // AI fix: send article + findings to the model, load the revision back into the editor for review.
+  const csFixWithAI = async () => {
+    if (csFixing) return;
+    const findings = csVet || csVetRef;
+    setCsFixing(true); setCsError(null);
+    try {
+      const r = await fetch('/api/create/revise', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: csTitle, body: csBody, topic: csBrief, voice: csVoice, findings }) });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Fix failed');
+      setCsBody(d.body || csBody);
+      setCsArticleLocked(false); setCsVet(null); setCsRevised(true); setCsFindingsOpen(true); setCsStep(1);
+      await saveProject({ body: d.body || csBody, article_locked: false, verdict: null, gate: null, status: 'draft', step: 1 });
+    } catch (e) { setCsError(e.message); }
+    finally { setCsFixing(false); }
   };
 
   const exportCs = async (format) => {
@@ -803,7 +823,7 @@ function App() {
       setCsArticleLocked(!!p.article_locked);
       setCsUsedImg(p.image_url ? { id: p.image_id, url: p.image_url } : null);
       setCsImageLocked(!!p.image_locked);
-      setCsVet(p.gate || null); setCsComments(null);
+      setCsVet(p.gate || null); setCsVetRef(p.gate || null); setCsRevised(false); setCsComments(null);
       setCsStep(p.step || (p.article_locked ? (p.with_image ? (p.image_locked ? 3 : 2) : 3) : 1));
       setActiveTab('Content Studio');
     } catch (e) { setCsError(e.message); }
@@ -1223,6 +1243,32 @@ function App() {
                 <div className="panel-head"><h2>1 · Write Article</h2>{csArticleLocked && <span className="cs-lock">🔒 Locked</span>}</div>
                 {!csArticleLocked ? (
                   <>
+                    {csRevised && <p className="cs-banner cs-banner-warn">✨ AI revised your article from the gate findings. Review it against the notes below, then re-lock and re-run the gate.</p>}
+                    {csVetRef && (
+                      <div className="cs-findings-ref">
+                        <button type="button" className="cs-findings-head" onClick={() => setCsFindingsOpen(o => !o)}>
+                          <span>{csFindingsOpen ? '▼' : '▶'} Stage Gate findings</span>
+                          <span className={'cs-verdict-mini cs-verdict-' + csVetRef.overall_verdict.replace(/\s+/g, '-').toLowerCase()}>{csVetRef.overall_verdict}</span>
+                        </button>
+                        {csFindingsOpen && (
+                          <div className="cs-findings-body">
+                            {csVetRef.rationale && <p className="muted small" style={{ marginBottom: '10px' }}>{csVetRef.rationale}</p>}
+                            {csVetRef.seo_checklist?.filter(c => c.status !== 'pass').length > 0 && (
+                              <ul className="cs-checklist" style={{ marginBottom: '10px' }}>
+                                {[...csVetRef.seo_checklist].filter(c => c.status !== 'pass').sort((a, b) => (a.status === 'fail' ? 0 : 1) - (b.status === 'fail' ? 0 : 1)).map((c, i) => (
+                                  <li key={i} className={'cs-check cs-check-' + c.status}><span className="cs-check-icon">{c.status === 'warn' ? '!' : '✕'}</span><span><strong>{c.item}</strong>{c.note ? ' — ' + c.note : ''}</span></li>
+                                ))}
+                              </ul>
+                            )}
+                            {csVetRef.issues?.length > 0 && <ul className="cs-list" style={{ marginBottom: '10px' }}>{csVetRef.issues.map((it, i) => <li key={i}><span className={'cs-sev cs-sev-' + (it.severity || 'Low').toLowerCase()}>{it.severity}</span> <strong>{it.area}:</strong> {it.detail}</li>)}</ul>}
+                            {csVetRef.fixes?.length > 0 && <><h4 className="cs-sub">Suggested fixes</h4><ul className="cs-list" style={{ marginBottom: '10px' }}>{csVetRef.fixes.map((f, i) => <li key={i}>→ {f}</li>)}</ul></>}
+                            {csVetRef.banned_phrases_found?.length > 0 && <p className="cs-banner cs-banner-warn">Banned phrases: {csVetRef.banned_phrases_found.join(', ')}</p>}
+                            {csVetRef.british_english_issues?.length > 0 && <p className="cs-banner cs-banner-warn">US spelling/vocab (use en-GB): {csVetRef.british_english_issues.join(', ')}</p>}
+                            <button className="btn-primary" onClick={csFixWithAI} disabled={csFixing}>{csFixing ? 'Fixing…' : '✨ Fix with AI'}</button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                     <input className="cs-input cs-title" placeholder="Article title" value={csTitle} onChange={e => setCsTitle(e.target.value)} />
                     <textarea className="cs-input cs-brief" rows={2}
                       placeholder="In simple words, what should this article be about? The AI uses this to draft a first version and to judge topic fit."
@@ -1333,8 +1379,11 @@ function App() {
                   <button className="btn-primary" onClick={runCsVet} disabled={csVetLoading || !csArticleLocked}>{csVetLoading ? 'Vetting…' : 'Run Stage Gate'}</button>
                 </div>
                 {!csArticleLocked && <div className="cs-empty">Lock the article first (Step 1).</div>}
+                {csArticleLocked && csVetLoading && (
+                  <div className="cs-vet-loading"><span className="cs-spinner" /><div><strong>Reviewing your article…</strong><div className="muted small">Checking topic fit, SEO, grammar &amp; spelling, and clarity. This usually takes 15–30 seconds.</div></div></div>
+                )}
                 {csArticleLocked && !csVet && !csVetLoading && <div className="cs-empty">Run the gate to check topic suitability, SEO, grammar/spelling and clarity.</div>}
-                {csVet && (
+                {csVet && !csVetLoading && (
                   <div className="cs-vet">
                     <div className={'cs-verdict cs-verdict-' + csVet.overall_verdict.replace(/\s+/g, '-').toLowerCase()}>{csVet.overall_verdict}</div>
                     <p className="muted small" style={{ margin: '4px 0 14px' }}>{csVet.rationale}</p>
@@ -1350,7 +1399,7 @@ function App() {
                       <div style={{ marginTop: '16px' }}>
                         <h4 className="cs-sub">On-page SEO checklist ({csVet.seo_checklist.filter(c => c.status === 'pass').length}/{csVet.seo_checklist.length} passed)</h4>
                         <ul className="cs-checklist">
-                          {csVet.seo_checklist.map((c, i) => (
+                          {[...csVet.seo_checklist].sort((a, b) => (({ pass: 0, warn: 1, fail: 2 })[a.status] ?? 3) - (({ pass: 0, warn: 1, fail: 2 })[b.status] ?? 3)).map((c, i) => (
                             <li key={i} className={'cs-check cs-check-' + c.status}>
                               <span className="cs-check-icon">{c.status === 'pass' ? '✓' : c.status === 'warn' ? '!' : '✕'}</span>
                               <span><strong>{c.item}</strong>{c.note ? ' — ' + c.note : ''}</span>
@@ -1383,7 +1432,7 @@ function App() {
                     )}
                     <div className="cs-btn-row cs-step-actions">
                       {csApproved ? <button className="btn-primary" onClick={() => setCsStep(4)}>Continue to Export →</button>
-                        : <button className="btn-ghost" onClick={unlockArticle}>Revise article</button>}
+                        : <><button className="btn-primary" onClick={csFixWithAI} disabled={csFixing}>{csFixing ? 'Fixing…' : '✨ Fix with AI'}</button><button className="btn-ghost" onClick={unlockArticle}>Revise myself</button></>}
                     </div>
                   </div>
                 )}
