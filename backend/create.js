@@ -183,8 +183,8 @@ const SEO_CHECKLIST = [
 
 // Checklist items that are CMS/publishing config, not body-copy edits — grouped as "Follow Up",
 // kept out of article approval and out of the AI fixes.
-const FOLLOW_UP_RE = /(\bURL slug\b|Structured data|Schema\.org|Internal link|Image alt|alt text|canonical|redirect|sitemap|robots|hreflang|breadcrumb|open graph)/i;
-const isFollowUpItem = (c) => FOLLOW_UP_RE.test(((c && c.item) || '') + ' ' + ((c && c.note) || ''));
+const FOLLOW_UP_RE = /(\bURL slug\b|Meta description|Structured data|Schema\.org|Internal link|Image alt|alt text|canonical|redirect|sitemap|robots|hreflang|breadcrumb|open graph)/i;
+const isFollowUpItem = (c) => FOLLOW_UP_RE.test((c && c.item) || '');
 
 const VET_SYSTEM = `You are "Nexus Copy Gate", a strict on-page SEO + editorial reviewer for a hospitality/travel portfolio, applying the Gaiada Copywriter SKILLS specification. You vet WRITING ONLY (images are handled separately).
 
@@ -197,7 +197,7 @@ Score these four dimensions 0–10:
 Evaluate EVERY item of this on-page SEO checklist and report each as pass / warn / fail with a short note:
 ${SEO_CHECKLIST.map((c, i) => `${i + 1}. ${c}`).join('\n')}
 
-Publishing follow-ups (configured in the CMS AFTER writing — report their status but DO NOT let them affect the four scores or the verdict): URL slug, Structured data, Internal linking, Image alt text.
+Publishing follow-ups (configured in the CMS AFTER writing — report their status but DO NOT let them affect the four scores or the verdict): URL slug, Meta description, Structured data, Internal linking, Image alt text.
 
 Hard rules:
 - Banned AI-ism phrases must not appear: ${BANNED_PHRASES.join(', ')}.
@@ -359,6 +359,27 @@ function buildHtmlDoc({ title, body, imageUrl, origin }) {
 </body></html>`;
 }
 
+// Deterministically remove any banned / persona-banned words an AI writer emitted (best-effort, up to 3 passes).
+async function scrubBannedWords(body, voice, ctxTitle = '') {
+  const personaBans = PERSONA_BANS[voice] || [];
+  let out = body || '';
+  const offenders = () => {
+    const low = (ctxTitle + '\n' + out).toLowerCase();
+    return Array.from(new Set([...scanBanned(low), ...personaBans.filter(p => low.includes(p))]));
+  };
+  let bad = offenders();
+  for (let pass = 0; pass < 3 && bad.length; pass++) {
+    const fix = await callGemini(TEXT_MODEL, {
+      system: 'You are a copy editor. Remove EVERY banned word/phrase listed from the article, replacing each with plain, specific wording that preserves the meaning. Change nothing else. Return ONLY the article body in Markdown (no title line, no code fences, no commentary).',
+      parts: [{ text: `BANNED — these must not appear anywhere: ${bad.join(', ')}\n\nARTICLE:\n${out}` }],
+      generationConfig: { temperature: 0, maxOutputTokens: 8192 },
+    });
+    out = firstText(fix) || out;
+    bad = offenders();
+  }
+  return out;
+}
+
 export function registerCreateRoutes(app, pool) {
   // Serve generated images under /api/media (Nginx already proxies /api -> backend).
   app.get('/api/media/:file', (req, res) => {
@@ -447,13 +468,14 @@ export function registerCreateRoutes(app, pool) {
     if (!brief && !title) return res.status(400).json({ error: 'Add a title or a brief first.' });
     try {
       const vnote = VOICE_NOTE[voice] || 'Voice: neutral, professional brand voice.';
-      const userText = `${vnote}\nWorking title: ${title || '(none yet)'}\nBrief (what the article should be about): ${brief || title}\n\nWrite the article now.`;
+      const personaBans = PERSONA_BANS[voice] || [];
+      const userText = `${vnote}\nWorking title: ${title || '(none yet)'}\nBrief (what the article should be about): ${brief || title}\n\nWrite in plain, concrete British English; avoid generic AI filler. Do NOT use any of these persona-banned words: ${personaBans.join(', ') || '(none)'}.\n\nWrite the article now.`;
       const data = await callGemini(TEXT_MODEL, {
         system: DRAFT_SYSTEM,
         parts: [{ text: userText }],
         generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
       });
-      res.json({ body: firstText(data) });
+      res.json({ body: await scrubBannedWords(firstText(data), voice) });
     } catch (e) {
       res.status(502).json({ error: 'Draft failed: ' + e.message });
     }
@@ -526,14 +548,17 @@ export function registerCreateRoutes(app, pool) {
         grammar: 'Concentrate on GRAMMAR & SPELLING: fix all grammar, punctuation and spelling, convert everything to British English (en-GB), and remove every banned phrase. Do not weaken the other areas.',
         clarity: 'Concentrate on CLARITY & MEANING: improve logical flow, remove filler and repetition, resolve contradictions and tighten wording so every paragraph earns its place. Do not weaken the other areas.',
       };
+      const personaBans = PERSONA_BANS[voice] || [];
+      const banNote = `\n\nHARD RULES — write in plain, concrete British English. Be specific (name real places, dishes, prices, sources) instead of flowery adjectives or generic AI filler. Do NOT use any banned phrase, and do NOT use any of these persona-banned words: ${personaBans.join(', ') || '(none)'}.`;
       const vnote = VOICE_NOTE[voice] || 'Voice: neutral, professional brand voice.';
-      const userText = `${vnote}\nTITLE: ${title || '(none)'}\nINTENDED TOPIC: ${topic || '(unspecified)'}\n\nYOUR TASK: ${FOCUS_MANDATE[focus]}\n\nSTAGE-GATE FINDINGS:\n${lines.length ? lines.join('\n') : '(no specific findings supplied — improve clarity, SEO and grammar)'}\n\nARTICLE TO REVISE (markdown):\n${body}\n\nReturn the full revised article now.`;
+      const userText = `${vnote}\nTITLE: ${title || '(none)'}\nINTENDED TOPIC: ${topic || '(unspecified)'}\n\nYOUR TASK: ${FOCUS_MANDATE[focus]}${banNote}\n\nSTAGE-GATE FINDINGS:\n${lines.length ? lines.join('\n') : '(no specific findings supplied — improve clarity, SEO and grammar)'}\n\nARTICLE TO REVISE (markdown):\n${body}\n\nReturn the full revised article now.`;
       const data = await callGemini(TEXT_MODEL, {
         system: REVISE_SYSTEM,
         parts: [{ text: userText }],
         generationConfig: { temperature: 0.4, maxOutputTokens: 8192 },
       });
-      res.json({ body: firstText(data) });
+      const revised = await scrubBannedWords(firstText(data), voice, title);
+      res.json({ body: revised });
     } catch (e) {
       res.status(502).json({ error: 'Revise failed: ' + e.message });
     }
@@ -562,8 +587,9 @@ export function registerCreateRoutes(app, pool) {
       // Trust local scans over the model for deterministic rules (banned phrases, persona bans, en-GB).
       const haystack = (title + '\n' + body).toLowerCase();
       const localBanned = [...scanBanned(haystack), ...personaBans.filter(p => haystack.includes(p))];
-      result.banned_phrases_found = Array.from(new Set([...(result.banned_phrases_found || []), ...localBanned]));
-      result.british_english_issues = Array.from(new Set([...(result.british_english_issues || []), ...scanUsSpellings(haystack)]));
+      // Deterministic scans are authoritative — the model hallucinates fake hits (e.g. "great", "socialising->socialising"), so use ONLY local results.
+      result.banned_phrases_found = Array.from(new Set(localBanned));
+      result.british_english_issues = scanUsSpellings(haystack);
       if (Array.isArray(result.seo_checklist)) result.seo_checklist.forEach(c => { c.category = isFollowUpItem(c) ? 'follow_up' : 'article'; });
       const blockers = [];
       if (result.banned_phrases_found.length) blockers.push('banned phrases: ' + result.banned_phrases_found.join(', '));

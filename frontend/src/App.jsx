@@ -579,7 +579,7 @@ function App() {
 
   const csApproved = csVet?.overall_verdict === 'APPROVED';
   // Publishing/CMS items (slug, schema, internal links, alt text) — shown as "Follow Up", outside article approval & AI fixes.
-  const csIsFollowUp = (c) => c?.category === 'follow_up' || /(\bURL slug\b|Structured data|Schema\.org|Internal link|Image alt|alt text|canonical|redirect|sitemap|robots|hreflang|breadcrumb|open graph)/i.test(c?.item || '');
+  const csIsFollowUp = (c) => c?.category === 'follow_up' || /(\bURL slug\b|Meta description|Structured data|Schema\.org|Internal link|Image alt|alt text|canonical|redirect|sitemap|robots|hreflang|breadcrumb|open graph)/i.test(c?.item || '');
 
   const saveProject = async (patch) => {
     if (!csProjectId) return;
