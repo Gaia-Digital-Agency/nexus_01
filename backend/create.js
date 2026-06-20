@@ -204,10 +204,11 @@ Hard rules:
 - British English (en-GB): flag US spellings (color→colour, optimize→optimise, etc.) and US vocabulary (elevator→lift, vacation→holiday).
 - E-E-A-T must be visible (author identity, real experience, credible claims, trusted links).
 
-Verdict rules:
-- APPROVED only if every score ≥ 7 AND no banned phrases AND no en-US spellings AND no ARTICLE checklist item is 'fail' AND no Critical issue. (The publishing follow-up items never block approval.)
+Verdict rules (the four scores decide the verdict):
+- APPROVED when all four scores are ≥ 6 (every area is "green").
 - REJECT if any score ≤ 3, the meaning is broken, or the piece is off-topic.
 - Otherwise NEEDS WORK.
+Still report banned phrases, en-GB issues and every checklist item — they inform the scores but do not independently block approval.
 
 Return strict JSON only, matching the schema. Be specific and actionable — every fail/warn needs a concrete fix.`;
 
@@ -594,10 +595,13 @@ export function registerCreateRoutes(app, pool) {
       const blockers = [];
       if (result.banned_phrases_found.length) blockers.push('banned phrases: ' + result.banned_phrases_found.join(', '));
       if (result.british_english_issues.length) blockers.push('US spellings: ' + result.british_english_issues.join(', '));
-      if (blockers.length && result.overall_verdict === 'APPROVED') {
-        result.overall_verdict = 'NEEDS WORK';
-        result.rationale = 'Auto-checks failed (' + blockers.join('; ') + '). ' + (result.rationale || '');
-      }
+      // Deterministic verdict driven purely by the four score bars: APPROVED when all four areas are green (>= 6).
+      const sc = result.scores || {};
+      const minScore = Math.min(...[sc.topic_suitability, sc.seo, sc.grammar_spelling, sc.clarity_meaning].map(n => Number(n) || 0));
+      if (minScore >= 6) result.overall_verdict = 'APPROVED';
+      else if (minScore <= 3) result.overall_verdict = 'REJECT';
+      else result.overall_verdict = 'NEEDS WORK';
+      if (blockers.length) result.rationale = '(Note — auto-checks flagged: ' + blockers.join('; ') + '.) ' + (result.rationale || '');
       const { rows } = await pool.query(
         `INSERT INTO content_submissions (title, body, topic, voice, image_url, verdict, scores, result)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id, verdict, created_at`,

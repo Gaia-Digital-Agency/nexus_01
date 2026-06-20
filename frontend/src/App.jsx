@@ -1411,8 +1411,8 @@ function App() {
                       {csVet.scores && [{ k: 'Topic', f: 'topic', v: csVet.scores.topic_suitability }, { k: 'SEO', f: 'seo', v: csVet.scores.seo }, { k: 'Grammar', f: 'grammar', v: csVet.scores.grammar_spelling }, { k: 'Clarity', f: 'clarity', v: csVet.scores.clarity_meaning }].map(({ k, f, v }) => (
                         <div key={k} className="cs-score">
                           <div className="cs-score-head"><span>{k}</span><strong>{v ?? '–'}/10</strong></div>
-                          <div className="cs-bar"><div className="cs-bar-fill" style={{ width: ((v || 0) * 10) + '%', background: v >= 7 ? 'var(--success)' : v >= 4 ? 'var(--warning)' : 'var(--danger)' }} /></div>
-                          {v < 7 && <button className="cs-fix-mini" onClick={() => csFixWithAI(f, { rerun: true })} disabled={!!csFixing || csVetLoading}>{csFixing === f ? 'Fixing…' : '✨ Fix ' + k}</button>}
+                          <div className="cs-bar"><div className="cs-bar-fill" style={{ width: ((v || 0) * 10) + '%', background: v >= 6 ? 'var(--success)' : v >= 4 ? 'var(--warning)' : 'var(--danger)' }} /></div>
+                          {v < 6 && <button className="cs-fix-mini" onClick={() => csFixWithAI(f, { rerun: true })} disabled={!!csFixing || csVetLoading}>{csFixing === f ? 'Fixing…' : '✨ Fix ' + k}</button>}
                         </div>
                       ))}
                     </div>
