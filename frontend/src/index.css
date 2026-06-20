@@ -398,6 +398,16 @@ button:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important
 .cs-findings-body { padding: 0 14px 14px; }
 .cs-verdict-mini { font-size: 11px; font-weight: 800; letter-spacing: 0.03em; padding: 3px 10px; border-radius: 999px; color: #fff; }
 
+/* Per-dimension AI fix button */
+.cs-fix-mini { margin-top: 8px; width: 100%; font-size: 11px; padding: 5px 8px; border-radius: 8px; background: rgba(99,102,241,0.12); color: var(--accent); border: 1px solid rgba(99,102,241,0.3); cursor: pointer; font-weight: 600; }
+.cs-fix-mini:hover:not(:disabled) { background: rgba(99,102,241,0.22); }
+.cs-fix-mini:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Follow-up (post-publish) checklist group — outside the approval process */
+.cs-followup { margin-top: 16px; border: 1px dashed rgba(148,163,184,0.35); border-radius: 10px; padding: 14px; background: rgba(148,163,184,0.05); }
+.cs-followup .cs-sub { color: var(--muted); display: flex; align-items: center; gap: 8px; }
+.cs-followup-tag { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); border: 1px solid rgba(148,163,184,0.4); border-radius: 999px; padding: 2px 7px; }
+
 /* Studio Projects grid */
 .cs-proj-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
 .cs-proj-card { background: var(--surface); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 16px; }

@@ -576,6 +576,8 @@ function App() {
   const csFileRef = useRef(null);
 
   const csApproved = csVet?.overall_verdict === 'APPROVED';
+  // Publishing/CMS items (slug, schema, internal links, alt text) — shown as "Follow Up", outside article approval & AI fixes.
+  const csIsFollowUp = (c) => c?.category === 'follow_up' || /(\bURL slug\b|Structured data|Schema\.org|Internal link|Image alt|alt text|canonical|redirect|sitemap|robots|hreflang|breadcrumb|open graph)/i.test(c?.item || '');
 
   const saveProject = async (patch) => {
     if (!csProjectId) return;
@@ -763,19 +765,19 @@ function App() {
   };
 
   // AI fix: send article + findings to the model, load the revision back into the editor for review.
-  const csFixWithAI = async () => {
+  const csFixWithAI = async (focus = 'all') => {
     if (csFixing) return;
     const findings = csVet || csVetRef;
-    setCsFixing(true); setCsError(null);
+    setCsFixing(focus); setCsError(null);
     try {
-      const r = await fetch('/api/create/revise', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: csTitle, body: csBody, topic: csBrief, voice: csVoice, findings }) });
+      const r = await fetch('/api/create/revise', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: csTitle, body: csBody, topic: csBrief, voice: csVoice, findings, focus }) });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || 'Fix failed');
       setCsBody(d.body || csBody);
       setCsArticleLocked(false); setCsVet(null); setCsRevised(true); setCsFindingsOpen(true); setCsStep(1);
       await saveProject({ body: d.body || csBody, article_locked: false, verdict: null, gate: null, status: 'draft', step: 1 });
     } catch (e) { setCsError(e.message); }
-    finally { setCsFixing(false); }
+    finally { setCsFixing(null); }
   };
 
   const exportCs = async (format) => {
@@ -1253,18 +1255,21 @@ function App() {
                         {csFindingsOpen && (
                           <div className="cs-findings-body">
                             {csVetRef.rationale && <p className="muted small" style={{ marginBottom: '10px' }}>{csVetRef.rationale}</p>}
-                            {csVetRef.seo_checklist?.filter(c => c.status !== 'pass').length > 0 && (
+                            {csVetRef.seo_checklist?.filter(c => c.status !== 'pass' && !csIsFollowUp(c)).length > 0 && (
                               <ul className="cs-checklist" style={{ marginBottom: '10px' }}>
-                                {[...csVetRef.seo_checklist].filter(c => c.status !== 'pass').sort((a, b) => (a.status === 'fail' ? 0 : 1) - (b.status === 'fail' ? 0 : 1)).map((c, i) => (
+                                {[...csVetRef.seo_checklist].filter(c => c.status !== 'pass' && !csIsFollowUp(c)).sort((a, b) => (a.status === 'fail' ? 0 : 1) - (b.status === 'fail' ? 0 : 1)).map((c, i) => (
                                   <li key={i} className={'cs-check cs-check-' + c.status}><span className="cs-check-icon">{c.status === 'warn' ? '!' : '✕'}</span><span><strong>{c.item}</strong>{c.note ? ' — ' + c.note : ''}</span></li>
                                 ))}
                               </ul>
+                            )}
+                            {csVetRef.seo_checklist?.filter(c => c.status !== 'pass' && csIsFollowUp(c)).length > 0 && (
+                              <p className="muted small" style={{ marginBottom: '10px' }}><strong>Follow up after publishing:</strong> {csVetRef.seo_checklist.filter(c => c.status !== 'pass' && csIsFollowUp(c)).map(c => c.item).join(', ')}</p>
                             )}
                             {csVetRef.issues?.length > 0 && <ul className="cs-list" style={{ marginBottom: '10px' }}>{csVetRef.issues.map((it, i) => <li key={i}><span className={'cs-sev cs-sev-' + (it.severity || 'Low').toLowerCase()}>{it.severity}</span> <strong>{it.area}:</strong> {it.detail}</li>)}</ul>}
                             {csVetRef.fixes?.length > 0 && <><h4 className="cs-sub">Suggested fixes</h4><ul className="cs-list" style={{ marginBottom: '10px' }}>{csVetRef.fixes.map((f, i) => <li key={i}>→ {f}</li>)}</ul></>}
                             {csVetRef.banned_phrases_found?.length > 0 && <p className="cs-banner cs-banner-warn">Banned phrases: {csVetRef.banned_phrases_found.join(', ')}</p>}
                             {csVetRef.british_english_issues?.length > 0 && <p className="cs-banner cs-banner-warn">US spelling/vocab (use en-GB): {csVetRef.british_english_issues.join(', ')}</p>}
-                            <button className="btn-primary" onClick={csFixWithAI} disabled={csFixing}>{csFixing ? 'Fixing…' : '✨ Fix with AI'}</button>
+                            <button className="btn-primary" onClick={() => csFixWithAI('all')} disabled={!!csFixing}>{csFixing === 'all' ? 'Fixing…' : '✨ Fix everything with AI'}</button>
                           </div>
                         )}
                       </div>
@@ -1388,26 +1393,39 @@ function App() {
                     <div className={'cs-verdict cs-verdict-' + csVet.overall_verdict.replace(/\s+/g, '-').toLowerCase()}>{csVet.overall_verdict}</div>
                     <p className="muted small" style={{ margin: '4px 0 14px' }}>{csVet.rationale}</p>
                     <div className="cs-scores">
-                      {csVet.scores && Object.entries({ 'Topic': csVet.scores.topic_suitability, 'SEO': csVet.scores.seo, 'Grammar': csVet.scores.grammar_spelling, 'Clarity': csVet.scores.clarity_meaning }).map(([k, v]) => (
+                      {csVet.scores && [{ k: 'Topic', f: 'topic', v: csVet.scores.topic_suitability }, { k: 'SEO', f: 'seo', v: csVet.scores.seo }, { k: 'Grammar', f: 'grammar', v: csVet.scores.grammar_spelling }, { k: 'Clarity', f: 'clarity', v: csVet.scores.clarity_meaning }].map(({ k, f, v }) => (
                         <div key={k} className="cs-score">
                           <div className="cs-score-head"><span>{k}</span><strong>{v ?? '–'}/10</strong></div>
                           <div className="cs-bar"><div className="cs-bar-fill" style={{ width: ((v || 0) * 10) + '%', background: v >= 7 ? 'var(--success)' : v >= 4 ? 'var(--warning)' : 'var(--danger)' }} /></div>
+                          {v < 7 && <button className="cs-fix-mini" onClick={() => csFixWithAI(f)} disabled={!!csFixing}>{csFixing === f ? 'Fixing…' : '✨ Fix ' + k}</button>}
                         </div>
                       ))}
                     </div>
-                    {csVet.seo_checklist?.length > 0 && (
-                      <div style={{ marginTop: '16px' }}>
-                        <h4 className="cs-sub">On-page SEO checklist ({csVet.seo_checklist.filter(c => c.status === 'pass').length}/{csVet.seo_checklist.length} passed)</h4>
-                        <ul className="cs-checklist">
-                          {[...csVet.seo_checklist].sort((a, b) => (({ pass: 0, warn: 1, fail: 2 })[a.status] ?? 3) - (({ pass: 0, warn: 1, fail: 2 })[b.status] ?? 3)).map((c, i) => (
-                            <li key={i} className={'cs-check cs-check-' + c.status}>
-                              <span className="cs-check-icon">{c.status === 'pass' ? '✓' : c.status === 'warn' ? '!' : '✕'}</span>
-                              <span><strong>{c.item}</strong>{c.note ? ' — ' + c.note : ''}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                    {csVet.seo_checklist?.length > 0 && (() => {
+                      const rank = { pass: 0, warn: 1, fail: 2 };
+                      const articleChecks = csVet.seo_checklist.filter(c => !csIsFollowUp(c));
+                      const followUps = csVet.seo_checklist.filter(c => csIsFollowUp(c));
+                      const Row = (c, i) => (
+                        <li key={i} className={'cs-check cs-check-' + c.status}>
+                          <span className="cs-check-icon">{c.status === 'pass' ? '✓' : c.status === 'warn' ? '!' : '✕'}</span>
+                          <span><strong>{c.item}</strong>{c.note ? ' — ' + c.note : ''}</span>
+                        </li>
+                      );
+                      return (
+                        <>
+                          <div style={{ marginTop: '16px' }}>
+                            <h4 className="cs-sub">On-page SEO checklist ({articleChecks.filter(c => c.status === 'pass').length}/{articleChecks.length} passed)</h4>
+                            <ul className="cs-checklist">{[...articleChecks].sort((a, b) => (rank[a.status] ?? 3) - (rank[b.status] ?? 3)).map(Row)}</ul>
+                          </div>
+                          {followUps.length > 0 && (
+                            <div className="cs-followup">
+                              <h4 className="cs-sub">Follow Up — after publishing <span className="cs-followup-tag">does not block approval</span></h4>
+                              <ul className="cs-checklist">{[...followUps].sort((a, b) => (rank[a.status] ?? 3) - (rank[b.status] ?? 3)).map(Row)}</ul>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
                     {csVet.banned_phrases_found?.length > 0 && <p className="cs-banner cs-banner-warn" style={{ marginTop: '14px' }}>Banned phrases: {csVet.banned_phrases_found.join(', ')}</p>}
                     {csVet.british_english_issues?.length > 0 && <p className="cs-banner cs-banner-warn" style={{ marginTop: '10px' }}>US spelling/vocabulary (use en-GB): {csVet.british_english_issues.join(', ')}</p>}
                     {csVet.issues?.length > 0 && (
@@ -1432,7 +1450,7 @@ function App() {
                     )}
                     <div className="cs-btn-row cs-step-actions">
                       {csApproved ? <button className="btn-primary" onClick={() => setCsStep(4)}>Continue to Export →</button>
-                        : <><button className="btn-primary" onClick={csFixWithAI} disabled={csFixing}>{csFixing ? 'Fixing…' : '✨ Fix with AI'}</button><button className="btn-ghost" onClick={unlockArticle}>Revise myself</button></>}
+                        : <><button className="btn-primary" onClick={() => csFixWithAI('all')} disabled={!!csFixing}>{csFixing === 'all' ? 'Fixing…' : '✨ Fix everything with AI'}</button><button className="btn-ghost" onClick={unlockArticle} disabled={!!csFixing}>Revise myself</button></>}
                     </div>
                   </div>
                 )}

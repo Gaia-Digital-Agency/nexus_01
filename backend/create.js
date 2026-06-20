@@ -181,6 +181,11 @@ const SEO_CHECKLIST = [
   'Original, informative, on-topic content matching reader intent',
 ];
 
+// Checklist items that are CMS/publishing config, not body-copy edits — grouped as "Follow Up",
+// kept out of article approval and out of the AI fixes.
+const FOLLOW_UP_RE = /(\bURL slug\b|Structured data|Schema\.org|Internal link|Image alt|alt text|canonical|redirect|sitemap|robots|hreflang|breadcrumb|open graph)/i;
+const isFollowUpItem = (c) => FOLLOW_UP_RE.test(((c && c.item) || '') + ' ' + ((c && c.note) || ''));
+
 const VET_SYSTEM = `You are "Nexus Copy Gate", a strict on-page SEO + editorial reviewer for a hospitality/travel portfolio, applying the Gaiada Copywriter SKILLS specification. You vet WRITING ONLY (images are handled separately).
 
 Score these four dimensions 0–10:
@@ -192,13 +197,15 @@ Score these four dimensions 0–10:
 Evaluate EVERY item of this on-page SEO checklist and report each as pass / warn / fail with a short note:
 ${SEO_CHECKLIST.map((c, i) => `${i + 1}. ${c}`).join('\n')}
 
+Publishing follow-ups (configured in the CMS AFTER writing — report their status but DO NOT let them affect the four scores or the verdict): URL slug, Structured data, Internal linking, Image alt text.
+
 Hard rules:
 - Banned AI-ism phrases must not appear: ${BANNED_PHRASES.join(', ')}.
 - British English (en-GB): flag US spellings (color→colour, optimize→optimise, etc.) and US vocabulary (elevator→lift, vacation→holiday).
 - E-E-A-T must be visible (author identity, real experience, credible claims, trusted links).
 
 Verdict rules:
-- APPROVED only if every score ≥ 7 AND no banned phrases AND no en-US spellings AND no checklist item is 'fail' AND no Critical issue.
+- APPROVED only if every score ≥ 7 AND no banned phrases AND no en-US spellings AND no ARTICLE checklist item is 'fail' AND no Critical issue. (The publishing follow-up items never block approval.)
 - REJECT if any score ≤ 3, the meaning is broken, or the piece is off-topic.
 - Otherwise NEEDS WORK.
 
@@ -280,7 +287,7 @@ Return ONLY the Markdown (no code fences, no commentary).`;
 
 // ── Revise to address stage-gate findings (AI fix) ──
 const REVISE_SYSTEM = `You are a senior travel/hospitality copywriter revising an existing article to satisfy a copywriting stage-gate.
-Apply the gate's findings: fix the flagged issues, act on the suggested fixes, remove any banned phrases, and correct US spellings to British English (en-GB).
+Apply the task and findings below COMPLETELY and THOROUGHLY: resolve every flagged issue, act on every suggested fix, remove all banned phrases, and use British English (en-GB) throughout. The revision must be good enough to pass a strict re-check — do not leave problems half-fixed.
 Preserve the article's intent, facts, structure and voice — improve it, do not rewrite from scratch or change the topic.
 Keep clean GitHub-flavoured Markdown (## subheadings, short paragraphs, "- " bullets). Never use these banned phrases: ${BANNED_PHRASES.join(', ')}.
 Return ONLY the revised article body in Markdown (no title line, no code fences, no commentary).`;
@@ -496,18 +503,31 @@ export function registerCreateRoutes(app, pool) {
     const topic = (req.body?.topic || '').toString().trim();
     const voice = (req.body?.voice || '').toString().trim();
     const findings = req.body?.findings || {};
+    const focus = ['topic', 'seo', 'grammar', 'clarity'].includes((req.body?.focus || '').toString().trim().toLowerCase()) ? req.body.focus.toString().trim().toLowerCase() : 'all';
     if (!body) return res.status(400).json({ error: 'Write or paste the article first.' });
     if (body.length > 40000) return res.status(400).json({ error: 'Article too long (max 40k chars).' });
     try {
       const lines = [];
       if (findings.rationale) lines.push('Overall: ' + findings.rationale);
+      if (findings.scores) lines.push(`Current scores /10 — topic ${findings.scores.topic_suitability ?? '?'}, SEO ${findings.scores.seo ?? '?'}, grammar ${findings.scores.grammar_spelling ?? '?'}, clarity ${findings.scores.clarity_meaning ?? '?'}.`);
       if (Array.isArray(findings.issues)) findings.issues.forEach(i => lines.push(`Issue (${i.severity || ''} ${i.area || ''}): ${i.detail || ''}`));
       if (Array.isArray(findings.fixes)) findings.fixes.forEach(x => lines.push('Fix: ' + x));
-      if (Array.isArray(findings.seo_checklist)) findings.seo_checklist.filter(c => c.status !== 'pass').forEach(c => lines.push(`SEO ${c.status}: ${c.item}${c.note ? ' — ' + c.note : ''}`));
-      if (Array.isArray(findings.banned_phrases_found) && findings.banned_phrases_found.length) lines.push('Remove banned phrases: ' + findings.banned_phrases_found.join(', '));
+      // Body-copy SEO items only — never the publishing follow-ups (slug, schema, internal links, alt text).
+      if (Array.isArray(findings.seo_checklist)) findings.seo_checklist.filter(c => c.status !== 'pass' && c.category !== 'follow_up' && !isFollowUpItem(c)).forEach(c => lines.push(`SEO ${c.status.toUpperCase()}: ${c.item}${c.note ? ' — ' + c.note : ''}`));
+      if (findings.meta_title) lines.push('Use/improve this meta title: ' + findings.meta_title);
+      if (findings.meta_description) lines.push('Use/improve this meta description: ' + findings.meta_description);
+      if (findings.primary_keyword) lines.push('Primary keyword to feature naturally: ' + findings.primary_keyword);
+      if (Array.isArray(findings.banned_phrases_found) && findings.banned_phrases_found.length) lines.push('Remove these banned phrases entirely: ' + findings.banned_phrases_found.join(', '));
       if (Array.isArray(findings.british_english_issues) && findings.british_english_issues.length) lines.push('Fix US spellings (use en-GB): ' + findings.british_english_issues.join(', '));
+      const FOCUS_MANDATE = {
+        all: 'Resolve EVERY issue and make EVERY body-copy SEO checklist item pass. The revised article must be strong enough to score at least 8/10 on all four dimensions (topic fit, SEO, grammar/en-GB, clarity) and pass the gate (APPROVED). Do not leave any amber or red item unaddressed.',
+        topic: 'Concentrate on TOPIC SUITABILITY: make the article clearly match the stated brief, voice and reader intent — adjust framing, coverage and emphasis so it is unmistakably on-topic. Do not weaken the other areas.',
+        seo: 'Concentrate on SEO: make every body-copy SEO checklist item pass — feature the primary keyword naturally in the title, first 100 words, at least one H2 and the body; ensure a clean H1/H2/H3 hierarchy, a strong meta-friendly introduction, a featured-snippet block, and credible external citations. Do not weaken the other areas.',
+        grammar: 'Concentrate on GRAMMAR & SPELLING: fix all grammar, punctuation and spelling, convert everything to British English (en-GB), and remove every banned phrase. Do not weaken the other areas.',
+        clarity: 'Concentrate on CLARITY & MEANING: improve logical flow, remove filler and repetition, resolve contradictions and tighten wording so every paragraph earns its place. Do not weaken the other areas.',
+      };
       const vnote = VOICE_NOTE[voice] || 'Voice: neutral, professional brand voice.';
-      const userText = `${vnote}\nTITLE: ${title || '(none)'}\nINTENDED TOPIC: ${topic || '(unspecified)'}\n\nSTAGE-GATE FINDINGS TO ADDRESS:\n${lines.length ? lines.join('\n') : '(no specific findings supplied — improve clarity, SEO and grammar)'}\n\nARTICLE TO REVISE (markdown):\n${body}\n\nReturn the revised article now.`;
+      const userText = `${vnote}\nTITLE: ${title || '(none)'}\nINTENDED TOPIC: ${topic || '(unspecified)'}\n\nYOUR TASK: ${FOCUS_MANDATE[focus]}\n\nSTAGE-GATE FINDINGS:\n${lines.length ? lines.join('\n') : '(no specific findings supplied — improve clarity, SEO and grammar)'}\n\nARTICLE TO REVISE (markdown):\n${body}\n\nReturn the full revised article now.`;
       const data = await callGemini(TEXT_MODEL, {
         system: REVISE_SYSTEM,
         parts: [{ text: userText }],
@@ -544,6 +564,7 @@ export function registerCreateRoutes(app, pool) {
       const localBanned = [...scanBanned(haystack), ...personaBans.filter(p => haystack.includes(p))];
       result.banned_phrases_found = Array.from(new Set([...(result.banned_phrases_found || []), ...localBanned]));
       result.british_english_issues = Array.from(new Set([...(result.british_english_issues || []), ...scanUsSpellings(haystack)]));
+      if (Array.isArray(result.seo_checklist)) result.seo_checklist.forEach(c => { c.category = isFollowUpItem(c) ? 'follow_up' : 'article'; });
       const blockers = [];
       if (result.banned_phrases_found.length) blockers.push('banned phrases: ' + result.banned_phrases_found.join(', '));
       if (result.british_english_issues.length) blockers.push('US spellings: ' + result.british_english_issues.join(', '));
