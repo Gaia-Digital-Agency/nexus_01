@@ -455,7 +455,8 @@ function computeSeoChecks(title, body, keyword) {
   ];
   const pass = checks.filter(c => c.status === 'pass').length;
   const warn = checks.filter(c => c.status === 'warn').length;
-  const score = Math.round(10 * (pass + 0.5 * warn) / checks.length);
+  let score = Math.round(10 * (pass + 0.5 * warn) / checks.length);
+  if (n < 250) score = Math.min(score, 5); // thin content can't read 'green' on structure alone — needs real substance
   return { checks, score };
 }
 
