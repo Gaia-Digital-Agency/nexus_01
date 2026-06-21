@@ -569,6 +569,7 @@ function App() {
   const [csRevised, setCsRevised] = useState(false); // AI just revised the article — prompt review
   const [csFixCount, setCsFixCount] = useState(0); // AI fixes applied to this article
   const [csGateCount, setCsGateCount] = useState(0); // times the stage gate has been run
+  const [csUserApproved, setCsUserApproved] = useState(false); // the USER confirmed approval (not the app)
   const [csVetLoading, setCsVetLoading] = useState(false);
   const [csExporting, setCsExporting] = useState(null);
   const [csError, setCsError] = useState(null);
@@ -630,7 +631,7 @@ function App() {
     setCsTitle(''); setCsBrief(''); setCsVoice('Brand voice'); setCsBody('');
     setCsArticleLocked(false); setCsComments(null);
     setCsSelectedImg(null); setCsUsedImg(null); setCsImageLocked(false);
-    setCsVet(null); setCsVetRef(null); setCsRevised(false); setCsFixCount(0); setCsGateCount(0); setCsError(null);
+    setCsVet(null); setCsVetRef(null); setCsRevised(false); setCsFixCount(0); setCsGateCount(0); setCsUserApproved(false); setCsError(null);
     setActiveTab('Content Studio');
   };
 
@@ -680,7 +681,7 @@ function App() {
   };
 
   const unlockArticle = async () => {
-    setCsArticleLocked(false); setCsVet(null); setCsFindingsOpen(true); setCsStep(1);
+    setCsArticleLocked(false); setCsVet(null); setCsUserApproved(false); setCsFindingsOpen(true); setCsStep(1);
     await saveProject({ article_locked: false, verdict: null, gate: null, status: 'draft', step: 1 });
   };
 
@@ -763,11 +764,19 @@ function App() {
       const r = await fetch('/api/create/vet', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId: csProjectId, title: csTitle, body: vbody, topic: csBrief, voice: csVoice, imageUrl: csUsedImg?.url || null }) });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || 'Gate failed');
-      setCsVet(d); setCsVetRef(d); setCsRevised(false);
+      setCsVet(d); setCsVetRef(d); setCsRevised(false); setCsUserApproved(false);
       const g = (csGateCount || 0) + 1; setCsGateCount(g); saveProject({ gate_count: g });
-      if (d.overall_verdict === 'APPROVED') setCsStep(4);
+      // No auto-approve: the gate only reports status. The user decides whether to approve (see Stage Gate footer).
     } catch (e) { setCsError(e.message); }
     finally { setCsVetLoading(false); }
+  };
+
+  // The USER grants final approval — the app only reports that all checks passed.
+  const approveArticle = async () => {
+    if (!csApproved) return;
+    setCsUserApproved(true);
+    await saveProject({ status: 'approved' });
+    setCsStep(4);
   };
 
   // AI fix: send article + findings to the model, load the revision back into the editor for review.
@@ -780,7 +789,7 @@ function App() {
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || 'Fix failed');
       const newBody = d.body || csBody;
-      setCsBody(newBody);
+      setCsBody(newBody); setCsUserApproved(false);
       const fc = (csFixCount || 0) + 1; setCsFixCount(fc);
       if (rerun) {
         // Applied in place — article stays locked; re-run the gate so the new scores show immediately.
@@ -795,7 +804,7 @@ function App() {
   };
 
   const exportCs = async (format) => {
-    if (!csApproved || !csProjectId || csExporting) return;
+    if (!csUserApproved || !csProjectId || csExporting) return;
     setCsExporting(format); setCsError(null);
     try {
       const r = await fetch('/api/create/export', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId: csProjectId, format }) });
@@ -839,7 +848,7 @@ function App() {
       setCsArticleLocked(!!p.article_locked);
       setCsUsedImg(p.image_url ? { id: p.image_id, url: p.image_url } : null);
       setCsImageLocked(!!p.image_locked);
-      setCsVet(p.gate || null); setCsVetRef(p.gate || null); setCsRevised(false); setCsFixCount(p.fix_count || 0); setCsGateCount(p.gate_count || 0); setCsComments(null);
+      setCsVet(p.gate || null); setCsVetRef(p.gate || null); setCsRevised(false); setCsFixCount(p.fix_count || 0); setCsGateCount(p.gate_count || 0); setCsUserApproved(p.status === 'exported'); setCsComments(null);
       setCsStep(p.step || (p.article_locked ? (p.with_image ? (p.image_locked ? 3 : 2) : 3) : 1));
       setActiveTab('Content Studio');
     } catch (e) { setCsError(e.message); }
@@ -1411,7 +1420,7 @@ function App() {
                 {csArticleLocked && !csVet && !csVetLoading && <div className="cs-empty">Run the gate to check topic suitability, SEO, grammar/spelling and clarity.</div>}
                 {csVet && !csVetLoading && (
                   <div className="cs-vet">
-                    <div className={'cs-verdict cs-verdict-' + csVet.overall_verdict.replace(/\s+/g, '-').toLowerCase()}>{csVet.overall_verdict}</div>
+                    <div className={'cs-verdict cs-verdict-' + csVet.overall_verdict.replace(/\s+/g, '-').toLowerCase()}>{csVet.overall_verdict === 'APPROVED' ? 'ALL CHECKS PASSED' : csVet.overall_verdict}</div>
                     <p className="muted small" style={{ margin: '4px 0 14px' }}>{csVet.rationale}</p>
                     <div className="cs-scores">
                       {csVet.scores && [{ k: 'Topic', f: 'topic', v: csVet.scores.topic_suitability }, { k: 'SEO', f: 'seo', v: csVet.scores.seo }, { k: 'Grammar', f: 'grammar', v: csVet.scores.grammar_spelling }, { k: 'Clarity', f: 'clarity', v: csVet.scores.clarity_meaning }].map(({ k, f, v }) => (
@@ -1469,9 +1478,22 @@ function App() {
                         {csVet.long_tail_keywords?.length > 0 && <div><span className="muted small">Long-tail:</span> {csVet.long_tail_keywords.join(', ')}</div>}
                       </div>
                     )}
-                    <div className="cs-btn-row cs-step-actions">
-                      {csApproved ? <button className="btn-primary" onClick={() => setCsStep(4)}>Continue to Export →</button>
-                        : <><button className="btn-primary" onClick={() => csFixWithAI('all', { rerun: true })} disabled={!!csFixing || csVetLoading}>{csFixing === 'all' ? 'Fixing…' : '✨ Fix everything with AI'}</button><button className="btn-ghost" onClick={unlockArticle} disabled={!!csFixing || csVetLoading}>Revise myself</button></>}
+                    <div className="cs-step-actions">
+                      {csApproved ? (
+                        <>
+                          <p className="cs-banner cs-approve-ask">✅ All stage-gate checks passed. Approval is your decision — review the article above, then approve when you’re happy.</p>
+                          <div className="cs-btn-row">
+                            <button className="btn-primary" onClick={approveArticle}>Approve article → Export</button>
+                            <button className="btn-ghost" onClick={() => csFixWithAI('all', { rerun: true })} disabled={!!csFixing || csVetLoading}>{csFixing === 'all' ? 'Improving…' : '✨ Improve further'}</button>
+                            <button className="btn-ghost" onClick={unlockArticle} disabled={!!csFixing || csVetLoading}>Edit article</button>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="cs-btn-row">
+                          <button className="btn-primary" onClick={() => csFixWithAI('all', { rerun: true })} disabled={!!csFixing || csVetLoading}>{csFixing === 'all' ? 'Fixing…' : '✨ Fix everything with AI'}</button>
+                          <button className="btn-ghost" onClick={unlockArticle} disabled={!!csFixing || csVetLoading}>Revise myself</button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -1482,9 +1504,9 @@ function App() {
             {csStep === 4 && (
               <section className="panel cs-panel">
                 <div className="panel-head"><h2>4 · Export</h2>
-                  <span className={'cs-lock ' + (csApproved ? 'cs-lock-open' : '')}>{csApproved ? '🔓 Unlocked' : '🔒 Locked until APPROVED'}</span>
+                  <span className={'cs-lock ' + (csUserApproved ? 'cs-lock-open' : '')}>{csUserApproved ? '🔓 Approved by you' : '🔒 Awaiting your approval'}</span>
                 </div>
-                {!csApproved ? <div className="cs-empty">Pass the Stage Gate (verdict APPROVED) to enable export.</div> : (
+                {!csUserApproved ? <div className="cs-empty">Approve the article in the Stage Gate (Step 3) to enable export.</div> : (
                   <>
                     {csWithImage && !csImageLocked && <p className="cs-banner cs-banner-warn">Lock the image (Step 2) to enable export.</p>}
                     <div className="cs-btn-row">

@@ -411,6 +411,7 @@ button:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important
 /* Stage gate iteration tracker */
 .cs-head-right { display: flex; align-items: center; gap: 10px; }
 .cs-iter { font-size: 11px; font-weight: 600; color: var(--muted); background: var(--darker); padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+.cs-approve-ask { background: rgba(16,185,129,0.12); color: var(--success); border: 1px solid rgba(16,185,129,0.35); margin-bottom: 14px; }
 
 /* Studio Projects grid */
 .cs-proj-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
