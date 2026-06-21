@@ -452,6 +452,7 @@ function App() {
   const [sites, setSites] = useState([]);
   const [status, setStatus] = useState('loading');
   const [health, setHealth] = useState(null);
+  const [navOpen, setNavOpen] = useState(false); // mobile sidebar drawer
   // activeTab is derived from the URL so deep links / refresh / back-forward all work.
   // setActiveTab is a navigate() wrapper, so existing call sites need no changes.
   const location = useLocation();
@@ -577,6 +578,12 @@ function App() {
   const [csSaving, setCsSaving] = useState(false);
   const [csSavedNote, setCsSavedNote] = useState(null);
   const csFileRef = useRef(null);
+  // Iteration tracking — a visible version number + activity timeline. Each save/edit/AI-fix is one entry; the gate result attaches to the entry it ran against.
+  const [csIterations, setCsIterations] = useState([]);
+  const csIterRef = useRef([]);
+  const [csGateEdit, setCsGateEdit] = useState(false); // inline "edit article" panel inside the Stage Gate
+  const [csTimelineOpen, setCsTimelineOpen] = useState(true);
+  const csVersion = csIterations.length ? csIterations[csIterations.length - 1].v : 0;
 
   const csApproved = csVet?.overall_verdict === 'APPROVED';
   // Publishing/CMS items (slug, schema, internal links, alt text) — shown as "Follow Up", outside article approval & AI fixes.
@@ -611,6 +618,31 @@ function App() {
   // The "Saved" note is stale once anything changes — clear it on edits.
   useEffect(() => { setCsSavedNote(null); /* eslint-disable-next-line */ }, [csTitle, csBrief, csBody, csVoice, csUsedImg]);
 
+  // ── Iteration timeline ──
+  // Keep a ref mirror so back-to-back actions (e.g. edit → re-run gate) read the latest array, not a stale closure.
+  useEffect(() => { csIterRef.current = csIterations; }, [csIterations]);
+  const commitIters = (next, extraPatch = {}) => {
+    csIterRef.current = next;
+    setCsIterations(next);
+    const v = next.length ? next[next.length - 1].v : 0;
+    saveProject({ iterations: next, iteration: v, ...extraPatch });
+  };
+  // Add a new version (a content change: lock / your edit / AI fix).
+  const addVersion = (action, by) => {
+    const prev = csIterRef.current;
+    const v = (prev.length ? prev[prev.length - 1].v : 0) + 1;
+    commitIters([...prev, { v, action, by, ts: new Date().toISOString(), gate: null }]);
+    return v;
+  };
+  // Attach a gate result to the current version (a gate run doesn't make a new version).
+  const setLatestGate = (verdict, scores) => {
+    let prev = csIterRef.current;
+    if (!prev.length) prev = [{ v: 1, action: 'Article locked', by: 'you', ts: new Date().toISOString(), gate: null }];
+    const next = prev.map((e, i) => i === prev.length - 1 ? { ...e, gate: { verdict, scores } } : e);
+    commitIters(next);
+  };
+  const FIX_LABELS = { all: 'everything', topic: 'Topic', seo: 'SEO', grammar: 'Grammar', clarity: 'Clarity' };
+
   const loadCsImages = () => {
     fetch('/api/create/images').then(r => r.json()).then(d => setCsImages(Array.isArray(d) ? d : [])).catch(() => {});
   };
@@ -632,6 +664,7 @@ function App() {
     setCsArticleLocked(false); setCsComments(null);
     setCsSelectedImg(null); setCsUsedImg(null); setCsImageLocked(false);
     setCsVet(null); setCsVetRef(null); setCsRevised(false); setCsFixCount(0); setCsGateCount(0); setCsUserApproved(false); setCsError(null);
+    setCsIterations([]); csIterRef.current = []; setCsGateEdit(false);
     setActiveTab('Content Studio');
   };
 
@@ -677,6 +710,7 @@ function App() {
     setCsArticleLocked(true);
     const next = csWithImage ? 2 : 3;
     await saveProject({ title: csTitle, brief: csBrief, voice: csVoice, body: csBody, article_locked: true, step: next, status: 'article-locked' });
+    addVersion(csIterRef.current.length ? 'You edited & saved' : 'Article saved & locked', 'you');
     setCsStep(next);
   };
 
@@ -766,6 +800,8 @@ function App() {
       if (!r.ok) throw new Error(d.error || 'Gate failed');
       setCsVet(d); setCsVetRef(d); setCsRevised(false); setCsUserApproved(false);
       const g = (csGateCount || 0) + 1; setCsGateCount(g); saveProject({ gate_count: g });
+      const s = d.scores || {};
+      setLatestGate(d.overall_verdict, [s.topic_suitability, s.seo, s.grammar_spelling, s.clarity_meaning]);
       // No auto-approve: the gate only reports status. The user decides whether to approve (see Stage Gate footer).
     } catch (e) { setCsError(e.message); }
     finally { setCsVetLoading(false); }
@@ -779,6 +815,19 @@ function App() {
     setCsStep(4);
   };
 
+  // Inline edit inside the Stage Gate: save the edited text as a new version, then re-run the gate on it — no screen change.
+  const saveGateEditAndRerun = async () => {
+    if (csVetLoading || !!csFixing) return;
+    if (!csBody.trim()) { setCsError('The article is empty.'); return; }
+    addVersion('You edited & saved', 'you');
+    setCsGateEdit(false);
+    await saveProject({ title: csTitle, body: csBody });
+    await runCsVet(csBody);
+  };
+
+  // Full editor: go back to Write Article keeping the lock/gate intact (they can unlock there for a bigger edit).
+  const backToWriteArticle = () => { setCsGateEdit(false); setCsStep(1); };
+
   // AI fix: send article + findings to the model, load the revision back into the editor for review.
   const csFixWithAI = async (focus = 'all', { rerun = false } = {}) => {
     if (csFixing || csVetLoading) return;
@@ -791,6 +840,7 @@ function App() {
       const newBody = d.body || csBody;
       setCsBody(newBody); setCsUserApproved(false);
       const fc = (csFixCount || 0) + 1; setCsFixCount(fc);
+      addVersion('AI fixed ' + (FIX_LABELS[focus] || focus), 'ai');
       if (rerun) {
         // Applied in place — article stays locked; re-run the gate so the new scores show immediately.
         await saveProject({ body: newBody, fix_count: fc });
@@ -849,6 +899,7 @@ function App() {
       setCsUsedImg(p.image_url ? { id: p.image_id, url: p.image_url } : null);
       setCsImageLocked(!!p.image_locked);
       setCsVet(p.gate || null); setCsVetRef(p.gate || null); setCsRevised(false); setCsFixCount(p.fix_count || 0); setCsGateCount(p.gate_count || 0); setCsUserApproved(p.status === 'exported'); setCsComments(null);
+      { const its = Array.isArray(p.iterations) ? p.iterations : []; setCsIterations(its); csIterRef.current = its; } setCsGateEdit(false);
       setCsStep(p.step || (p.article_locked ? (p.with_image ? (p.image_locked ? 3 : 2) : 3) : 1));
       setActiveTab('Content Studio');
     } catch (e) { setCsError(e.message); }
@@ -866,6 +917,36 @@ function App() {
   const csSteps = csWithImage === false
     ? [{ n: 0, label: 'Scope' }, { n: 1, label: 'Write Article' }, { n: 3, label: 'Stage Gate' }, { n: 4, label: 'Export' }]
     : [{ n: 0, label: 'Scope' }, { n: 1, label: 'Write Article' }, { n: 2, label: 'Generate Image' }, { n: 3, label: 'Stage Gate' }, { n: 4, label: 'Export' }];
+
+  // Activity timeline — one line per saved version, with the gate result it produced. Gives "where am I / which version" at a glance.
+  const csByIcon = (by) => by === 'ai' ? '✨' : by === 'app' ? '⚙️' : '✏️';
+  const renderTimeline = () => csIterations.length === 0 ? null : (
+    <div className="cs-timeline">
+      <button type="button" className="cs-timeline-head" onClick={() => setCsTimelineOpen(o => !o)}>
+        <span>{csTimelineOpen ? '▼' : '▶'} History — you are on <strong>version {csVersion}</strong></span>
+        <span className="muted small">{csIterations.length} saved</span>
+      </button>
+      {csTimelineOpen && (
+        <ol className="cs-timeline-list">
+          {csIterations.map((e, i) => {
+            const isNow = i === csIterations.length - 1;
+            const scores = Array.isArray(e.gate?.scores) && e.gate.scores.some(x => x != null) ? ' (' + e.gate.scores.map(x => x ?? '–').join('/') + ')' : '';
+            return (
+              <li key={i} className={'cs-tl-item' + (isNow ? ' cs-tl-now' : '')}>
+                <span className="cs-tl-v">v{e.v}</span>
+                <span className="cs-tl-body">
+                  <span className="cs-tl-action"><span className="cs-tl-icon">{csByIcon(e.by)}</span> {e.action}</span>
+                  {isNow && <span className="cs-tl-here">← you are here</span>}
+                  {e.gate && <span className="cs-tl-gate">↳ gate: <strong className={'cs-tl-verdict cs-verdict-' + String(e.gate.verdict || '').replace(/\s+/g, '-').toLowerCase()}>{e.gate.verdict}</strong>{scores}</span>}
+                </span>
+                {e.ts && <span className="cs-tl-time">{new Date(e.ts).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>}
+              </li>
+            );
+          })}
+        </ol>
+      )}
+    </div>
+  );
 
   const handleSiteFocus = (siteName) => {
     const idx = DIRECTORY_SITES.findIndex(s => s.name.toLowerCase() === siteName.toLowerCase() || s.name.toLowerCase().includes(siteName.toLowerCase()) || siteName.toLowerCase().includes(s.name.toLowerCase()));
@@ -1182,9 +1263,19 @@ function App() {
 
   return (
     <div className="app">
-      {/* Sidebar Section */}
-      <aside className="sidebar">
-        <div className="logo" data-tooltip="Nexus AI-Powered Control Plane" onClick={() => setActiveTab('Dashboard')} style={{ cursor: 'pointer' }}>Nexus</div>
+      {/* Mobile top bar — only shown < 768px (CSS). Hosts the hamburger that opens the drawer. */}
+      <div className="mobile-topbar">
+        <button className="hamburger" aria-label="Open menu" onClick={() => setNavOpen(true)}>☰</button>
+        <div className="mobile-logo" onClick={() => { setActiveTab('Dashboard'); setNavOpen(false); }}>Nexus</div>
+        <span style={{ width: '40px' }} />
+      </div>
+
+      {/* Backdrop behind the open drawer (mobile only) */}
+      {navOpen && <div className="nav-backdrop" onClick={() => setNavOpen(false)} />}
+
+      {/* Sidebar Section — off-canvas drawer on mobile, static on desktop */}
+      <aside className={'sidebar' + (navOpen ? ' sidebar-open' : '')}>
+        <div className="logo" data-tooltip="Nexus AI-Powered Control Plane" onClick={() => { setActiveTab('Dashboard'); setNavOpen(false); }} style={{ cursor: 'pointer' }}>Nexus</div>
         {NAV_GROUPS.map((group) => (
           <div key={group.label} className="nav-group">
             <div className="nav-section-label">{group.label}</div>
@@ -1195,7 +1286,7 @@ function App() {
                   + (SOURCE_ITEMS.has(n) ? ' nav-item-source' : '')
                   + (activeTab === n ? ' active' : '')
                   + (COMING_SOON.has(n) ? ' nav-item-soon' : '')}
-                onClick={() => setActiveTab(n)}
+                onClick={() => { setActiveTab(n); setNavOpen(false); }}
                 data-tooltip={NAV_TOOLTIPS[n]}
               >
                 {SOURCE_ITEMS.has(n) && <span className={'source-dot source-dot-' + n.toLowerCase()} />}
@@ -1239,6 +1330,7 @@ function App() {
                 </button>
               ))}
               <div className="cs-stepper-right">
+                {csVersion > 0 && <span className="cs-version-badge" title="The version you're working on. It goes up by one each time you or the AI saves a change.">Version {csVersion}</span>}
                 {csSavedNote && <span className="muted small">{csSavedNote}</span>}
                 {csStep > 0 && csProjectId && <button className="btn-ghost" onClick={saveDraft} disabled={csSaving}>{csSaving ? 'Saving…' : '💾 Save draft'}</button>}
                 <button className="btn-ghost" onClick={newProject}>+ New</button>
@@ -1326,10 +1418,15 @@ function App() {
                         {csComments.suggestions?.length > 0 && <><h4 className="cs-sub">Suggestions</h4><ul className="cs-list">{csComments.suggestions.map((s, i) => <li key={i}>→ {s}</li>)}</ul></>}
                       </div>
                     )}
-                    <div className="cs-btn-row cs-step-actions">
-                      <button className="btn-primary" onClick={acceptArticle} disabled={!csTitle.trim() || !csBody.trim()}>Accept &amp; Lock Article</button>
-                      <button className="btn-ghost" onClick={csDraftAI} disabled={csDrafting}>Ask AI for a new draft</button>
-                      <button className="btn-danger" onClick={discardArticle}>Discard</button>
+                    <div className="cs-step-actions">
+                      <p className="muted small" style={{ marginBottom: '10px' }}>
+                        💾 Saving keeps this version and {csWithImage ? 'takes you to the image step' : 'takes you to the Stage Gate'}. The gate then checks exactly what you saved. You can always come back and edit.
+                      </p>
+                      <div className="cs-btn-row">
+                        <button className="btn-primary" onClick={acceptArticle} disabled={!csTitle.trim() || !csBody.trim()}>{csWithImage ? '💾 Save article & add image →' : '💾 Save article & go to Stage Gate →'}</button>
+                        <button className="btn-ghost" onClick={csDraftAI} disabled={csDrafting}>Ask AI for a new draft</button>
+                        <button className="btn-danger" onClick={discardArticle}>Discard</button>
+                      </div>
                     </div>
                   </>
                 ) : (
@@ -1409,11 +1506,37 @@ function App() {
                 <div className="panel-head">
                   <h2>3 · Stage Gate</h2>
                   <div className="cs-head-right">
+                    {csVersion > 0 && <span className="cs-iter cs-iter-v" title="The version the gate is checking">version {csVersion}</span>}
                     {(csGateCount > 0 || csFixCount > 0) && <span className="cs-iter" title="Gate runs · AI fixes applied to this article">↻ {csGateCount} run{csGateCount === 1 ? '' : 's'} · ✨ {csFixCount} fix{csFixCount === 1 ? '' : 'es'}</span>}
-                    <button className="btn-primary" onClick={runCsVet} disabled={csVetLoading || !csArticleLocked}>{csVetLoading ? 'Vetting…' : 'Run Stage Gate'}</button>
+                    <button className="btn-primary" onClick={() => runCsVet()} disabled={csVetLoading || !csArticleLocked || !!csFixing}>{csVetLoading ? 'Vetting…' : (csGateCount > 0 ? 'Re-run gate' : 'Run Stage Gate')}</button>
                   </div>
                 </div>
-                {!csArticleLocked && <div className="cs-empty">Lock the article first (Step 1).</div>}
+                {!csArticleLocked && <div className="cs-empty">Save &amp; lock the article first (Step 1).</div>}
+
+                {csArticleLocked && (
+                  <>
+                    {/* Edit in place — revise without leaving the Stage Gate, then save & re-check */}
+                    <div className="cs-gate-toolbar">
+                      <button className={'btn-ghost' + (csGateEdit ? ' cs-on' : '')} onClick={() => setCsGateEdit(o => !o)} disabled={csVetLoading || !!csFixing}>{csGateEdit ? '▲ Hide editor' : '✏️ Edit article here'}</button>
+                      <button className="btn-ghost" onClick={backToWriteArticle} disabled={csVetLoading || !!csFixing}>← Back to Write Article</button>
+                    </div>
+                    {csGateEdit && (
+                      <div className="cs-gate-edit">
+                        <p className="muted small" style={{ marginBottom: '8px' }}>Edit below, then <strong>💾 Save &amp; re-run gate</strong> — the app re-checks your edit and updates the scores &amp; comments. Or let the AI fix it for you.</p>
+                        <input className="cs-input cs-title" value={csTitle} onChange={e => setCsTitle(e.target.value)} placeholder="Article title" />
+                        <textarea className="cs-textarea cs-textarea-tall" value={csBody} onChange={e => setCsBody(e.target.value)} rows={16} placeholder="Edit your article…" />
+                        <div className="muted small">{csBody.trim() ? csBody.trim().split(/\s+/).length : 0} words</div>
+                        <div className="cs-btn-row cs-step-actions">
+                          <button className="btn-primary" onClick={saveGateEditAndRerun} disabled={csVetLoading || !!csFixing || !csBody.trim()}>{csVetLoading ? 'Saving &amp; checking…' : '💾 Save & re-run gate'}</button>
+                          <button className="btn-ghost" onClick={() => csFixWithAI('all', { rerun: true })} disabled={!!csFixing || csVetLoading}>{csFixing === 'all' ? 'AI working…' : '✨ Let AI fix & save'}</button>
+                          <button className="btn-ghost" onClick={() => setCsGateEdit(false)} disabled={csVetLoading || !!csFixing}>Close editor</button>
+                        </div>
+                      </div>
+                    )}
+                    {renderTimeline()}
+                  </>
+                )}
+
                 {csArticleLocked && csVetLoading && (
                   <div className="cs-vet-loading"><span className="cs-spinner" /><div><strong>Reviewing your article…</strong><div className="muted small">Checking topic fit, SEO, grammar &amp; spelling, and clarity. This usually takes 15–30 seconds.</div></div></div>
                 )}
@@ -1485,14 +1608,17 @@ function App() {
                           <div className="cs-btn-row">
                             <button className="btn-primary" onClick={approveArticle}>Approve article → Export</button>
                             <button className="btn-ghost" onClick={() => csFixWithAI('all', { rerun: true })} disabled={!!csFixing || csVetLoading}>{csFixing === 'all' ? 'Improving…' : '✨ Improve further'}</button>
-                            <button className="btn-ghost" onClick={unlockArticle} disabled={!!csFixing || csVetLoading}>Edit article</button>
+                            <button className="btn-ghost" onClick={() => setCsGateEdit(true)} disabled={!!csFixing || csVetLoading}>✏️ Edit it myself</button>
                           </div>
                         </>
                       ) : (
-                        <div className="cs-btn-row">
-                          <button className="btn-primary" onClick={() => csFixWithAI('all', { rerun: true })} disabled={!!csFixing || csVetLoading}>{csFixing === 'all' ? 'Fixing…' : '✨ Fix everything with AI'}</button>
-                          <button className="btn-ghost" onClick={unlockArticle} disabled={!!csFixing || csVetLoading}>Revise myself</button>
-                        </div>
+                        <>
+                          <p className="muted small" style={{ marginBottom: '10px' }}>Not passing yet. Choose how to fix it — either way it’s saved as a new version and re-checked:</p>
+                          <div className="cs-btn-row">
+                            <button className="btn-primary" onClick={() => csFixWithAI('all', { rerun: true })} disabled={!!csFixing || csVetLoading}>{csFixing === 'all' ? 'AI working…' : '✨ Let AI fix & save'}</button>
+                            <button className="btn-ghost" onClick={() => setCsGateEdit(true)} disabled={!!csFixing || csVetLoading}>✏️ Edit it myself</button>
+                          </div>
+                        </>
                       )}
                     </div>
                   </div>
@@ -1540,6 +1666,7 @@ function App() {
                   </div>
                   <div className="muted small" style={{ marginTop: '6px' }}>
                     {p.with_image ? '🖼️ With image' : '📝 Text only'} · {p.status}
+                    {p.iteration > 0 && <> · <strong title="Current version">v{p.iteration}</strong></>}
                     {(p.gate_count > 0 || p.fix_count > 0) && <> · <span title="Gate runs · AI fixes applied">↻ {p.gate_count || 0} · ✨ {p.fix_count || 0}</span></>}
                   </div>
                   <div className="muted small">Updated {new Date(p.updated_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
@@ -1564,9 +1691,9 @@ function App() {
               <div className="panel-head"><h2>The four stages</h2></div>
               <ol className="cs-list cs-guide-steps">
                 <li><span className="cs-guide-num">0</span><div><strong>Scope</strong> — choose <em>Article with image</em> or <em>Text only</em>. This decides whether the image stage appears.</div></li>
-                <li><span className="cs-guide-num">1</span><div><strong>Write Article</strong> — give a title and a plain-language brief, then <em>paste/type</em>, <em>✨ Write with AI</em>, or both. Use <em>⇲ Format to Markdown</em> to tidy pasted text and <em>💬 Get AI Comments</em> for advisory feedback. When happy, <strong>Accept &amp; Lock</strong>.</div></li>
+                <li><span className="cs-guide-num">1</span><div><strong>Write Article</strong> — give a title and a plain-language brief, then <em>paste/type</em>, <em>✨ Write with AI</em>, or both. Use <em>⇲ Format to Markdown</em> to tidy pasted text and <em>💬 Get AI Comments</em> for advisory feedback. When happy, hit <strong>💾 Save article</strong> — this keeps the version (now <strong>v1</strong>) and moves you on.</div></li>
                 <li><span className="cs-guide-num">2</span><div><strong>Generate Image</strong> (image projects only) — <em>Generate</em> from a prompt or <em>⬆ Upload</em> your own. Each image gets an AI suitability check. <em>Use</em> the one you want, <em>Save locally</em> or <em>Delete</em>, then <strong>Accept &amp; Lock</strong>.</div></li>
-                <li><span className="cs-guide-num">3</span><div><strong>Stage Gate</strong> — the AI copywriting gate scores the writing and returns <strong>APPROVED</strong>, <strong>NEEDS WORK</strong>, or <strong>REJECT</strong>. Revise and re-run until it passes.</div></li>
+                <li><span className="cs-guide-num">3</span><div><strong>Stage Gate</strong> — the AI copywriting gate scores the writing and returns <strong>APPROVED</strong>, <strong>NEEDS WORK</strong>, or <strong>REJECT</strong>. You can fix it <em>right here</em>: <strong>✏️ Edit it myself</strong> then <strong>💾 Save &amp; re-run gate</strong>, or <strong>✨ Let AI fix &amp; save</strong>. Each fix becomes a new version — keep going until it passes.</div></li>
                 <li><span className="cs-guide-num">4</span><div><strong>Export</strong> — download as <strong>PDF</strong>, <strong>HTML</strong>, or <strong>Markdown</strong> (with Markdown you can also download the image to keep alongside it). Unlocks only once the gate is APPROVED (and the image is locked, for image projects).</div></li>
               </ol>
             </section>
@@ -1591,11 +1718,31 @@ function App() {
             </section>
 
             <section className="panel cs-panel" style={{ marginTop: '20px' }}>
+              <div className="panel-head"><h2>Versions — always know where you are</h2></div>
+              <p className="muted small">Think of it like saved games. Every time you (or the AI) save a change, the <strong>version number goes up</strong> — v1, v2, v3… The <strong>Version</strong> badge at the top right always shows the one you’re working on.</p>
+              <ul className="cs-list" style={{ marginTop: '10px' }}>
+                <li><strong>Where am I?</strong> The numbered steps at the top (Scope → Write → Image → Stage Gate → Export) show your <em>stage</em>; the <strong>Version</strong> badge shows your <em>iteration</em>.</li>
+                <li><strong>What changed?</strong> The <strong>History</strong> list inside the Stage Gate shows every version in order — “Article saved &amp; locked”, “You edited &amp; saved”, “AI fixed Grammar” — with the gate result underneath each, and a <em>← you are here</em> marker on the latest.</li>
+                <li>A version is created when you <strong>save the article</strong>, <strong>edit &amp; save</strong> in the gate, or let the <strong>AI fix &amp; save</strong>. Running the gate on its own doesn’t add a version — it just attaches a result to the current one.</li>
+              </ul>
+            </section>
+
+            <section className="panel cs-panel" style={{ marginTop: '20px' }}>
+              <div className="panel-head"><h2>Fixing in the Stage Gate</h2></div>
+              <p className="muted small">When the gate says NEEDS WORK or REJECT, you never have to leave the screen. You have three clear choices:</p>
+              <ul className="cs-list" style={{ marginTop: '10px' }}>
+                <li><strong>✏️ Edit it myself</strong> — opens the article right inside the gate. Make your changes, then <strong>💾 Save &amp; re-run gate</strong>: the app saves a new version and re-checks <em>your</em> edit, giving fresh scores and comments.</li>
+                <li><strong>✨ Let AI fix &amp; save</strong> — the AI rewrites to address the findings, saves it as a new version, and re-runs the gate automatically.</li>
+                <li><strong>← Back to Write Article</strong> — returns to the full Step 1 editor for a bigger rewrite. Your gate result is kept.</li>
+              </ul>
+              <p className="muted small" style={{ marginTop: '10px' }}>Approval is always <strong>your</strong> decision: even when all checks pass, the article waits for you to press <strong>Approve → Export</strong>.</p>
+            </section>
+
+            <section className="panel cs-panel" style={{ marginTop: '20px' }}>
               <div className="panel-head"><h2>Saving &amp; reopening</h2></div>
               <ul className="cs-list">
-                <li><strong>💾 Save draft</strong> (top bar) snapshots everything at any stage.</li>
-                <li><strong>Studio Projects</strong> lists every project with its status and verdict — click <em>Open</em> to resume at the stage you left.</li>
-                <li>Editing a locked article or image re-opens it and clears the downstream gate result, so the verdict always matches the final text.</li>
+                <li><strong>💾 Save draft</strong> (top bar) snapshots everything at any stage, without changing the verdict.</li>
+                <li><strong>Studio Projects</strong> lists every project with its status, verdict and current version — click <em>Open</em> to resume exactly where you left off, history and all.</li>
               </ul>
             </section>
           </>
@@ -1616,7 +1763,7 @@ function App() {
             </section>
 
             {/* Semrush Top Sites + Opportunities */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
               {/* Semrush Top Sites by DA */}
               <div className="panel">
                 <div className="panel-head">
@@ -1685,7 +1832,7 @@ function App() {
                 <h2>Data Source Connections</h2>
                 <span className="badge-source font-11">5 Sources · 75 Tools Total</span>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0', borderTop: '1px solid var(--darker)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0', borderTop: '1px solid var(--darker)' }}>
                 {[
                   { name: 'Semrush', tools: 19, status: 'live', note: 'SEO · Keywords · Backlinks · DA' },
                   { name: 'Google Search Console', tools: 20, status: 'live', note: 'Clicks · Impressions · CTR · Queries' },
@@ -1801,7 +1948,7 @@ function App() {
                   onChange={(e) => setDirectorySearch(e.target.value)}
                   style={{
                     padding: '6px 14px', background: 'var(--darker)', border: '1px solid rgba(255,255,255,0.05)',
-                    borderRadius: '20px', color: 'var(--text)', fontSize: '13px', width: '240px'
+                    borderRadius: '20px', color: 'var(--text)', fontSize: '13px', width: '240px', maxWidth: '100%'
                   }}
                 />
               </div>
@@ -2060,7 +2207,7 @@ function App() {
                 <Kpi label="GTM Containers" value={GTM_CONTAINERS.length} accent="success" tooltip="Active GTM containers across all accounts" />
               </section>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '20px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
                 {/* Account Selector */}
                 <section className="panel">
                   <div className="panel-head"><h2>GA4 Accounts</h2><span className="badge-source" style={{ background: '#059669', color: '#fff', border: 'none' }}>✓ Live</span></div>
@@ -2110,7 +2257,7 @@ function App() {
               {/* GTM Accounts */}
               <section className="panel">
                 <div className="panel-head"><h2>GTM Accounts & Container Health</h2><span className="badge-source" style={{ background: '#059669', color: '#fff', border: 'none' }}>✓ Live · 3 Accounts</span></div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0', borderTop: '1px solid var(--darker)' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0', borderTop: '1px solid var(--darker)' }}>
                   {[{ id: '6001052563', name: 'Gaia Digital Agency', containers: GTM_CONTAINERS.length, note: 'Standard conversion rules' }, { id: '6230112195', name: 'SGi Airbali.com', containers: 1, note: 'Heli-booking action tags' }, { id: '6244135728', name: 'sgi-aero.com', containers: 1, note: 'Corporate booking triggers' }].map((acc, i, arr) => (
                     <div key={acc.id} style={{ padding: '18px 20px', borderRight: i < arr.length - 1 ? '1px solid var(--darker)' : 'none' }}>
                       <div style={{ fontWeight: 600, fontSize: '14px', marginBottom: '4px' }}>{acc.name}</div>
@@ -2237,8 +2384,8 @@ function App() {
 
             {/* Hermes Chat Drawer/Modal Panel */}
             {activeChatProposal && (
-              <div style={{
-                position: 'fixed', top: 0, right: 0, width: '450px', height: '100%',
+              <div className="hermes-drawer" style={{
+                position: 'fixed', top: 0, right: 0, width: '450px', maxWidth: '100vw', height: '100%',
                 background: 'var(--surface)', borderLeft: '1px solid var(--darker)',
                 boxShadow: '-10px 0 30px rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', flexDirection: 'column',
                 animation: 'slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
@@ -2561,7 +2708,7 @@ function App() {
                 return (
                   <div className="pad">
                     {/* The 4 Main Areas: PABS Gauge Scores */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px', marginBottom: '24px' }}>
                       {[
                         { label: 'Performance', score: data.performance, color: data.performance >= 90 ? 'var(--success)' : 'var(--warning)' },
                         { label: 'Accessibility', score: data.accessibility, color: data.accessibility >= 90 ? 'var(--success)' : 'var(--warning)' },
@@ -3312,116 +3459,95 @@ function App() {
         {/* ==================== VIEW: INFO / ABOUT ==================== */}
         {activeTab === 'Info' && (
           <>
-            {/* Hero — AI front and centre */}
+            {/* ── Introduction ── */}
             <section className="panel">
               <div className="panel-head">
-                <h2>Meet Hermes — the AI that runs the portfolio</h2>
+                <h2>Gaia Nexus — an AI-operated SEO control plane</h2>
                 <span className="badge-source" style={{ background: '#059669', color: '#fff', border: 'none' }}>About this platform</span>
               </div>
-              <div className="pad" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div className="pad" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <p style={{ lineHeight: '1.6', fontSize: '14px', margin: 0 }}>
-                  <strong style={{ color: 'var(--accent)' }}>Gaia Nexus</strong> is an
-                  <strong> AI-operated control plane</strong> for Gaia Digital Agency's ~50 managed domains. The operator
-                  is <strong>Hermes</strong>, a Claude Opus agent running on a dedicated command-centre VM
-                  (<code style={{ background: 'var(--darker)', padding: '1px 6px', borderRadius: '4px' }}>gda-ai01</code>).
+                  <strong style={{ color: 'var(--accent)' }}>Gaia Nexus</strong> is the cockpit for Gaia Digital Agency's ~50 managed domains. The AI operator, <strong>Hermes</strong> (Claude Opus on <code style={{ background: 'var(--darker)', padding: '1px 6px', borderRadius: '4px' }}>gda-ai01</code>), audits every site, turns the data into ranked plain-English actions, and deploys the approved ones over SSH / WP-CLI — while you stay in command.
                 </p>
-                <p className="muted" style={{ lineHeight: '1.6', fontSize: '13.5px', margin: 0 }}>
-                  Hermes audits every site, turns the data into ranked plain-English proposals, and deploys the approved
-                  ones over SSH / WP-CLI — autonomously. This dashboard is the cockpit a human uses to watch, steer, and
-                  approve what the AI does across the whole fleet.
+                <p className="muted small" style={{ lineHeight: '1.6', margin: 0 }}>
+                  A 50-site portfolio scatters data across Semrush, Search Console, GA4, GTM and Ads — too much for any team to act on in time. Hermes reasons over all of it at once: it <strong>monitors</strong>, <strong>decides</strong> and <strong>executes</strong>; you watch, steer and approve.
                 </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '2px' }}>
+                  {[['Operator', 'Hermes'], ['Model', 'Claude Opus'], ['Domains', '~50'], ['Audited', '63'], ['SSH fleet', '4']].map(([k, v]) => (
+                    <span key={k} className="tag" style={{ textTransform: 'none' }}>{k}: <strong style={{ color: 'var(--text)' }}>{v}</strong></span>
+                  ))}
+                </div>
               </div>
             </section>
 
-            {/* Gap vs solution */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
-              <div className="panel">
-                <div className="pad">
-                  <h3 style={{ margin: '0 0 8px', fontSize: '14px', color: 'var(--warning)' }}>⚠ The gap</h3>
-                  <p className="muted small" style={{ lineHeight: '1.6', margin: 0 }}>
-                    A 50-site portfolio spreads SEO data across Semrush, Search Console, GA4, GTM and Google Ads — per
-                    site, per login. No human team can diagnose, decide, and act on all of it fast enough. Wins get
-                    missed; regressions go unnoticed.
-                  </p>
-                </div>
-              </div>
-              <div className="panel">
-                <div className="pad">
-                  <h3 style={{ margin: '0 0 8px', fontSize: '14px', color: 'var(--success)' }}>✓ The AI answer</h3>
-                  <p className="muted small" style={{ lineHeight: '1.6', margin: 0 }}>
-                    Hermes ingests every source, reasons over the whole portfolio, and proposes ranked fixes — then
-                    deploys the ones you approve straight to the servers. The agent does the monitoring, analysis, and
-                    execution; you stay in command.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* AI scope */}
-            <section className="kpis" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}>
-              <div className="kpi"><div className="kpi-label muted">AI Operator</div><div className="kpi-value" style={{ fontSize: '16px' }}>Hermes</div></div>
-              <div className="kpi"><div className="kpi-label muted">Model</div><div className="kpi-value" style={{ fontSize: '16px' }}>Claude Opus</div></div>
-              <div className="kpi"><div className="kpi-label muted">Managed Domains</div><div className="kpi-value">~50</div></div>
-              <div className="kpi"><div className="kpi-label muted">Sites Audited</div><div className="kpi-value success">63</div></div>
-              <div className="kpi"><div className="kpi-label muted">SSH Fleet</div><div className="kpi-value">4</div></div>
-            </section>
-
-            {/* How Hermes works — the loop */}
+            {/* ── Create (flagship — biggest section) ── */}
             <section className="panel">
-              <div className="panel-head"><h2>How Hermes works — the operating loop</h2></div>
-              <div className="pad" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px' }}>
-                {[
-                  { n: '1', t: 'Monitor', d: 'The agent reads portfolio-wide health, per-site deep dives, and Core Web Vitals.' },
-                  { n: '2', t: 'Decide', d: 'It drafts AI period briefings and ranked, staged optimisation proposals for you to approve or refine by chat.' },
-                  { n: '3', t: 'Act', d: 'On approval it deploys via Nginx / WP-CLI and tracks execution in real time.' },
-                  { n: '4', t: 'Data', d: 'Semrush, GSC, GA4, GTM & Ads — the intelligence Hermes reasons over.' },
-                  { n: '5', t: 'Assist', d: 'An in-app AI assistant answers questions about the portfolio on demand.' },
-                ].map((s) => (
-                  <div key={s.t} style={{ background: 'var(--darker)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.03)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                      <span style={{ background: 'var(--accent)', color: '#fff', width: '24px', height: '24px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '12px' }}>{s.n}</span>
-                      <h3 style={{ fontSize: '13.5px', margin: 0, fontWeight: 600 }}>{s.t}</h3>
+              <div className="panel-head">
+                <h2>Create — Content Studio</h2>
+                <span className="badge-source" style={{ background: '#6366F1', color: '#fff', border: 'none' }}>Newest</span>
+              </div>
+              <div className="pad" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <p style={{ margin: 0, lineHeight: '1.6', fontSize: '14px' }}>
+                  A guided studio that takes a piece from blank page to publish-ready file — with an AI copywriting <strong>Stage Gate</strong> standing between draft and export, so nothing ships below standard.
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
+                  {[
+                    ['✍️ Write', 'Type, paste, or ✨ draft with AI in a chosen brand voice; tidy to Markdown and get advisory AI comments.'],
+                    ['🖼️ Image', 'Generate or upload an image; each gets an AI suitability check (image projects only).'],
+                    ['🚦 Stage Gate', 'The AI copywriter scores Topic / SEO / Grammar / Clarity (0–10), runs an 18-point on-page SEO checklist, enforces British English and bans clichés.'],
+                    ['🔢 Versions', 'Every save, edit or AI fix is a tracked version (v1, v2, v3…) with a history timeline — you always know which iteration you’re on.'],
+                    ['🛠️ Fix in place', 'Edit inside the gate and “Save & re-run”, or let the AI fix & save — no screen-jumping. Approval is always your call.'],
+                    ['📤 Export', 'Download as PDF, HTML or Markdown once you approve.'],
+                  ].map(([t, d]) => (
+                    <div key={t} style={{ background: 'var(--darker)', padding: '14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                      <h3 style={{ margin: '0 0 6px', fontSize: '13px', color: 'var(--accent)' }}>{t}</h3>
+                      <p className="muted small" style={{ margin: 0, lineHeight: '1.5' }}>{d}</p>
                     </div>
-                    <p className="muted small" style={{ lineHeight: '1.5', margin: 0 }}>{s.d}</p>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            {/* ── The operating loop: Monitor · Decide & Act · Data · System ── */}
+            <section className="panel">
+              <div className="panel-head"><h2>The operating loop</h2></div>
+              <div className="pad" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px' }}>
+                {[
+                  { icon: '📡', name: 'Monitor', items: ['Dashboard', 'Directory', 'Focus', 'Lighthouse'], desc: 'Portfolio health at a glance, the full managed-site directory, per-site deep dives, and Lighthouse Core Web Vitals.' },
+                  { icon: '✅', name: 'Decide & Act', items: ['Reports', 'Proposals', 'Deployments', 'Audit'], desc: 'AI period briefings, ranked staged proposals you approve or refine by chat, a live Nginx / WP-CLI deployment tracker, and the daily portfolio audit.' },
+                  { icon: '🔌', name: 'Data', items: ['Semrush', 'GSC', 'GA4', 'Analytics', 'GTM', 'Ads'], desc: 'The intelligence Hermes reasons over — SEO, search, behaviour and tags. (GTM & Ads coming soon.)' },
+                  { icon: '⚙️', name: 'System', items: ['Settings', 'Guide', 'Chat History', 'Info'], desc: 'Config & credentials, the operator playbook, past assistant Q&A, and this page.' },
+                ].map((g) => (
+                  <div key={g.name} style={{ background: 'var(--darker)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                    <h3 style={{ margin: '0 0 8px', fontSize: '14px' }}>{g.icon} {g.name}</h3>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px' }}>
+                      {g.items.map((it) => <span key={it} className="capability-tool-badge">{it}</span>)}
+                    </div>
+                    <p className="muted small" style={{ margin: 0, lineHeight: '1.5' }}>{g.desc}</p>
                   </div>
                 ))}
               </div>
             </section>
 
-            {/* Capabilities */}
+            {/* ── Others ── */}
             <section className="panel">
-              <div className="panel-head"><h2>What the AI delivers</h2></div>
-              <div className="table-wrapper">
-                <table className="compact-table">
-                  <thead><tr><th>Capability</th><th>What it delivers</th><th>Powered by</th></tr></thead>
-                  <tbody>
-                    {[
-                      ['Autonomous audits', 'Hermes diagnoses every site — technical, SEO, performance — without a human', 'Hermes (Claude Opus)'],
-                      ['Ranked proposals', 'Plain-English, prioritised fixes you approve or refine by chat', 'Hermes reasoning'],
-                      ['One-click deploys', 'Approved changes pushed to servers and tracked live', 'SSH / WP-CLI'],
-                      ['In-app AI assistant', 'Ask the platform anything about the portfolio', 'Gemini-backed chat'],
-                      ['Market & search intel', 'Keywords, backlinks, clicks, CTR, quick-wins, indexing', 'Semrush + GSC'],
-                      ['Behaviour & conversion', 'Sessions, funnels, tag health, paid-search audits', 'GA4 · GTM · Ads'],
-                      ['Answer-engine optimisation', 'Schema + direct answers; tracks ChatGPT / Perplexity referrals', 'AEO playbook'],
-                    ].map((r) => (
-                      <tr key={r[0]}><td style={{ color: 'var(--accent)' }}>{r[0]}</td><td>{r[1]}</td><td className="muted">{r[2]}</td></tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="panel-head"><h2>Also in the platform</h2></div>
+              <div className="pad" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
+                {[
+                  ['✦ In-app AI assistant', 'Ask anything about your portfolio data — info-only, answers on demand.'],
+                  ['📱 Mobile-ready', 'Fully responsive — run the cockpit from phone, tablet or desktop.'],
+                  ['🔐 4-server SSH fleet', 'gda-ce01 · gda-pn01 · gda-s01 · gda-ai01 — passwordless-sudo deploys.'],
+                  ['🧱 The stack', 'Hermes (Claude Opus) · Gemini assistant · PostgreSQL · React 19 · Vite 6 · Node/Express · Nginx.'],
+                ].map(([t, d]) => (
+                  <div key={t} style={{ background: 'var(--darker)', padding: '14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                    <h3 style={{ margin: '0 0 6px', fontSize: '13px' }}>{t}</h3>
+                    <p className="muted small" style={{ margin: 0, lineHeight: '1.5' }}>{d}</p>
+                  </div>
+                ))}
               </div>
-            </section>
-
-            {/* Stack + CTA */}
-            <section className="panel">
-              <div className="pad" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
-                <div>
-                  <h3 style={{ margin: '0 0 6px', fontSize: '14px' }}>The AI stack</h3>
-                  <p className="muted small" style={{ margin: 0 }}>Hermes (Claude Opus) on gda-ai01 · Gemini-backed in-app assistant · PostgreSQL 18 · React 19 · Vite 6 · Node/Express · Nginx.</p>
-                </div>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <button className="btn-primary" onClick={() => setActiveTab('Dashboard')} style={{ padding: '8px 16px' }}>Open Dashboard</button>
-                  <button className="btn-secondary" onClick={() => setActiveTab('Guide')} style={{ padding: '8px 16px' }}>Operator Guide</button>
-                </div>
+              <div className="pad" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', paddingTop: 0 }}>
+                <button className="btn-primary" onClick={() => setActiveTab('Dashboard')} style={{ padding: '8px 16px' }}>Open Dashboard</button>
+                <button className="btn-secondary" onClick={() => setActiveTab('Guide')} style={{ padding: '8px 16px' }}>Operator Guide</button>
               </div>
             </section>
           </>

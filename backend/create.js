@@ -309,7 +309,9 @@ const COMMENTS_SCHEMA = {
 };
 
 // ── Project field whitelist for safe partial updates ──
-const PROJECT_FIELDS = ['title', 'with_image', 'brief', 'voice', 'body', 'article_locked', 'image_id', 'image_url', 'image_locked', 'verdict', 'gate', 'step', 'status', 'fix_count', 'gate_count'];
+const PROJECT_FIELDS = ['title', 'with_image', 'brief', 'voice', 'body', 'article_locked', 'image_id', 'image_url', 'image_locked', 'verdict', 'gate', 'step', 'status', 'fix_count', 'gate_count', 'iteration', 'iterations'];
+// jsonb columns must be JSON-stringified before binding (pg would otherwise coerce JS arrays to Postgres array literals).
+const JSON_FIELDS = new Set(['gate', 'iterations']);
 
 // ── HTML export ──
 function escapeHtml(s) {
@@ -729,7 +731,7 @@ export function registerCreateRoutes(app, pool) {
   app.get('/api/create/projects', async (_req, res) => {
     try {
       const { rows } = await pool.query(
-        'SELECT id, title, with_image, verdict, status, image_url, article_locked, image_locked, fix_count, gate_count, updated_at FROM content_projects ORDER BY updated_at DESC LIMIT 200'
+        'SELECT id, title, with_image, verdict, status, image_url, article_locked, image_locked, fix_count, gate_count, iteration, updated_at FROM content_projects ORDER BY updated_at DESC LIMIT 200'
       );
       res.json(rows);
     } catch (e) { res.status(500).json({ error: e.message }); }
@@ -747,7 +749,7 @@ export function registerCreateRoutes(app, pool) {
     const sets = [], vals = [];
     for (const f of PROJECT_FIELDS) {
       if (Object.prototype.hasOwnProperty.call(req.body || {}, f)) {
-        vals.push(f === 'gate' ? JSON.stringify(req.body[f]) : req.body[f]);
+        vals.push(JSON_FIELDS.has(f) ? JSON.stringify(req.body[f]) : req.body[f]);
         sets.push(`${f}=$${vals.length}`);
       }
     }

@@ -195,6 +195,22 @@ th { font-size: 12px; color: var(--muted); font-weight: 500; text-transform: upp
 .err { color: var(--danger); }
 .foot { margin-top: 24px; font-size: 12px; text-align: center; }
 
+/* ==================== Responsive foundations ==================== */
+/* Never let the page itself scroll sideways — wide content (tables, grids)
+   must scroll inside its own container instead of widening the whole app. */
+html, body { max-width: 100%; overflow-x: hidden; }
+/* Flex/grid children default to min-width:auto, which refuses to shrink below
+   their content. That makes wide tables push the whole layout out. Allow them
+   to shrink so the inner .table-wrapper (overflow-x:auto) can scroll instead. */
+.main { min-width: 0; }
+.panel, .analytics-box, .settings-section, .kpi { min-width: 0; }
+.split-panels > *, .kpis > * { min-width: 0; }
+.table-wrapper { max-width: 100%; }
+
+/* Mobile chrome — hidden on desktop, shown inside the 768px breakpoint. */
+.mobile-topbar { display: none; }
+.nav-backdrop { display: none; }
+
 /* Mobile Responsiveness & Media Queries */
 @media (max-width: 1024px) {
   .kpis { grid-template-columns: repeat(2, 1fr); }
@@ -202,20 +218,55 @@ th { font-size: 12px; color: var(--muted); font-weight: 500; text-transform: upp
 }
 
 @media (max-width: 768px) {
+  /* Sidebar is now hidden out-of-flow; the visible flow is [mobile-topbar, main]. */
   .app { flex-direction: column; }
-  .sidebar {
-    width: 100%; border-right: none; border-bottom: 1px solid var(--darker);
-    flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between;
-    padding: 16px; gap: 12px;
+
+  .mobile-topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px; background: var(--surface);
+    border-bottom: 1px solid var(--darker);
+    position: sticky; top: 0; z-index: 120;
   }
-  .logo { margin-bottom: 0; }
-  .nav-item { padding: 6px 12px; font-size: 13px; }
+  .hamburger {
+    background: none; border: none; color: var(--text);
+    font-size: 24px; line-height: 1; cursor: pointer; padding: 4px 10px;
+  }
+  .mobile-logo {
+    font-weight: 600; font-size: 17px; color: #fff; cursor: pointer;
+    background: var(--accent); padding: 6px 14px; border-radius: 10px;
+  }
+
+  /* Off-canvas drawer */
+  .sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0; height: 100vh;
+    width: 270px; max-width: 82vw;
+    flex-direction: column; flex-wrap: nowrap; align-items: stretch; justify-content: flex-start;
+    border-right: 1px solid var(--darker); border-bottom: none;
+    padding: 20px 16px; gap: 8px; overflow-y: auto;
+    transform: translateX(-100%); transition: transform 0.25s ease; z-index: 200;
+  }
+  .sidebar.sidebar-open { transform: translateX(0); box-shadow: 8px 0 32px rgba(0,0,0,0.6); }
+  .logo { margin-bottom: 16px; }
+  .nav-item { padding: 12px 16px; font-size: 14px; }
+
+  .nav-backdrop {
+    display: block; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55); z-index: 150;
+    animation: fadeIn 0.2s ease-out;
+  }
+
   .main { padding: 16px; gap: 16px; }
   .topbar { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .topbar h1 { font-size: 20px; }
   .badge-row { width: 100%; justify-content: space-between; margin-top: 4px; }
   .kpis { grid-template-columns: 1fr; }
   .split-panels { grid-template-columns: 1fr; }
-  .floating-action-bar { width: 90%; gap: 16px; flex-direction: column; border-radius: 16px; padding: 16px; }
+  .floating-action-bar { width: 92%; max-width: 360px; gap: 16px; flex-direction: column; border-radius: 16px; padding: 16px; }
+
+  /* Tighter table cells so more fits before horizontal scroll kicks in */
+  th, td { padding: 10px 12px; }
+  .group-tabs { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+  .group-tab { white-space: nowrap; }
 }
 
 /* Custom CSS tooltips */
@@ -423,3 +474,34 @@ button:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important
 .cs-guide-steps { gap: 14px; }
 .cs-guide-steps li { display: flex; gap: 12px; align-items: flex-start; }
 .cs-guide-num { flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; }
+
+/* ==================== Iteration tracking (version badge, in-gate editor, timeline) ==================== */
+.cs-version-badge { background: var(--accent); color: #fff; font-weight: 700; font-size: 12px; padding: 5px 12px; border-radius: 999px; white-space: nowrap; }
+.cs-iter-v { background: rgba(99,102,241,0.15); color: var(--accent); border: 1px solid rgba(99,102,241,0.35); font-weight: 700; text-transform: none; }
+
+/* In-gate edit toolbar + editor */
+.cs-gate-toolbar { display: flex; flex-wrap: wrap; gap: 10px; padding-top: 16px; }
+.cs-gate-toolbar .btn-ghost.cs-on { border-color: var(--accent); color: var(--text); }
+.cs-gate-edit { margin-top: 14px; background: var(--darker); border: 1px solid rgba(99,102,241,0.25); border-radius: 12px; padding: 16px; }
+.cs-gate-edit .cs-title { margin-top: 0; }
+
+/* Activity timeline */
+.cs-timeline { margin-top: 16px; background: var(--darker); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; overflow: hidden; }
+.cs-timeline-head { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px; background: none; border: none; color: var(--text); font-size: 13px; font-weight: 600; padding: 12px 16px; cursor: pointer; }
+.cs-timeline-head strong { color: var(--accent); }
+.cs-timeline-list { list-style: none; padding: 0 8px 8px; margin: 0; display: flex; flex-direction: column; }
+.cs-tl-item { display: flex; align-items: flex-start; gap: 10px; padding: 9px 8px; border-top: 1px solid rgba(255,255,255,0.04); font-size: 13px; }
+.cs-tl-item:first-child { border-top: none; }
+.cs-tl-now { background: rgba(99,102,241,0.07); border-radius: 8px; }
+.cs-tl-v { flex-shrink: 0; min-width: 30px; text-align: center; font-weight: 700; font-size: 11px; color: var(--muted); background: var(--surface); border-radius: 6px; padding: 3px 6px; }
+.cs-tl-now .cs-tl-v { background: var(--accent); color: #fff; }
+.cs-tl-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.cs-tl-action { color: var(--text); }
+.cs-tl-icon { opacity: 0.9; }
+.cs-tl-here { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--accent); margin-left: 6px; }
+.cs-tl-gate { font-size: 12px; color: var(--muted); }
+.cs-tl-verdict { font-weight: 700; }
+.cs-tl-verdict.cs-verdict-approved { color: var(--success); }
+.cs-tl-verdict.cs-verdict-needs-work { color: var(--warning); }
+.cs-tl-verdict.cs-verdict-reject { color: var(--danger); }
+.cs-tl-time { flex-shrink: 0; font-size: 11px; color: var(--muted); }

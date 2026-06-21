@@ -72,6 +72,9 @@ export async function initDb(pool) {
     CREATE INDEX IF NOT EXISTS content_projects_updated_idx ON content_projects (updated_at DESC);
     ALTER TABLE content_projects ADD COLUMN IF NOT EXISTS fix_count  integer NOT NULL DEFAULT 0;
     ALTER TABLE content_projects ADD COLUMN IF NOT EXISTS gate_count integer NOT NULL DEFAULT 0;
+    -- Iteration tracking: current version number + an activity timeline (one entry per save/edit/AI-fix, with the gate result attached).
+    ALTER TABLE content_projects ADD COLUMN IF NOT EXISTS iteration  integer NOT NULL DEFAULT 0;
+    ALTER TABLE content_projects ADD COLUMN IF NOT EXISTS iterations jsonb   NOT NULL DEFAULT '[]'::jsonb;
   `);
 }
 
