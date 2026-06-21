@@ -381,6 +381,84 @@ async function scrubBannedWords(body, voice, ctxTitle = '') {
   return out;
 }
 
+// ── Deterministic on-page SEO scorer (article body-copy items only; follow-ups handled separately) ──
+const SEO_STOP = new Set(['in','of','the','a','to','and','for','with','best','top','guide','your','you']);
+function sigTokens(kw) {
+  return (String(kw).toLowerCase().match(/[a-z']+/g) || []).filter(t => t.length > 2 && !SEO_STOP.has(t));
+}
+function computeSeoChecks(title, body, keyword) {
+  const T = String(title || ''), B = String(body || '');
+  const low = B.toLowerCase();
+  const toks = sigTokens(keyword);
+  const allw = low.match(/[a-z']+/g) || [];
+  const n = allw.length || 1;
+  const lines = B.replace(/\r/g, '').split('\n');
+  const headings = [];
+  for (const L of lines) { const m = L.match(/^(#{1,6})\s+(.*)$/); if (m) headings.push({ lv: m[1].length, txt: m[2] }); }
+  const h2 = headings.filter(h => h.lv === 2);
+  const h1 = headings.filter(h => h.lv === 1);
+  const paras = B.split(/\n\s*\n/).map(p => p.trim()).filter(p => p && !p.startsWith('#'));
+  const first100 = allw.slice(0, 100).join(' ');
+  const links = B.match(/\]\((https?:\/\/[^)]+)\)/g) || [];
+  const wc = (s) => (String(s).toLowerCase().match(/[a-z']+/g) || []).length;
+  const present = (text) => { const tl = String(text).toLowerCase(); return toks.length ? toks.every(t => tl.includes(t)) : false; };
+  const tokFreq = toks.reduce((a, t) => a + (low.split(t).length - 1), 0);
+  const density = 100 * tokFreq / (n * Math.max(1, toks.length));
+  const introWc = paras.length ? wc(paras[0]) : 0;
+  const earlyList = lines.slice(0, 30).some(L => /^\s*([-*]|\d+\.)\s+/.test(L));
+  const cta = /\b(book|visit|try|discover|explore|find|grab|head to|order|check out|start|reserve|sample|seek out)\b/.test(low) || /don't miss/.test(low);
+  const eeat = /\b(I|I've|my|we|our)\b/i.test(B);
+  const longParas = paras.filter(p => wc(p) > 80).length;
+  const usHits = scanUsSpellings(low);
+  const place = [present(T), present(first100), h2.some(h => present(h.txt))].filter(Boolean).length;
+  const mk = (item, status, note) => ({ item, status, note, category: 'article' });
+  const checks = [
+    mk('Title tag — present, ≤60 chars, includes the primary keyword',
+       (present(T) && T.length <= 60) ? 'pass' : (present(T) ? 'warn' : 'fail'),
+       present(T) ? (T.length <= 60 ? `Title contains the keyword (${T.length} chars).` : `Title is ${T.length} chars — trim to 60 or fewer.`) : 'Add the primary keyword to the title.'),
+    mk('Primary keyword placement — in title, first 100 words, ≥1 H2, and meta',
+       place >= 3 ? 'pass' : (place >= 2 ? 'warn' : 'fail'),
+       place >= 3 ? 'Keyword appears in the title, the opening and a heading.' : `Keyword found in ${place} of 3 spots (title / first 100 words / an H2) — add it to the others.`),
+    mk('Heading hierarchy — exactly one H1, H2s top-level, H3 only under H2, no level skips',
+       (h2.length >= 1 && h1.length === 0) ? 'pass' : (headings.length ? 'warn' : 'fail'),
+       (h2.length >= 1 && h1.length === 0) ? `${h2.length} H2 section(s), clean hierarchy.` : (h1.length ? 'Remove the H1 from the body (the title is the H1); use "## " as the top level.' : 'Add "## " subheadings to structure the article.')),
+    mk('Natural keyword usage — ~0.8–1.5% density, never stuffed; secondary keywords present',
+       (density >= 0.5 && density <= 3.0) ? 'pass' : (tokFreq > 0 ? 'warn' : 'fail'),
+       `Keyword density about ${density.toFixed(1)}%.` + (density < 0.5 ? ' Use the keyword a little more often.' : (density > 3.0 ? ' Reduce repetition.' : ''))),
+    mk('Strong CTA — at least one inline, action-verb opener',
+       cta ? 'pass' : 'warn',
+       cta ? 'Action-verb call to action present.' : 'Add an action-verb call to action (e.g. "Visit…", "Try…", "Book…").'),
+    mk('Engaging introduction — 50–100 words, hook + value + structure preview',
+       (introWc >= 40 && introWc <= 120) ? 'pass' : (introWc >= 25 ? 'warn' : 'fail'),
+       `Intro is ${introWc} words` + (introWc < 40 ? ' — expand to 50–100.' : (introWc > 120 ? ' — trim to 50–100.' : '.'))),
+    mk('Engaging conclusion — recap + CTA reinforcement',
+       (paras.length >= 3 && wc(paras[paras.length - 1]) >= 25) ? 'pass' : 'warn',
+       (paras.length >= 3 && wc(paras[paras.length - 1]) >= 25) ? 'Closing paragraph present.' : 'Add a closing paragraph that recaps and reinforces the CTA.'),
+    mk('Featured-snippet block — a concise definition/list/steps in the first 200 words',
+       earlyList ? 'pass' : 'warn',
+       earlyList ? 'Early list/steps present.' : 'Add a short bullet list or numbered steps near the top.'),
+    mk('E-E-A-T — author byline, expertise/experience markers woven in, credible',
+       eeat ? 'pass' : 'warn',
+       eeat ? 'First-person experience present.' : 'Weave in first-person experience or an author marker.'),
+    mk('Trusted external citations — links to authoritative sources for claims',
+       links.length >= 1 ? 'pass' : 'warn',
+       links.length >= 1 ? `${links.length} external link(s) present.` : 'Add at least one link to an authoritative source.'),
+    mk('Readability — short paragraphs (≤4 sentences / ≤80 words), lists where helpful',
+       (paras.length && (longParas / paras.length) <= 0.3) ? 'pass' : 'warn',
+       (paras.length && (longParas / paras.length) <= 0.3) ? 'Paragraphs are short and scannable.' : 'Break up long paragraphs (aim for 80 words or fewer each).'),
+    mk('British English (en-GB) — spelling, punctuation and vocabulary',
+       usHits.length ? 'fail' : 'pass',
+       usHits.length ? 'US spellings found: ' + usHits.join(', ') : 'British English throughout.'),
+    mk('Original, informative, on-topic content matching reader intent',
+       n >= 300 ? 'pass' : 'warn',
+       n >= 300 ? `${n} words of substantive content.` : 'Add more specific, useful detail (aim for 300+ words).'),
+  ];
+  const pass = checks.filter(c => c.status === 'pass').length;
+  const warn = checks.filter(c => c.status === 'warn').length;
+  const score = Math.round(10 * (pass + 0.5 * warn) / checks.length);
+  return { checks, score };
+}
+
 export function registerCreateRoutes(app, pool) {
   // Serve generated images under /api/media (Nginx already proxies /api -> backend).
   app.get('/api/media/:file', (req, res) => {
@@ -582,7 +660,7 @@ export function registerCreateRoutes(app, pool) {
       const data = await callGemini(TEXT_MODEL, {
         system: VET_SYSTEM + personaNote,
         parts: [{ text: userText }],
-        generationConfig: { temperature: 0.2, responseMimeType: 'application/json', responseSchema: VET_SCHEMA, thinkingConfig: { thinkingBudget: 0 } },
+        generationConfig: { temperature: 0, responseMimeType: 'application/json', responseSchema: VET_SCHEMA, thinkingConfig: { thinkingBudget: 0 } },
       });
       const result = firstJson(data);
       // Trust local scans over the model for deterministic rules (banned phrases, persona bans, en-GB).
@@ -591,7 +669,15 @@ export function registerCreateRoutes(app, pool) {
       // Deterministic scans are authoritative — the model hallucinates fake hits (e.g. "great", "socialising->socialising"), so use ONLY local results.
       result.banned_phrases_found = Array.from(new Set(localBanned));
       result.british_english_issues = scanUsSpellings(haystack);
-      if (Array.isArray(result.seo_checklist)) result.seo_checklist.forEach(c => { c.category = isFollowUpItem(c) ? 'follow_up' : 'article'; });
+      // Deterministic SEO: compute the article checklist + SEO score from the text itself (no model wobble);
+      // keep the model's follow-up items (slug, meta, schema, internal links, alt text) as-reported.
+      {
+        const followUps = (result.seo_checklist || []).filter(c => isFollowUpItem(c)).map(c => ({ ...c, category: 'follow_up' }));
+        const det = computeSeoChecks(title, body, result.primary_keyword || topic || title || '');
+        result.seo_checklist = [...det.checks, ...followUps];
+        result.scores = result.scores || {};
+        result.scores.seo = det.score;
+      }
       const blockers = [];
       if (result.banned_phrases_found.length) blockers.push('banned phrases: ' + result.banned_phrases_found.join(', '));
       if (result.british_english_issues.length) blockers.push('US spellings: ' + result.british_english_issues.join(', '));
@@ -642,7 +728,7 @@ export function registerCreateRoutes(app, pool) {
   app.get('/api/create/projects', async (_req, res) => {
     try {
       const { rows } = await pool.query(
-        'SELECT id, title, with_image, verdict, status, image_url, article_locked, image_locked, updated_at FROM content_projects ORDER BY updated_at DESC LIMIT 200'
+        'SELECT id, title, with_image, verdict, status, image_url, article_locked, image_locked, fix_count, gate_count, updated_at FROM content_projects ORDER BY updated_at DESC LIMIT 200'
       );
       res.json(rows);
     } catch (e) { res.status(500).json({ error: e.message }); }

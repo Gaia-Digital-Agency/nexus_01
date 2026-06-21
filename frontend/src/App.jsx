@@ -725,6 +725,8 @@ function App() {
   const deleteSelectedImage = async () => {
     if (!csSelectedImg) return;
     const id = csSelectedImg;
+    if (!window.confirm('Delete this image?')) return;
+    if (!window.confirm('Are you sure? This image will be permanently removed.')) return;
     try {
       await fetch('/api/create/images/' + id, { method: 'DELETE' });
       setCsImages(prev => prev.filter(i => i.id !== id));
@@ -844,6 +846,10 @@ function App() {
   };
 
   const deleteProject = async (id) => {
+    const proj = csProjects.find(x => x.id === id);
+    const name = proj?.title || 'this project';
+    if (!window.confirm(`Delete "${name}"? This permanently removes the project.`)) return;
+    if (!window.confirm(`Are you sure? "${name}" cannot be recovered. Click OK to delete for good.`)) return;
     try { await fetch('/api/create/projects/' + id, { method: 'DELETE' }); setCsProjects(prev => prev.filter(p => p.id !== id)); }
     catch (e) { setCsError(e.message); }
   };
@@ -1512,6 +1518,7 @@ function App() {
                   </div>
                   <div className="muted small" style={{ marginTop: '6px' }}>
                     {p.with_image ? '🖼️ With image' : '📝 Text only'} · {p.status}
+                    {(p.gate_count > 0 || p.fix_count > 0) && <> · <span title="Gate runs · AI fixes applied">↻ {p.gate_count || 0} · ✨ {p.fix_count || 0}</span></>}
                   </div>
                   <div className="muted small">Updated {new Date(p.updated_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
                   <div className="cs-btn-row" style={{ marginTop: '12px' }}>
